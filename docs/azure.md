@@ -11,7 +11,7 @@ Sophos APIs --> Container Apps job (4 runs a day) --> Azure Files share (history
      (Sophos credential)
 ```
 
-Status: the template compiles and lints clean, and CI runs the container image's file writes against an SMB share mounted with the template's mount options. A first live deployment had not been tested when this page was written (22/11/2026).
+Tested on 22/11/2026 in a pay-as-you-go subscription in Australia East, deployed from the template and image this page links to. The backfill and the next run both succeeded: each read the Sophos credential from Key Vault and uploaded with the managed identity, and the second run kept the backfill's history on the share. A scheduled run takes about 75 seconds.
 
 ## What it creates
 
@@ -35,6 +35,7 @@ One tenant, four runs a day, 122 runs a month, priced for Australia East on 22/1
 | Azure Files share | About 0.1 GB and a few thousand operations | Under 0.50 |
 | Key Vault | A few hundred secret reads | Under 0.05 |
 | Log Analytics | A few MB, inside the 5 GB a month that is free | 0 |
+| Data out | Up to 60 MB a run to SharePoint, inside the 100 GB a month that is free | 0 |
 | Image | The public image on GitHub Container Registry | 0 |
 | Image, your own build | Azure Container Registry Basic | 7.92 |
 
@@ -70,7 +71,7 @@ az deployment group create --resource-group fusion-export --name fusion-export \
     sharePointSiteUrl=https://contoso.sharepoint.com/sites/reporting sharePointFolder=FusionExport/contoso
 ```
 
-The deployment's outputs name the jobs, the Key Vault, the storage account and the identity. Keep `identityPrincipalId` for step 3. In the portal they are under the resource group's **Deployments**, and with the CLI:
+The deployment takes about 15 minutes, most of it for the Container Apps environment. Its outputs name the jobs, the Key Vault, the storage account and the identity. Keep `identityPrincipalId` for step 3. In the portal they are under the resource group's **Deployments**, and with the CLI:
 
 ```sh
 az deployment group show --resource-group fusion-export --name fusion-export --query properties.outputs
@@ -109,7 +110,7 @@ New-MgSitePermission -SiteId $site.Id -BodyParameter @{ roles = @("write"); gran
 
 ### 4. Run the first load
 
-Start the backfill job once. It reads every case, 90 days of detections and 30 days of AI Defense activity, which takes a few minutes. Start it at least 15 minutes away from a scheduled run time (00:17, 06:17, 12:17 and 18:17 UTC by default), because two runs writing the same folder at once can lose the backfill's older detections.
+Start the backfill job once. It reads every case, 90 days of detections and 30 days of AI Defense activity. For a tenant with 95,000 detections and 22,000 AI Defense activities, that took 8 minutes and 279 Sophos API calls. Start it at least 15 minutes away from a scheduled run time (00:17, 06:17, 12:17 and 18:17 UTC by default), because two runs writing the same folder at once can lose the backfill's older detections.
 
 ```sh
 az containerapp job start --resource-group fusion-export --name fusion-export-backfill
@@ -133,6 +134,8 @@ RUN=$(az containerapp job execution list --resource-group fusion-export --name f
 az monitor log-analytics query --workspace "$WORKSPACE" --query "[].Log_s" --output tsv \
   --analytics-query "ContainerAppConsoleLogs_CL | where ContainerGroupName_s startswith '$RUN' | order by _timestamp_d asc"
 ```
+
+Log lines reach Log Analytics a few minutes after the run writes them, so a query straight after a run can come back empty or partial; run it again.
 
 In the portal, the job's **Execution history** lists the runs and links to their logs. The share itself is under the storage account's **File shares > export**: `_state/runs.jsonl` has one line per run with the call count and rows per table.
 
