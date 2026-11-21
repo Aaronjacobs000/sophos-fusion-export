@@ -1,0 +1,3 @@
+tenant_id,snapshot_date,license_id,license_code,generic_code,product_name,license_type,quantity,used,unlimited,perpetual,start_date,end_date,days_to_end
+11111111-2222-4333-8444-555555555555,2026-11-21,AAAA-BBBB-CCCC-0001,XDR-MSP,XDR,Sophos XDR - User,usage,,42,true,true,,,
+11111111-2222-4333-8444-555555555555,2026-11-21,AAAA-BBBB-CCCC-0002,CPHISH,PHT,Central Phish Threat,trial,100,0,false,false,2026-02-23,2026-12-01,10

@@ -1,0 +1,11 @@
+{
+  "items": [
+    { "allowedActions": ["acknowledge"], "category": "wireless", "description": "Access Point: first floor AP is offline", "eventCount": 1, "groupKey": "x",
+      "id": "a0000000-0000-4000-8000-000000000001", "managedAgent": {}, "person": {}, "product": "wireless", "raisedAt": "2026-11-17T14:51:19.918196Z", "severity": "medium", "status": "open",
+      "tenant": { "dataRegion": "eu01", "id": "11111111-2222-4333-8444-555555555555", "name": "Example Tenant" }, "type": "Event::Wireless::WifixAccessPoint::Common" },
+    { "category": "malware", "description": "Malware detected on HOST-B", "id": "a0000000-0000-4000-8000-000000000002",
+      "managedAgent": { "id": "e0000000-0000-4000-8000-000000000002", "type": "computer" }, "product": "endpoint", "raisedAt": "2026-11-20T23:30:00Z", "severity": "high", "status": "open",
+      "tenant": { "id": "11111111-2222-4333-8444-555555555555", "name": "Example Tenant" }, "type": "Event::Endpoint::Threat::Detected" }
+  ],
+  "pages": { "size": 2, "maxSize": 1000 }
+}

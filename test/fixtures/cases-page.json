@@ -1,0 +1,31 @@
+{
+  "data": {
+    "cases": {
+      "totalCount": 2,
+      "pageInfo": { "endCursor": "cursor-1", "hasNextPage": false },
+      "cases": [
+        {
+          "id": "c0000000-0000-4000-8000-000000000001", "shortId": "G-00001", "title": "Suspicious logon on HOST-A", "severity": 8,
+          "type": { "id": "type-investigation", "name": "investigation", "title": "Investigation" },
+          "primaryStatus": { "id": "status-closed", "name": "closed", "title": "Closed", "isClosed": true },
+          "secondaryStatus": null,
+          "primaryVerdict": { "id": "verdict-fp", "name": "false_positive", "title": "False Positive" },
+          "secondaryVerdict": null, "closeReason": "Benign admin activity by user bob", "managedBy": "PROVIDER",
+          "isCreatedByMDRProvider": true, "isCreatedByPartner": false, "assigneeId": "@sophos", "tenantId": "100001",
+          "createdAt": "2026-11-19T11:50:57.174548Z", "updatedAt": "2026-11-19T11:56:36.475508Z", "closedAt": "2026-11-19T12:50:57.174548Z",
+          "archivedAt": null, "riskScore": 0, "source": null, "tags": ["Auto-Resolve", "lab"], "detectionsCount": 3, "eventsCount": 0, "assetsCount": 1
+        },
+        {
+          "id": "c0000000-0000-4000-8000-000000000002", "shortId": "G-00002", "title": "Malware on HOST-B", "severity": 10,
+          "type": { "id": "type-investigation", "name": "investigation", "title": "Investigation" },
+          "primaryStatus": { "id": "status-new", "name": "new", "title": "New", "isClosed": false },
+          "secondaryStatus": { "id": "sub-triage", "name": "triage", "title": "Triage" },
+          "primaryVerdict": null, "secondaryVerdict": null, "closeReason": null, "managedBy": null,
+          "isCreatedByMDRProvider": false, "isCreatedByPartner": false, "assigneeId": null, "tenantId": "100001",
+          "createdAt": "2026-11-20T00:00:00Z", "updatedAt": "2026-11-20T01:00:00Z", "closedAt": null,
+          "archivedAt": null, "riskScore": 7.5, "source": { "id": "src-1", "name": "auto", "title": "Automatic" }, "tags": [], "detectionsCount": 1, "eventsCount": 2, "assetsCount": 1
+        }
+      ]
+    }
+  }
+}

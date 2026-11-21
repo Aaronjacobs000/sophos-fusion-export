@@ -1,0 +1,42 @@
+{
+  "data": {
+    "detectionSearch": {
+      "status": "OK", "reason": "success",
+      "alerts": {
+        "total_results": 3, "next_offset": 0,
+        "list": [
+          {
+            "id": "alert://priv:tactic-detector:100001:1795241267509:00000000-0000-5000-8000-000000000001",
+            "status": "OPEN", "resolution_reason": "", "attack_technique_ids": ["T1021.002", "T1078.002"], "sensor_types": ["ENDPOINT_SOPHOS"], "threat_score": 0.5,
+            "metadata": { "title": "Unmanaged host logons to managed hosts", "description": "Logons from 10.0.0.5 to HOST-A", "severity": 0.05, "confidence": 0.05,
+              "created_at": { "seconds": 1795241267 }, "first_seen_at": null,
+              "creator": { "detector": { "detector_id": "app:detect:tactic-detector", "detector_name": "Tactic Graphs Detector" } } },
+            "enrichment_details": [ { "mitre_attack_info": null }, { "mitre_attack_info": { "technique_id": "T1021.002", "technique": "SMB/Windows Admin Shares", "tactics": ["lateral-movement"] } },
+              { "mitre_attack_info": { "technique_id": "T1078.002", "technique": "Domain Accounts", "tactics": ["persistence", "initial-access"] } } ],
+            "investigation_ids": null,
+            "source_entities": [ { "display_name": "10.0.0.5", "subtype": "IpAddress" }, { "display_name": "HOST-A", "subtype": "Endpoint" } ],
+            "target_entities": [ { "display_name": "HOST-A", "subtype": "Endpoint" }, { "display_name": "bob@example.test", "subtype": "User" } ]
+          },
+          {
+            "id": "alert://priv:aidefense:100001:1795240527633:00000000-0000-5000-8000-000000000002",
+            "status": "TRUE_POSITIVE_BENIGN", "resolution_reason": "Expected", "attack_technique_ids": null, "sensor_types": ["PALOALTO_FIREWALL", "ENDPOINT_SOPHOS"], "threat_score": 5,
+            "metadata": { "title": "High-risk AI activity", "description": "AI app use by alice", "severity": 0.6, "confidence": 1,
+              "created_at": { "seconds": 1795240527 }, "first_seen_at": { "seconds": 1795240000 },
+              "creator": { "detector": { "detector_id": "app:event-filter:aidefense", "detector_name": "AI Defense Findings" } } },
+            "enrichment_details": null,
+            "investigation_ids": [ { "id": "c0000000-0000-4000-8000-000000000001" } ],
+            "source_entities": [], "target_entities": null
+          },
+          {
+            "id": "alert://priv:watchlist:100001:1795200000000:00000000-0000-5000-8000-000000000003",
+            "status": "OPEN", "resolution_reason": null, "attack_technique_ids": ["T1059"], "sensor_types": ["ENDPOINT_SOPHOS"], "threat_score": null,
+            "metadata": { "title": "Command interpreter", "description": null, "severity": 0.85, "confidence": 0.9,
+              "created_at": { "seconds": 1795200000 }, "first_seen_at": null,
+              "creator": { "detector": { "detector_id": "app:watchlist", "detector_name": "Watchlist" } } },
+            "enrichment_details": [], "investigation_ids": [], "source_entities": null, "target_entities": null
+          }
+        ]
+      }
+    }
+  }
+}

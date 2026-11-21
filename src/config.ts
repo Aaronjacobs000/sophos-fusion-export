@@ -1,0 +1,140 @@
+/**
+ * Settings: defaults, then a JSON config file, then command line flags.
+ * Credentials never sit in the config file; they come from the environment
+ * (or an env file passed with --env-file), and a config file holding a
+ * secret is refused.
+ */
+
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { DEFAULT_PER_HOUR, DEFAULT_PER_MINUTE, MAX_PER_MINUTE } from "./sophos/limiter.js";
+import { assertTimeZone } from "./time.js";
+
+export const DATASETS = ["licenses", "cases", "detections", "endpoints", "alerts"] as const;
+export type DatasetName = (typeof DATASETS)[number];
+
+export interface SharePointSettings {
+  siteUrl: string;
+  library?: string;
+  folder?: string;
+  tenantId?: string;
+  clientId?: string;
+}
+
+export interface ExportConfig {
+  outputDir: string;
+  reportTimezone: string;
+  tenantName?: string;
+  personalData: boolean;
+  rate: { perMinute: number; perHour: number };
+  maxCallsPerRun: number;
+  backfillDays: number;
+  detections: { trailingDays: number; retentionDays: number; pageSize: number };
+  cases: { overlapMinutes: number };
+  datasets: DatasetName[];
+  sharepoint?: SharePointSettings;
+}
+
+export const DEFAULTS: ExportConfig = {
+  outputDir: "./export",
+  reportTimezone: "UTC",
+  personalData: false,
+  rate: { perMinute: DEFAULT_PER_MINUTE, perHour: DEFAULT_PER_HOUR },
+  maxCallsPerRun: 2000,
+  backfillDays: 90,
+  detections: { trailingDays: 7, retentionDays: 90, pageSize: 10_000 },
+  cases: { overlapMinutes: 15 },
+  datasets: [...DATASETS],
+};
+
+export class ConfigError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ConfigError";
+  }
+}
+
+const SECRET_KEY = /secret|password|token|apikey|api_key/i;
+
+function findSecretKeys(value: unknown, path: string[] = []): string[] {
+  if (!value || typeof value !== "object") return [];
+  return Object.entries(value as Record<string, unknown>).flatMap(([key, v]) =>
+    SECRET_KEY.test(key) ? [[...path, key].join(".")] : findSecretKeys(v, [...path, key])
+  );
+}
+
+function positiveInt(value: unknown, name: string, max = Number.MAX_SAFE_INTEGER): number {
+  const n = Number(value);
+  if (!Number.isInteger(n) || n < 1 || n > max) throw new ConfigError(`${name} must be a whole number from 1 to ${max}.`);
+  return n;
+}
+
+/** Merges a parsed config object over the defaults and checks it. Relative paths resolve against baseDir. */
+export function buildConfig(raw: Record<string, unknown>, baseDir = process.cwd()): ExportConfig {
+  const secrets = findSecretKeys(raw);
+  if (secrets.length) {
+    throw new ConfigError(`The config file holds ${secrets.join(", ")}. Put credentials in environment variables or an --env-file instead, never in the config file.`);
+  }
+  const rate = (raw.rate ?? {}) as Record<string, unknown>;
+  const detections = (raw.detections ?? {}) as Record<string, unknown>;
+  const cases = (raw.cases ?? {}) as Record<string, unknown>;
+  const config: ExportConfig = {
+    outputDir: resolve(baseDir, typeof raw.outputDir === "string" ? raw.outputDir : DEFAULTS.outputDir),
+    reportTimezone: typeof raw.reportTimezone === "string" ? raw.reportTimezone : DEFAULTS.reportTimezone,
+    ...(typeof raw.tenantName === "string" && raw.tenantName.trim() ? { tenantName: raw.tenantName.trim() } : {}),
+    personalData: raw.personalData === true,
+    rate: {
+      perMinute: rate.perMinute === undefined ? DEFAULTS.rate.perMinute : positiveInt(rate.perMinute, "rate.perMinute", MAX_PER_MINUTE),
+      perHour: rate.perHour === undefined ? DEFAULTS.rate.perHour : positiveInt(rate.perHour, "rate.perHour", 10_000),
+    },
+    maxCallsPerRun: raw.maxCallsPerRun === undefined ? DEFAULTS.maxCallsPerRun : positiveInt(raw.maxCallsPerRun, "maxCallsPerRun", 100_000),
+    backfillDays: raw.backfillDays === undefined ? DEFAULTS.backfillDays : positiveInt(raw.backfillDays, "backfillDays", 400),
+    detections: {
+      trailingDays: detections.trailingDays === undefined ? DEFAULTS.detections.trailingDays : positiveInt(detections.trailingDays, "detections.trailingDays", 90),
+      retentionDays: detections.retentionDays === undefined ? DEFAULTS.detections.retentionDays : positiveInt(detections.retentionDays, "detections.retentionDays", 3650),
+      pageSize: detections.pageSize === undefined ? DEFAULTS.detections.pageSize : positiveInt(detections.pageSize, "detections.pageSize", 10_000),
+    },
+    cases: { overlapMinutes: cases.overlapMinutes === undefined ? DEFAULTS.cases.overlapMinutes : positiveInt(cases.overlapMinutes, "cases.overlapMinutes", 1440) },
+    datasets: DEFAULTS.datasets,
+  };
+  if (raw.datasets !== undefined) {
+    if (!Array.isArray(raw.datasets) || raw.datasets.some((d) => !(DATASETS as readonly string[]).includes(String(d)))) {
+      throw new ConfigError(`datasets must be a list drawn from ${DATASETS.join(", ")}.`);
+    }
+    config.datasets = DATASETS.filter((d) => (raw.datasets as string[]).includes(d));
+  }
+  if (raw.sharepoint !== undefined) {
+    const sp = raw.sharepoint as Record<string, unknown>;
+    if (!sp || typeof sp.siteUrl !== "string") throw new ConfigError("sharepoint.siteUrl is required when sharepoint is set.");
+    config.sharepoint = {
+      siteUrl: sp.siteUrl,
+      ...(typeof sp.library === "string" ? { library: sp.library } : {}),
+      ...(typeof sp.folder === "string" ? { folder: sp.folder } : {}),
+      ...(typeof sp.tenantId === "string" ? { tenantId: sp.tenantId } : {}),
+      ...(typeof sp.clientId === "string" ? { clientId: sp.clientId } : {}),
+    };
+  }
+  if (config.detections.retentionDays < config.detections.trailingDays) {
+    throw new ConfigError("detections.retentionDays can't be shorter than detections.trailingDays.");
+  }
+  assertTimeZone(config.reportTimezone);
+  return config;
+}
+
+export function loadConfig(path: string | undefined): ExportConfig {
+  if (!path) return buildConfig({});
+  let text: string;
+  try {
+    text = readFileSync(path, "utf8");
+  } catch {
+    throw new ConfigError(`Can't read the config file ${path}.`);
+  }
+  let raw: unknown;
+  try {
+    raw = JSON.parse(text);
+  } catch {
+    throw new ConfigError(`${path} is not valid JSON.`);
+  }
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) throw new ConfigError(`${path} must hold a JSON object.`);
+  return buildConfig(raw as Record<string, unknown>, resolve(path, ".."));
+}

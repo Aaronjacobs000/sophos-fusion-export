@@ -1,0 +1,9 @@
+{
+  "tenant": { "id": "11111111-2222-4333-8444-555555555555" },
+  "endpoint": {
+    "protection": { "computer": { "score": 100, "total": 13, "notFullyProtected": 0, "snoozed": false }, "server": { "score": 90, "total": 6, "notFullyProtected": 1, "snoozed": false } },
+    "policy": { "computer": { "threat-protection": { "score": 50, "total": 2, "notOnRecommended": 1, "snoozed": true, "snoozeDetail": { "score": 1, "reason": "x" }, "policies": [ { "id": "p", "notOnRecommended": 13 } ] } } },
+    "exclusions": { "policy": { "computer": { "score": 50, "total": 2, "numberOfSecurityRisks": 1, "snoozed": false } }, "global": { "score": 40, "numberOfSecurityRisks": 3, "snoozed": false, "scanningExclusions": [ { "value": "F:\\" } ] } },
+    "tamperProtection": { "computer": { "score": 100, "total": 13, "disabled": 0, "snoozed": false }, "globalDetail": { "score": 100, "enabled": true, "snoozed": false } }
+  }
+}

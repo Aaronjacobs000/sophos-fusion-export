@@ -1,0 +1,3 @@
+tenant_id,alert_id,raised_at,raised_local_date,severity,category,product,alert_type,status,managed_agent_id,managed_agent_type,event_count,description,last_seen_open_at
+11111111-2222-4333-8444-555555555555,a0000000-0000-4000-8000-000000000001,2026-11-17T14:51:19Z,2026-11-18,medium,wireless,wireless,Event::Wireless::WifixAccessPoint::Common,open,,,1,,2026-11-21T08:00:00Z
+11111111-2222-4333-8444-555555555555,a0000000-0000-4000-8000-000000000002,2026-11-20T23:30:00Z,2026-11-21,high,malware,endpoint,Event::Endpoint::Threat::Detected,open,e0000000-0000-4000-8000-000000000002,computer,,,2026-11-21T08:00:00Z

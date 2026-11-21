@@ -1,0 +1,32 @@
+{
+  "name": "sophos-fusion-export",
+  "version": "0.1.0",
+  "description": "Unofficial Sophos Fusion Data Exporter: reads the documented Sophos APIs and writes a star schema of CSV files for Power BI, Grafana, Excel and other BI tools.",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "author": "Aaron Jacobs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Aaronjacobs000/sophos-fusion-export.git"
+  },
+  "bin": {
+    "fusion-export": "dist/cli.js"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run build && node --test test/*.test.mjs",
+    "demo": "npm run build && node scripts/make-demo.mjs",
+    "docs": "npm run build && node scripts/gen-docs.mjs"
+  },
+  "devDependencies": {
+    "@microsoft/powerquery-parser": "4.0.1",
+    "@types/node": "^22.20.0",
+    "graphql": "^16.15.0",
+    "typescript": "~5.9.3"
+  }
+}

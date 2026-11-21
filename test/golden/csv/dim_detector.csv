@@ -1,0 +1,4 @@
+tenant_id,detector_id,detector_name
+11111111-2222-4333-8444-555555555555,app:detect:tactic-detector,Tactic Graphs Detector
+11111111-2222-4333-8444-555555555555,app:event-filter:aidefense,AI Defense Findings
+11111111-2222-4333-8444-555555555555,app:watchlist,Watchlist

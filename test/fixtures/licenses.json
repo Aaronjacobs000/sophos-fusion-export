@@ -1,0 +1,10 @@
+{
+  "licenses": [
+    { "id": "AAAA-BBBB-CCCC-0001", "licenseIdentifier": "LN0000000001", "product": { "code": "XDR-MSP", "genericCode": "XDR", "name": "Sophos XDR  - User" }, "type": "usage", "unlimited": true, "perpetual": true, "usage": { "current": { "count": 42 } } },
+    { "id": "AAAA-BBBB-CCCC-0002", "product": { "code": "CPHISH", "genericCode": "PHT", "name": "Central Phish Threat" }, "type": "trial", "quantity": 100, "startDate": "2026-02-23", "endDate": "2026-12-01", "perpetual": false, "unlimited": false, "usage": { "current": { "count": 0 } } },
+    { "id": "AAAA-BBBB-CCCC-0003", "product": { "name": "No code here" }, "type": "term" }
+  ],
+  "tenant": { "id": "11111111-2222-4333-8444-555555555555" },
+  "partner": { "id": "99999999-0000-4000-8000-000000000001" },
+  "organization": { "id": "99999999-0000-4000-8000-000000000002" }
+}

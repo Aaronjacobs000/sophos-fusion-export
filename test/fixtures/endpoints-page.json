@@ -1,0 +1,24 @@
+{
+  "items": [
+    {
+      "id": "e0000000-0000-4000-8000-000000000001", "type": "server", "tenant": { "id": "11111111-2222-4333-8444-555555555555" }, "hostname": "DC1",
+      "health": { "overall": "good", "threats": { "status": "good" }, "services": { "status": "good", "serviceDetails": [] } },
+      "os": { "isServer": true, "platform": "windows", "name": "Windows Server 2022 Standard ", "majorVersion": 10, "minorVersion": 0, "build": 20348 },
+      "ipv4Addresses": ["10.0.0.10"], "mdrManaged": true, "group": { "name": "Domain Controllers", "id": "g1" }, "associatedPerson": {},
+      "tamperProtectionSupported": true, "tamperProtectionEnabled": true,
+      "assignedProducts": [ { "code": "endpointProtection", "version": "10.8.11", "status": "installed" }, { "code": "coreAgent", "version": "2026.3.0.2117", "status": "installed" }, { "code": "mtr", "version": "2026.3.0", "status": "notInstalled" } ],
+      "packages": { "protection": { "assignedId": "XDR", "name": "XDR", "status": "assigned" } },
+      "lastSeenAt": "2026-11-21T07:23:38.045Z", "lockdown": { "status": "notInstalled" }, "online": true, "isolation": { "status": "notIsolated" }
+    },
+    {
+      "id": "e0000000-0000-4000-8000-000000000002", "type": "computer", "tenant": { "id": "11111111-2222-4333-8444-555555555555" }, "hostname": "LAPTOP-7",
+      "health": { "overall": "bad", "threats": { "status": "good" }, "services": { "status": "bad" } },
+      "os": { "isServer": false, "platform": "macOS", "name": "macOS Sequoia", "majorVersion": 15, "minorVersion": 6 },
+      "associatedPerson": { "name": "Alice Example", "viaLogin": "EXAMPLE\\alice" },
+      "tamperProtectionSupported": true, "tamperProtectionEnabled": false,
+      "assignedProducts": [ { "code": "coreAgent", "version": "2025.1.0", "status": "installed" } ],
+      "lastSeenAt": "2026-11-01T00:00:00Z", "online": false, "isolation": { "status": "isolated" }
+    }
+  ],
+  "pages": { "size": 2, "maxSize": 500 }
+}

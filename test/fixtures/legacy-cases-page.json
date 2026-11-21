@@ -1,0 +1,9 @@
+{
+  "items": [
+    { "id": "1-598868", "type": "investigation", "name": "Old case on HOST-C", "managedBy": "sophos", "createdAt": "2026-09-01T00:00:00Z", "resolvedAt": "2026-09-01T02:30:00Z",
+      "updatedAt": "2026-09-01T02:30:00Z", "severity": "high", "status": "resolved", "assignee": { "id": "u1", "name": "mdr-ops@example.com" }, "detectionCount": 4, "verdict": "truePositiveBenign",
+      "createdBy": { "type": "service", "accountType": "partner" } },
+    { "id": "1-598869", "name": "Open self case", "managedBy": "self", "createdAt": "2026-09-02T00:00:00Z", "status": "onHold" }
+  ],
+  "pages": { "current": 1, "size": 50, "total": 1, "items": 2 }
+}

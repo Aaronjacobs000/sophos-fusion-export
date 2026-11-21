@@ -1,0 +1,2 @@
+tenant_id,tenant_name,fusion_tenant_id,partner_id,organization_id,data_region,platform,report_timezone,license_codes,exported_at
+11111111-2222-4333-8444-555555555555,Example Tenant,100001,99999999-0000-4000-8000-000000000001,99999999-0000-4000-8000-000000000002,https://api-eu01.central.sophos.com,fusion,Australia/Sydney,CPHISH|XDR-MSP,2026-11-21T08:00:00Z

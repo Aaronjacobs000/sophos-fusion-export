@@ -1,0 +1,9 @@
+{
+  "data": {
+    "caseTypes": { "types": [ { "id": "type-investigation", "name": "investigation", "title": "Investigation", "managedBy": null }, { "id": "type-hunt", "name": "threat_hunt", "title": "Threat Hunt", "managedBy": "PROVIDER" } ] },
+    "casePrimaryStatuses": { "primaryStatuses": [ { "id": "status-new", "name": "new", "title": "New", "isClosed": false }, { "id": "status-closed", "name": "closed", "title": "Closed", "isClosed": true } ] },
+    "caseSecondaryStatuses": { "secondaryStatuses": [ { "id": "sub-triage", "name": "triage", "title": null } ] },
+    "casePrimaryVerdicts": { "primaryVerdicts": [ { "id": "verdict-fp", "name": "false_positive", "title": "False Positive" } ] },
+    "caseSecondaryVerdicts": { "secondaryVerdicts": [] }
+  }
+}

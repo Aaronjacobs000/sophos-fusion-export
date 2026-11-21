@@ -1,0 +1,4 @@
+tenant_id,status_id,level,name,title,is_closed
+11111111-2222-4333-8444-555555555555,status-closed,primary,closed,Closed,true
+11111111-2222-4333-8444-555555555555,status-new,primary,new,New,false
+11111111-2222-4333-8444-555555555555,sub-triage,secondary,triage,triage,

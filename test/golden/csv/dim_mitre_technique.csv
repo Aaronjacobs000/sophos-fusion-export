@@ -1,0 +1,4 @@
+tenant_id,technique_id,technique_name,tactics
+11111111-2222-4333-8444-555555555555,T1021.002,SMB/Windows Admin Shares,lateral-movement
+11111111-2222-4333-8444-555555555555,T1059,,
+11111111-2222-4333-8444-555555555555,T1078.002,Domain Accounts,initial-access|persistence
