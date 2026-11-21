@@ -15,6 +15,7 @@ The repository also holds report templates for Power BI and Grafana, and a secon
 - [Configure](#configure)
 - [Run](#run)
 - [Schedule](#schedule)
+- [Run it in Azure (no machine)](#run-it-in-azure-no-machine)
 - [Upload to SharePoint or OneDrive](#upload-to-sharepoint-or-onedrive)
 - [Power BI, recommended path](#power-bi-recommended-path)
 - [Power BI, alternative direct path](#power-bi-alternative-direct-path)
@@ -36,7 +37,7 @@ Sophos APIs --> exporter (scheduled, read only) --> CSV folder --> SharePoint or
                                                          +--> Grafana, Excel, Tableau, Looker Studio
 ```
 
-- The Sophos client secret stays on the machine that runs the exporter. Nothing in Power BI holds it.
+- The Sophos client secret stays on the machine that runs the exporter, or in Key Vault when it [runs in Azure](#run-it-in-azure-no-machine). Nothing in Power BI holds it.
 - The Power BI service refreshes from a SharePoint or OneDrive folder on a schedule, with no gateway.
 - The files keep history: detection counts, endpoint snapshots and case outcomes stay after Sophos's 90 day window ends.
 - Each run makes a few calls (under 20 for a typical tenant) under its own budget of 60 a minute, well below Sophos's limit.
@@ -124,9 +125,9 @@ Copy `fusion-export.config.example.json` and edit it. Every field is optional ex
 | `aiDefense.retentionDays` | 90 | AI Defense activity older than this is pruned. The daily counts stay. |
 | `aiDefense.inventoryDays` | 30 | Window the AI application and user inventories and Sophos's AI Defense totals cover, ending at the run. |
 | `datasets` | all | Any of `licenses`, `cases`, `detections`, `endpoints`, `alerts`, `aiDefense`. |
-| `sharepoint` | none | See [Upload to SharePoint or OneDrive](#upload-to-sharepoint-or-onedrive). |
+| `sharepoint` | none | See [Upload to SharePoint or OneDrive](#upload-to-sharepoint-or-onedrive). `sharepoint.auth` is `clientSecret` (the default) or `managedIdentity` for [Azure](#run-it-in-azure-no-machine). |
 
-The exporter refuses a config file that holds anything that looks like a secret. Credentials go in the environment or an env file.
+The exporter refuses a config file that holds anything that looks like a secret. Credentials go in the environment or an env file. In a container, the same JSON can go in the `FUSION_EXPORT_CONFIG_JSON` environment variable in place of `--config`.
 
 ## Run
 
@@ -163,6 +164,14 @@ Register-ScheduledTask -TaskName "Fusion Export" -Action $action -Trigger $trigg
 ```
 
 Keep the env file readable by the account that runs the task and nobody else.
+
+## Run it in Azure (no machine)
+
+The exporter can also run as a scheduled Azure Container Apps job in your own Azure subscription, with the Sophos credential in Key Vault, the CSV folder on an Azure Files share, and the SharePoint upload signed in with the job's managed identity, so there's no app secret to manage. It costs about AUD 0 to 1 a month for one tenant. [docs/azure.md](docs/azure.md) has the setup, the costs, how to check a run, and how to update and remove it.
+
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAaronjacobs000%2Fsophos-fusion-export%2Fmain%2Fdeploy%2Fazure%2Fazuredeploy.json)
+
+The image is `ghcr.io/aaronjacobs000/sophos-fusion-export`, built from this repository by the [image workflow](.github/workflows/image.yml). To run your own build instead, `az acr build` it into an Azure Container Registry: see [Or build the image yourself](docs/azure.md#2-or-build-the-image-yourself).
 
 ## Upload to SharePoint or OneDrive
 
@@ -277,6 +286,7 @@ Turn it on with `"personalData": true` or `--personal-data` only where the files
 - Secrets come from the environment or an env file, never from the config file, the output folder or `_state/`. Nothing logs a secret.
 - The CSV file server for Grafana listens on 127.0.0.1 by default and serves only the table files.
 - The SharePoint upload can reach only the Entra token endpoint, Microsoft Graph and SharePoint upload URLs. With `Sites.Selected` it can write to the one site you granted.
+- In Azure, the exporter also calls the managed identity endpoint on the local host and reads two secrets from the Key Vault you name. Both are off unless `SOPHOS_KEY_VAULT_URL` or `sharepoint.auth` asks for them.
 - Report security issues privately: see [SECURITY.md](SECURITY.md).
 
 ## Limitations
@@ -300,6 +310,8 @@ node scripts/build-grafana.mjs    # regenerate grafana/dashboards
 node scripts/build-powerbi.mjs    # regenerate powerbi/ from the schema
 npm run docs                      # regenerate docs/data-dictionary.md
 npm run demo                      # regenerate demo/ (synthetic)
+bicep build deploy/azure/main.bicep --outfile deploy/azure/azuredeploy.json   # after a template change
+docker build -t sophos-fusion-export .                                         # the container image
 UPDATE_GOLDEN=1 node --test test/run.test.mjs   # accept a deliberate change to the golden CSVs
 ```
 

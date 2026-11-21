@@ -44,3 +44,59 @@ jobs:
           git diff --exit-code -- grafana powerbi docs
       - name: The command line answers --help
         run: node dist/cli.js --help
+
+  azure:
+    name: Container image and Azure template
+    runs-on: ubuntu-latest
+    env:
+      BICEP_VERSION: v0.49.2
+      BICEP_SHA256: 0ab9de90c2493f206f8281bae74f9ee2d5ed3605548dab1adf41fef185e1f7c5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci && npm run build
+      - name: Bicep lint, and azuredeploy.json is current
+        shell: bash
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/bicep" "https://github.com/Azure/bicep/releases/download/$BICEP_VERSION/bicep-linux-x64"
+          echo "$BICEP_SHA256  $RUNNER_TEMP/bicep" | sha256sum -c -
+          chmod +x "$RUNNER_TEMP/bicep"
+          "$RUNNER_TEMP/bicep" lint deploy/azure/main.bicep
+          "$RUNNER_TEMP/bicep" build deploy/azure/main.bicep --outfile "$RUNNER_TEMP/azuredeploy.json"
+          diff -u deploy/azure/azuredeploy.json "$RUNNER_TEMP/azuredeploy.json"
+      - name: Build the image
+        run: docker build -t fusion-export:ci .
+      - name: The image runs as uid 1000, answers --help and refuses Key Vault without a managed identity
+        shell: bash
+        run: |
+          test "$(docker run --rm --entrypoint id fusion-export:ci -u)" = "1000"
+          docker run --rm --entrypoint sh fusion-export:ci -c 'touch /data/probe && rm /data/probe'
+          docker run --rm fusion-export:ci --help | grep -q "SOPHOS_KEY_VAULT_URL"
+          set +e
+          out=$(docker run --rm -e SOPHOS_KEY_VAULT_URL=https://kv-ci-check.vault.azure.net fusion-export:ci doctor 2>&1)
+          code=$?
+          set -e
+          echo "$out"
+          test "$code" = "1"
+          grep -q "IDENTITY_ENDPOINT and IDENTITY_HEADER are not set" <<<"$out"
+      - name: Write, rerun and replace files on an SMB share mounted with the template's mount options
+        shell: bash
+        run: |
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq samba cifs-utils > /dev/null
+          pw=$(openssl rand -hex 16)
+          sudo useradd -M -s /usr/sbin/nologin smbcheck
+          printf '%s\n%s\n' "$pw" "$pw" | sudo smbpasswd -a -s smbcheck
+          sudo install -d -o smbcheck -m 0700 /srv/smbcheck
+          printf '[export]\n  path = /srv/smbcheck\n  read only = no\n  valid users = smbcheck\n' | sudo tee -a /etc/samba/smb.conf > /dev/null
+          sudo systemctl restart smbd
+          opts=$(jq -r '.parameters.mountOptions.defaultValue' deploy/azure/azuredeploy.json)
+          sudo mkdir -p /mnt/smbcheck
+          sudo mount -t cifs //127.0.0.1/export /mnt/smbcheck -o "username=smbcheck,password=$pw,vers=3.1.1,$opts"
+          mount | grep /mnt/smbcheck
+          docker run --rm -v /mnt/smbcheck:/data -v "$PWD/scripts:/app/scripts:ro" -v "$PWD/test:/app/test:ro" \
+            --entrypoint node fusion-export:ci /app/scripts/check-output-folder.mjs /data
+          sudo umount /mnt/smbcheck

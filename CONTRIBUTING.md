@@ -18,6 +18,6 @@ npm run typecheck
 npm test
 ```
 
-CI runs the same on Ubuntu with Node.js 22 and 24, and fails if the generated templates or docs are out of date.
+CI runs the same on Ubuntu with Node.js 22 and 24, and fails if the generated templates or docs are out of date. It also lints the Azure template and checks `deploy/azure/azuredeploy.json` matches `main.bicep` (Bicep 0.49.2: run `bicep build deploy/azure/main.bicep --outfile deploy/azure/azuredeploy.json` after a change), builds the container image, and runs `scripts/check-output-folder.mjs` in it against an SMB share.
 
 Write commit messages in the conventional style, for example `fix(cases): ...`.
