@@ -105,6 +105,16 @@ test("a redirect is refused, and a 429 backs the whole credential off", async ()
   assert.equal(backoff, 7);
 });
 
+test("a 429 with a Retry-After date backs the credential off until that date", async () => {
+  const limiter = new RateLimiter({ perMinute: 100 });
+  let backoff = null;
+  limiter.backoff = (s) => (backoff = s);
+  const at = new Date(Math.ceil(Date.now() / 1000) * 1000 + 90_000).toUTCString();
+  const fetch = createGuardedFetch({ limiter, baseFetch: async () => new Response("{}", { status: 429, headers: { "Retry-After": at } }) });
+  await fetch(`${REGION}/common/v1/alerts`);
+  assert.ok(backoff > 88 && backoff <= 91, `backed off ${backoff} s, not the 30 s default`);
+});
+
 test("the vendored clients send nothing through the global fetch", async () => {
   const original = globalThis.fetch;
   globalThis.fetch = () => {

@@ -23,7 +23,7 @@
  * download and the name based allowlist taken out.
  */
 
-import type { FetchLike } from "../vendor/sophos-core/index.js";
+import { retryAfterMs, type FetchLike } from "../vendor/sophos-core/index.js";
 import { DOCUMENTS } from "./documents.js";
 import type { RateLimiter } from "./limiter.js";
 
@@ -187,8 +187,9 @@ export function createGuardedFetch(options: GuardOptions): FetchLike & { calls: 
     }
     record(response.status);
     if (response.status === 429) {
-      const retryAfter = Number(response.headers.get("Retry-After"));
-      options.limiter.backoff(Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : null);
+      // Seconds or an HTTP date; Number() read a date as NaN, so the pause fell back to 30 s.
+      const waitMs = retryAfterMs(response.headers.get("Retry-After"));
+      options.limiter.backoff(waitMs !== null && waitMs > 0 ? waitMs / 1000 : null);
     }
     if (response.status >= 300 && response.status <= 399) {
       response.body?.cancel().catch(() => {});
