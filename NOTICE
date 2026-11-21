@@ -1,0 +1,27 @@
+Unofficial Sophos Fusion Data Exporter (sophos-fusion-export)
+Copyright 2026 Aaron Jacobs
+Licensed under the MIT License (LICENSE).
+
+Unofficial. Uses the documented Sophos APIs. This exporter is not made,
+endorsed or supported by Sophos.
+
+src/vendor/sophos-core is vendored from @notfusion/sophos-core (NotFusion,
+Copyright 2026 Aaron Jacobs), licensed under the Apache License 2.0 AND the
+MIT License. Both notices are kept beside it: src/vendor/sophos-core/LICENSE
+(Apache-2.0) and LICENSE-MIT. Parts of it are adapted from
+sophos-central-mcp-server (https://github.com/Aaronjacobs000/sophos-mcp), MIT
+License. The exporter's local changes to those files are listed in
+ATTRIBUTIONS.md.
+
+src/sophos/guard.ts, src/sophos/limiter.ts and src/datasets/sensor-labels.ts
+are adapted from the SecOps Toolkit
+(https://github.com/Aaronjacobs000/sophos-secops-toolkit), MIT License.
+
+schemas/fusion/*.graphql are copies of the public Sophos Fusion GraphQL
+schemas (Cases v2 and Detections v2) from developer.sophos.com, used to
+validate the exporter's queries in tests. They describe Sophos's APIs and
+remain Sophos's material; this project's licence does not cover them.
+
+Sophos, Sophos Central and Sophos Fusion are trademarks of Sophos Limited.
+Microsoft, Power BI, SharePoint and OneDrive are trademarks of Microsoft
+Corporation. Grafana is a trademark of Grafana Labs.

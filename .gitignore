@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.env
+*.env
+.DS_Store
+*.log
+# Real exports never go in the repository. Demo data lives in demo/ and is synthetic.
+/out/
+/export/
+/data/
+/_state/
+fusion-export.config.json
