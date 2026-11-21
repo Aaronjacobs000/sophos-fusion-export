@@ -63,7 +63,7 @@ export class SophosSession {
   /** Signs in and runs /whoami/v1. Throws CredentialError for anything but a tenant credential. */
   static async open(options: SessionOptions): Promise<SophosSession> {
     if (!options.clientId || !options.clientSecret) {
-      throw new CredentialError("No Sophos credential. Set SOPHOS_CLIENT_ID and SOPHOS_CLIENT_SECRET, or pass --env-file.");
+      throw new CredentialError("No Sophos credential. Set SOPHOS_CLIENT_ID and SOPHOS_CLIENT_SECRET, pass --env-file, or set SOPHOS_KEY_VAULT_URL.");
     }
     const session = new SophosSession(options);
     let identity;

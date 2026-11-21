@@ -1,7 +1,8 @@
 /**
- * Settings: defaults, then a JSON config file, then command line flags.
- * Credentials never sit in the config file; they come from the environment
- * (or an env file passed with --env-file), and a config file holding a
+ * Settings: defaults, then a JSON config file (or the same JSON in
+ * FUSION_EXPORT_CONFIG_JSON, for a container), then command line flags.
+ * Credentials never sit in the config; they come from the environment (or an
+ * env file passed with --env-file, or Key Vault), and a config holding a
  * secret is refused.
  */
 
@@ -19,7 +20,11 @@ export interface SharePointSettings {
   folder?: string;
   tenantId?: string;
   clientId?: string;
+  /** clientSecret (default) or managedIdentity. */
+  auth?: "clientSecret" | "managedIdentity";
 }
+
+export const SHAREPOINT_AUTH = ["clientSecret", "managedIdentity"] as const;
 
 export interface ExportConfig {
   outputDir: string;
@@ -117,12 +122,16 @@ export function buildConfig(raw: Record<string, unknown>, baseDir = process.cwd(
   if (raw.sharepoint !== undefined) {
     const sp = raw.sharepoint as Record<string, unknown>;
     if (!sp || typeof sp.siteUrl !== "string") throw new ConfigError("sharepoint.siteUrl is required when sharepoint is set.");
+    if (sp.auth !== undefined && !(SHAREPOINT_AUTH as readonly unknown[]).includes(sp.auth)) {
+      throw new ConfigError(`sharepoint.auth must be ${SHAREPOINT_AUTH.join(" or ")}.`);
+    }
     config.sharepoint = {
       siteUrl: sp.siteUrl,
       ...(typeof sp.library === "string" ? { library: sp.library } : {}),
       ...(typeof sp.folder === "string" ? { folder: sp.folder } : {}),
       ...(typeof sp.tenantId === "string" ? { tenantId: sp.tenantId } : {}),
       ...(typeof sp.clientId === "string" ? { clientId: sp.clientId } : {}),
+      ...(sp.auth === "managedIdentity" ? { auth: "managedIdentity" as const } : {}),
     };
   }
   if (config.detections.retentionDays < config.detections.trailingDays) {
@@ -135,6 +144,18 @@ export function buildConfig(raw: Record<string, unknown>, baseDir = process.cwd(
   return config;
 }
 
+/** Parses config JSON from a file or the environment. `source` names it in error messages. */
+export function parseConfigJson(text: string, source: string, baseDir: string): ExportConfig {
+  let raw: unknown;
+  try {
+    raw = JSON.parse(text);
+  } catch {
+    throw new ConfigError(`${source} is not valid JSON.`);
+  }
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) throw new ConfigError(`${source} must hold a JSON object.`);
+  return buildConfig(raw as Record<string, unknown>, baseDir);
+}
+
 export function loadConfig(path: string | undefined): ExportConfig {
   if (!path) return buildConfig({});
   let text: string;
@@ -143,12 +164,8 @@ export function loadConfig(path: string | undefined): ExportConfig {
   } catch {
     throw new ConfigError(`Can't read the config file ${path}.`);
   }
-  let raw: unknown;
-  try {
-    raw = JSON.parse(text);
-  } catch {
-    throw new ConfigError(`${path} is not valid JSON.`);
-  }
-  if (!raw || typeof raw !== "object" || Array.isArray(raw)) throw new ConfigError(`${path} must hold a JSON object.`);
-  return buildConfig(raw as Record<string, unknown>, resolve(path, ".."));
+  return parseConfigJson(text, path, resolve(path, ".."));
 }
+
+/** The variable that carries the config JSON when there is no config file, as in the Azure Container Apps job. */
+export const CONFIG_ENV = "FUSION_EXPORT_CONFIG_JSON";

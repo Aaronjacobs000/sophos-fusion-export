@@ -11,11 +11,18 @@
  * SOPHOS_CLIENT_SECRET, plus GRAPH_TENANT_ID, GRAPH_CLIENT_ID and
  * GRAPH_CLIENT_SECRET for the SharePoint upload. --env-file loads a file of
  * those into the environment first (it can be given more than once).
+ *
+ * In an Azure Container Apps job, SOPHOS_KEY_VAULT_URL reads the Sophos
+ * credential from Key Vault with the job's managed identity,
+ * FUSION_EXPORT_CONFIG_JSON carries the config, and sharepoint.auth
+ * "managedIdentity" uploads with the same identity. None of these is set
+ * unless you set it.
  */
 
 import { readFileSync, realpathSync } from "node:fs";
 import { pathToFileURL } from "node:url";
-import { buildConfig, ConfigError, loadConfig, type ExportConfig } from "./config.js";
+import { resolveSophosCredentials } from "./azure/managed-identity.js";
+import { buildConfig, CONFIG_ENV, ConfigError, loadConfig, parseConfigJson, type ExportConfig } from "./config.js";
 import { runDoctor } from "./doctor.js";
 import { runExport } from "./runner.js";
 import { dataDictionary } from "./schema/dictionary.js";
@@ -43,6 +50,13 @@ Options:
   --json              Machine readable output
   --quiet             Only print the summary
   --help, --version
+
+Environment:
+  SOPHOS_CLIENT_ID, SOPHOS_CLIENT_SECRET   The Sophos API credential
+  SOPHOS_KEY_VAULT_URL                     Read the credential from Key Vault with the Azure managed identity
+  GRAPH_TENANT_ID, GRAPH_CLIENT_ID, GRAPH_CLIENT_SECRET   SharePoint upload with an app secret
+  AZURE_CLIENT_ID                          The user-assigned managed identity to use
+  FUSION_EXPORT_CONFIG_JSON                The config as JSON, in place of --config
 `;
 
 interface Args {
@@ -93,8 +107,10 @@ export function parseArgs(argv: string[]): Args {
   return args;
 }
 
-function settings(args: Args): ExportConfig {
-  const base = args.config ? loadConfig(args.config) : buildConfig({});
+export function settings(args: Args, env: NodeJS.ProcessEnv = process.env): ExportConfig {
+  const fromEnv = env[CONFIG_ENV];
+  if (args.config && fromEnv) throw new ConfigError(`Use --config or ${CONFIG_ENV}, not both.`);
+  const base = args.config ? loadConfig(args.config) : fromEnv ? parseConfigJson(fromEnv, CONFIG_ENV, process.cwd()) : buildConfig({});
   const overrides: Partial<ExportConfig> = {};
   if (args.out) overrides.outputDir = buildConfig({ outputDir: args.out }).outputDir;
   if (args.timezone) overrides.reportTimezone = buildConfig({ reportTimezone: args.timezone }).reportTimezone;
@@ -104,11 +120,15 @@ function settings(args: Args): ExportConfig {
   return merged;
 }
 
-function sharepointConfig(config: ExportConfig): SharePointConfig | null {
+export function sharepointConfig(config: ExportConfig, env: NodeJS.ProcessEnv = process.env): SharePointConfig | null {
   if (!config.sharepoint) return null;
-  const tenantId = config.sharepoint.tenantId ?? process.env.GRAPH_TENANT_ID ?? "";
-  const clientId = config.sharepoint.clientId ?? process.env.GRAPH_CLIENT_ID ?? "";
-  const clientSecret = process.env.GRAPH_CLIENT_SECRET ?? "";
+  if (config.sharepoint.auth === "managedIdentity") {
+    const { tenantId: _tenant, clientId: _client, ...site } = config.sharepoint;
+    return { ...site, auth: "managedIdentity", ...(env.AZURE_CLIENT_ID ? { managedIdentityClientId: env.AZURE_CLIENT_ID } : {}) };
+  }
+  const tenantId = config.sharepoint.tenantId ?? env.GRAPH_TENANT_ID ?? "";
+  const clientId = config.sharepoint.clientId ?? env.GRAPH_CLIENT_ID ?? "";
+  const clientSecret = env.GRAPH_CLIENT_SECRET ?? "";
   if (!tenantId || !clientId || !clientSecret) {
     throw new ConfigError("SharePoint upload is configured but GRAPH_TENANT_ID, GRAPH_CLIENT_ID or GRAPH_CLIENT_SECRET is missing from the environment.");
   }
@@ -147,9 +167,10 @@ export async function main(argv: string[]): Promise<number> {
   try {
     for (const file of args.envFiles) process.loadEnvFile(file);
     const config = settings(args);
-    const credentials = { clientId: process.env.SOPHOS_CLIENT_ID ?? "", clientSecret: process.env.SOPHOS_CLIENT_SECRET ?? "" };
     const sharepoint = sharepointConfig(config);
     const log = args.quiet || args.json ? () => {} : (m: string) => console.log(m);
+    const { source, ...credentials } = await resolveSophosCredentials(process.env);
+    if (source === "key vault") log("Sophos credential read from Key Vault with the managed identity.");
 
     if (args.command === "doctor") {
       const report = await runDoctor({ config, credentials, sharepoint });

@@ -4,21 +4,28 @@
  * hosts that can't sync the library (a headless server, a container, a Mac
  * that doesn't sync that tenant).
  *
- * Auth is an Entra app registration with the client credentials flow. The
- * least privilege setup is Sites.Selected with write on the one site, granted
- * by an admin; README has the steps. Only files whose content changed since
- * the last upload are sent.
+ * Auth is an Entra app registration with the client credentials flow, or,
+ * in an Azure Container Apps job, the job's managed identity. The least
+ * privilege setup is Sites.Selected with write on the one site, granted by an
+ * admin; README has the steps. Only files whose content changed since the
+ * last upload are sent.
  *
  * Requests may go only to the Entra token endpoint, Microsoft Graph, and the
- * SharePoint upload session URLs Graph hands back, over https.
+ * SharePoint upload session URLs Graph hands back, over https, plus the local
+ * managed identity endpoint when that is the sign-in.
  */
 
 import { createHash } from "node:crypto";
+import { GRAPH_RESOURCE, ManagedIdentity, managedIdentityFromEnv, type TokenSource } from "../azure/managed-identity.js";
 
 export interface SharePointConfig {
-  tenantId: string;
-  clientId: string;
-  clientSecret: string;
+  /** clientSecret (default): an app registration and its secret. managedIdentity: the Azure host's managed identity. */
+  auth?: "clientSecret" | "managedIdentity";
+  tenantId?: string;
+  clientId?: string;
+  clientSecret?: string;
+  /** With managedIdentity: the client ID of a user-assigned identity. Empty means the system-assigned identity. */
+  managedIdentityClientId?: string;
   /** https://contoso.sharepoint.com/sites/reporting, or a OneDrive URL https://contoso-my.sharepoint.com/personal/user_contoso_com */
   siteUrl: string;
   /** Document library name. Default "Documents" (Shared Documents in the URL). */
@@ -85,13 +92,26 @@ export class SharePointSink {
   readonly calls: Array<{ method: string; path: string; status: number }> = [];
   private readonly fetchImpl: FetchFn;
 
+  private readonly identity: TokenSource | null;
+
   constructor(
     private readonly config: SharePointConfig,
-    fetchImpl?: FetchFn
+    fetchImpl?: FetchFn,
+    /** For the managedIdentity sign-in. Tests pass a fake; otherwise it comes from the environment. */
+    identity?: TokenSource
   ) {
-    for (const key of ["tenantId", "clientId", "clientSecret", "siteUrl"] as const) {
+    const keys = config.auth === "managedIdentity" ? (["siteUrl"] as const) : (["tenantId", "clientId", "clientSecret", "siteUrl"] as const);
+    for (const key of keys) {
       if (!config[key]) throw new SharePointError(`SharePoint upload needs ${key}.`);
     }
+    this.identity =
+      config.auth === "managedIdentity"
+        ? (identity ??
+          new ManagedIdentity({
+            ...managedIdentityFromEnv(),
+            ...(config.managedIdentityClientId ? { clientId: config.managedIdentityClientId } : {}),
+          }))
+        : null;
     const base = fetchImpl ?? ((input: string, init?: RequestInit) => globalThis.fetch(input, init));
     this.fetchImpl = async (input, init) => {
       assertGraphHost(input);
@@ -116,14 +136,15 @@ export class SharePointSink {
   }
 
   private async accessToken(): Promise<string> {
+    if (this.identity) return (await this.identity.token(GRAPH_RESOURCE)).value;
     if (this.token && Date.now() < this.token.expires - 60_000) return this.token.value;
     const body = new URLSearchParams({
       grant_type: "client_credentials",
-      client_id: this.config.clientId,
-      client_secret: this.config.clientSecret,
+      client_id: this.config.clientId ?? "",
+      client_secret: this.config.clientSecret ?? "",
       scope: "https://graph.microsoft.com/.default",
     });
-    const response = await this.send(`https://login.microsoftonline.com/${encodeURIComponent(this.config.tenantId)}/oauth2/v2.0/token`, {
+    const response = await this.send(`https://login.microsoftonline.com/${encodeURIComponent(this.config.tenantId ?? "")}/oauth2/v2.0/token`, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: body.toString(),
