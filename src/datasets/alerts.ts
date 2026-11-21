@@ -7,7 +7,7 @@
  */
 
 import type { Row } from "../store/csv.js";
-import { isoSeconds, localDate } from "../time.js";
+import { dateKey, isoSeconds, localDate } from "../time.js";
 import { store, type Dataset, type RunContext } from "./context.js";
 
 export const ALERT_PAGE_SIZE = 1000;
@@ -33,6 +33,7 @@ export function mapAlert(a: RawAlert, tenantId: string, timeZone: string, now: D
     alert_id: a.id,
     raised_at: isoSeconds(a.raisedAt),
     raised_local_date: localDate(a.raisedAt, timeZone),
+    raised_date_key: dateKey(localDate(a.raisedAt, timeZone)),
     severity: a.severity ?? null,
     category: a.category ?? null,
     product: a.product ?? null,

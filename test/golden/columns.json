@@ -49,9 +49,11 @@
     "assignee_id:string",
     "created_at:datetime",
     "created_local_date:date",
+    "created_date_key:integer",
     "updated_at:datetime",
     "closed_at:datetime",
     "closed_local_date:date",
+    "closed_date_key:integer",
     "archived_at:datetime",
     "minutes_to_close:integer",
     "age_days:number",
@@ -91,6 +93,7 @@
     "detection_id:string",
     "created_at:datetime",
     "created_local_date:date",
+    "created_date_key:integer",
     "first_seen_at:datetime",
     "severity:number",
     "severity_band:string",
@@ -145,6 +148,7 @@
   "fact_detection_daily": [
     "tenant_id:string",
     "local_date:date",
+    "date_key:integer",
     "severity_band:string",
     "severity_rank:integer",
     "detector_id:string",
@@ -154,6 +158,7 @@
   "fact_technique_daily": [
     "tenant_id:string",
     "local_date:date",
+    "date_key:integer",
     "technique_id:string",
     "tactic:string",
     "detections:integer"
@@ -161,6 +166,7 @@
   "fact_sensor_daily": [
     "tenant_id:string",
     "local_date:date",
+    "date_key:integer",
     "sensor_type:string",
     "detections:integer"
   ],
@@ -206,6 +212,7 @@
     "alert_id:string",
     "raised_at:datetime",
     "raised_local_date:date",
+    "raised_date_key:integer",
     "severity:string",
     "category:string",
     "product:string",

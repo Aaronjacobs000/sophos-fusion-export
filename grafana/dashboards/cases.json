@@ -1,0 +1,1433 @@
+{
+  "uid": "fusion-cases",
+  "title": "Fusion Export: Cases",
+  "description": "Case backlog, response times and outcomes.",
+  "tags": [
+    "fusion-export",
+    "unofficial"
+  ],
+  "editable": false,
+  "graphTooltip": 1,
+  "timezone": "browser",
+  "schemaVersion": 41,
+  "version": 1,
+  "refresh": "",
+  "time": {
+    "from": "now-30d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
+  "links": [
+    {
+      "title": "Fusion Export",
+      "type": "dashboards",
+      "tags": [
+        "fusion-export"
+      ],
+      "asDropdown": false,
+      "includeVars": false,
+      "keepTime": true,
+      "targetBlank": false
+    }
+  ],
+  "panels": [
+    {
+      "id": 1,
+      "type": "text",
+      "title": "",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 2
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "Unofficial: built on the CSV tables of the Unofficial Sophos Fusion Data Exporter, not a Sophos product. Dates are in the exporter's report time zone. Sophos sends no first response or SLA time, so response is measured as created to closed.",
+        "code": {
+          "language": "markdown",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        }
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Open cases",
+      "gridPos": {
+        "x": 0,
+        "y": 2,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_case.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "case_id",
+              "text": "case_id",
+              "type": "string"
+            },
+            {
+              "selector": "is_closed",
+              "text": "is_closed",
+              "type": "string"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "is_closed == 'false'",
+          "summarizeExpression": "count(case_id)",
+          "summarizeBy": "",
+          "summarizeAlias": ""
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "noValue": "0",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "orange"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Opened in range",
+      "gridPos": {
+        "x": 4,
+        "y": 2,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_case.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "case_id",
+              "text": "case_id",
+              "type": "string"
+            },
+            {
+              "selector": "created_date_key",
+              "text": "created_date_key",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "(created_date_key ?? 0) >= ${__from:date:YYYYMMDD} && (created_date_key ?? 0) <= ${__to:date:YYYYMMDD}",
+          "summarizeExpression": "count(case_id)",
+          "summarizeBy": "",
+          "summarizeAlias": ""
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "noValue": "0",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Closed in range",
+      "gridPos": {
+        "x": 8,
+        "y": 2,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_case.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "case_id",
+              "text": "case_id",
+              "type": "string"
+            },
+            {
+              "selector": "closed_date_key",
+              "text": "closed_date_key",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "(closed_date_key ?? 0) >= ${__from:date:YYYYMMDD} && (closed_date_key ?? 0) <= ${__to:date:YYYYMMDD}",
+          "summarizeExpression": "count(case_id)",
+          "summarizeBy": "",
+          "summarizeAlias": ""
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "noValue": "0",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Mean time to close",
+      "gridPos": {
+        "x": 12,
+        "y": 2,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_case.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "closed_date_key",
+              "text": "closed_date_key",
+              "type": "number"
+            },
+            {
+              "selector": "minutes_to_close",
+              "text": "minutes_to_close",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [
+            {
+              "selector": "minutes_to_close / 60",
+              "text": "hours",
+              "type": "number"
+            }
+          ],
+          "filterExpression": "(closed_date_key ?? 0) >= ${__from:date:YYYYMMDD} && (closed_date_key ?? 0) <= ${__to:date:YYYYMMDD}",
+          "summarizeExpression": "mean(hours)",
+          "summarizeBy": "",
+          "summarizeAlias": ""
+        }
+      ],
+      "description": "Cases closed in the time range, created to closed.",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "h",
+          "decimals": 1,
+          "noValue": "0",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Mean open case age",
+      "gridPos": {
+        "x": 16,
+        "y": 2,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_case.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "is_closed",
+              "text": "is_closed",
+              "type": "string"
+            },
+            {
+              "selector": "age_days",
+              "text": "age_days",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "is_closed == 'false'",
+          "summarizeExpression": "mean(age_days)",
+          "summarizeBy": "",
+          "summarizeAlias": ""
+        }
+      ],
+      "description": "Days since creation, as of the last export.",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "d",
+          "decimals": 1,
+          "noValue": "0",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "orange"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 7,
+      "type": "stat",
+      "title": "Provider managed",
+      "gridPos": {
+        "x": 20,
+        "y": 2,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_case.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "case_id",
+              "text": "case_id",
+              "type": "string"
+            },
+            {
+              "selector": "is_closed",
+              "text": "is_closed",
+              "type": "string"
+            },
+            {
+              "selector": "managed_by",
+              "text": "managed_by",
+              "type": "string"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "is_closed == 'false' && managed_by == 'PROVIDER'",
+          "summarizeExpression": "count(case_id)",
+          "summarizeBy": "",
+          "summarizeAlias": ""
+        }
+      ],
+      "description": "Open cases Sophos MDR or the partner manages.",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "noValue": "0",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "purple"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Cases opened per day by severity",
+      "gridPos": {
+        "x": 0,
+        "y": 6,
+        "w": 16,
+        "h": 8
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_case.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "created_local_date",
+              "text": "created_local_date",
+              "type": "string"
+            },
+            {
+              "selector": "severity_label",
+              "text": "severity_label",
+              "type": "string"
+            },
+            {
+              "selector": "case_id",
+              "text": "case_id",
+              "type": "string"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "",
+          "summarizeExpression": "",
+          "summarizeBy": "",
+          "summarizeAlias": ""
+        }
+      ],
+      "transformations": [
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "created_local_date": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "severity_label": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "case_id": {
+                "aggregations": [
+                  "count"
+                ],
+                "operation": "aggregate"
+              }
+            }
+          }
+        },
+        {
+          "id": "groupingToMatrix",
+          "options": {
+            "columnField": "severity_label",
+            "rowField": "created_local_date",
+            "valueField": "case_id (count)",
+            "emptyValue": "zero"
+          }
+        },
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "created_local_date\\severity_label",
+                "destinationType": "time",
+                "dateFormat": "YYYY-MM-DD"
+              }
+            ],
+            "fields": {}
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "created_local_date\\severity_label"
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {
+              "created_local_date\\severity_label": 0,
+              "Critical": 1,
+              "High": 2,
+              "Medium": 3,
+              "Low": 4,
+              "Informational": 5,
+              "Not set": 6
+            },
+            "renameByName": {}
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 85,
+            "lineWidth": 1,
+            "barAlignment": 0,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            },
+            "showPoints": "never",
+            "axisSoftMin": 0
+          },
+          "unit": "none",
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Critical"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "dark-red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "High"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Medium"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Low"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "yellow"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Informational"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "blue"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Not set"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "text"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "id": 9,
+      "type": "barchart",
+      "title": "Open cases by status",
+      "gridPos": {
+        "x": 16,
+        "y": 6,
+        "w": 8,
+        "h": 8
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_case.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "primary_status",
+              "text": "primary_status",
+              "type": "string"
+            },
+            {
+              "selector": "case_id",
+              "text": "case_id",
+              "type": "string"
+            },
+            {
+              "selector": "is_closed",
+              "text": "is_closed",
+              "type": "string"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "is_closed == 'false'",
+          "summarizeExpression": "count(case_id)",
+          "summarizeBy": "primary_status",
+          "summarizeAlias": "cases"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "cases",
+                "desc": true
+              }
+            ]
+          }
+        }
+      ],
+      "options": {
+        "orientation": "horizontal",
+        "xField": "primary_status",
+        "showValue": "always",
+        "groupWidth": 0.7,
+        "barWidth": 0.8,
+        "stacking": "none",
+        "legend": {
+          "showLegend": false,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelMaxLength": 40
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "orange"
+          },
+          "custom": {
+            "fillOpacity": 85,
+            "lineWidth": 0,
+            "axisSoftMin": 0
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 10,
+      "type": "table",
+      "title": "Mean hours to close by severity",
+      "gridPos": {
+        "x": 0,
+        "y": 14,
+        "w": 8,
+        "h": 8
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_case.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "severity_label",
+              "text": "severity_label",
+              "type": "string"
+            },
+            {
+              "selector": "closed_date_key",
+              "text": "closed_date_key",
+              "type": "number"
+            },
+            {
+              "selector": "minutes_to_close",
+              "text": "minutes_to_close",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [
+            {
+              "selector": "minutes_to_close / 60",
+              "text": "hours",
+              "type": "number"
+            }
+          ],
+          "filterExpression": "(closed_date_key ?? 0) >= ${__from:date:YYYYMMDD} && (closed_date_key ?? 0) <= ${__to:date:YYYYMMDD}",
+          "summarizeExpression": "mean(hours)",
+          "summarizeBy": "severity_label",
+          "summarizeAlias": "mean_hours"
+        }
+      ],
+      "description": "Cases closed in the time range, created to closed.",
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "mean_hours",
+                "desc": true
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "severity_label": "Severity",
+              "mean_hours": "Mean hours to close"
+            }
+          }
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": ""
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 1,
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 11,
+      "type": "barchart",
+      "title": "Verdicts of cases closed in range",
+      "gridPos": {
+        "x": 8,
+        "y": 14,
+        "w": 8,
+        "h": 8
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_case.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "primary_verdict",
+              "text": "primary_verdict",
+              "type": "string"
+            },
+            {
+              "selector": "case_id",
+              "text": "case_id",
+              "type": "string"
+            },
+            {
+              "selector": "closed_date_key",
+              "text": "closed_date_key",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "(closed_date_key ?? 0) >= ${__from:date:YYYYMMDD} && (closed_date_key ?? 0) <= ${__to:date:YYYYMMDD} && primary_verdict != ''",
+          "summarizeExpression": "count(case_id)",
+          "summarizeBy": "primary_verdict",
+          "summarizeAlias": "cases"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "cases",
+                "desc": true
+              }
+            ]
+          }
+        }
+      ],
+      "options": {
+        "orientation": "horizontal",
+        "xField": "primary_verdict",
+        "showValue": "always",
+        "groupWidth": 0.7,
+        "barWidth": 0.8,
+        "stacking": "none",
+        "legend": {
+          "showLegend": false,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelMaxLength": 40
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          },
+          "custom": {
+            "fillOpacity": 85,
+            "lineWidth": 0,
+            "axisSoftMin": 0
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 12,
+      "type": "piechart",
+      "title": "Cases opened by type",
+      "gridPos": {
+        "x": 16,
+        "y": 14,
+        "w": 8,
+        "h": 8
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_case.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "case_type",
+              "text": "case_type",
+              "type": "string"
+            },
+            {
+              "selector": "case_id",
+              "text": "case_id",
+              "type": "string"
+            },
+            {
+              "selector": "created_date_key",
+              "text": "created_date_key",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "(created_date_key ?? 0) >= ${__from:date:YYYYMMDD} && (created_date_key ?? 0) <= ${__to:date:YYYYMMDD}",
+          "summarizeExpression": "count(case_id)",
+          "summarizeBy": "case_type",
+          "summarizeAlias": "cases"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": true,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "pieType": "donut",
+        "displayLabels": [],
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "values": [
+            "value",
+            "percent"
+          ]
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 13,
+      "type": "table",
+      "title": "Open cases, highest severity first",
+      "gridPos": {
+        "x": 0,
+        "y": 22,
+        "w": 24,
+        "h": 10
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_case.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "short_id",
+              "text": "short_id",
+              "type": "string"
+            },
+            {
+              "selector": "severity",
+              "text": "severity",
+              "type": "number"
+            },
+            {
+              "selector": "severity_label",
+              "text": "severity_label",
+              "type": "string"
+            },
+            {
+              "selector": "case_type",
+              "text": "case_type",
+              "type": "string"
+            },
+            {
+              "selector": "primary_status",
+              "text": "primary_status",
+              "type": "string"
+            },
+            {
+              "selector": "managed_by",
+              "text": "managed_by",
+              "type": "string"
+            },
+            {
+              "selector": "created_local_date",
+              "text": "created_local_date",
+              "type": "string"
+            },
+            {
+              "selector": "age_days",
+              "text": "age_days",
+              "type": "number"
+            },
+            {
+              "selector": "detections_count",
+              "text": "detections_count",
+              "type": "number"
+            },
+            {
+              "selector": "is_closed",
+              "text": "is_closed",
+              "type": "string"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "is_closed == 'false'",
+          "summarizeExpression": "",
+          "summarizeBy": "",
+          "summarizeAlias": ""
+        }
+      ],
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "severity",
+                "desc": true
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "is_closed": true,
+              "severity": true
+            },
+            "indexByName": {
+              "short_id": 0,
+              "severity_label": 1,
+              "case_type": 2,
+              "primary_status": 3,
+              "managed_by": 4,
+              "created_local_date": 5,
+              "age_days": 6,
+              "detections_count": 7
+            },
+            "renameByName": {
+              "short_id": "Case",
+              "severity_label": "Severity",
+              "case_type": "Type",
+              "primary_status": "Status",
+              "managed_by": "Managed by",
+              "created_local_date": "Created",
+              "age_days": "Age (days)",
+              "detections_count": "Detections"
+            }
+          }
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": ""
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          }
+        },
+        "overrides": []
+      }
+    }
+  ]
+}

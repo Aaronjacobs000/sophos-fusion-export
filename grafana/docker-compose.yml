@@ -1,0 +1,47 @@
+# Grafana with the Fusion Export dashboards, reading a folder the exporter writes.
+#
+#   export FUSION_EXPORT_DIR=/path/to/export          # the exporter's outputDir
+#   export GRAFANA_ADMIN_PASSWORD='choose-a-long-one'
+#   docker compose -f grafana/docker-compose.yml up -d
+#
+# Then open http://localhost:3000. The CSV server has no published port: only
+# Grafana can reach it, on the compose network. To let others view without an
+# account, set GF_AUTH_ANONYMOUS_ENABLED to "true" (viewers only).
+services:
+  csv:
+    image: node:22.23.4-alpine
+    command: ["node", "/srv/csv-server.mjs", "--dir", "/data", "--host", "0.0.0.0", "--port", "3301"]
+    volumes:
+      - ${FUSION_EXPORT_DIR:?set FUSION_EXPORT_DIR to the exporter's output folder}:/data:ro
+      - ./csv-server.mjs:/srv/csv-server.mjs:ro
+    read_only: true
+    user: "node"
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:13.3.1
+    depends_on: [csv]
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?set GRAFANA_ADMIN_PASSWORD}
+      GF_PLUGINS_PREINSTALL_SYNC: yesoreyeram-infinity-datasource@4.1.5
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_NEWS_NEWS_FEED_ENABLED: "false"
+      GF_SECURITY_DISABLE_GRAVATAR: "true"
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/fusion-export/overview.json
+      FUSION_EXPORT_CSV_URL: http://csv:3301
+      FUSION_EXPORT_DASHBOARDS: /var/lib/grafana/dashboards/fusion-export
+    volumes:
+      - ./provisioning:/etc/grafana/provisioning:ro
+      - ./dashboards:/var/lib/grafana/dashboards/fusion-export:ro
+      - grafana-data:/var/lib/grafana
+    restart: unless-stopped
+
+volumes:
+  grafana-data:

@@ -9,7 +9,7 @@
  *   - tenant_id (the Sophos Central tenant ID) is the first column of every row,
  *     so a partner model can roll tenants up and apply row-level security;
  *   - timestamps are UTC ISO 8601 with Z; *_local_date columns are the date in
- *     the configured report time zone;
+ *     the configured report time zone, and *_date_key the same date as YYYYMMDD;
  *   - a minor schema version only adds columns, at the end.
  */
 
@@ -120,9 +120,11 @@ export const TABLES: readonly TableDef[] = [
       col("assignee_id", "string", "ID of the assigned user, client or group, or a mention such as @sophos."),
       col("created_at", "datetime", "When the case was created."),
       col("created_local_date", "date", "created_at as a date in the report time zone."),
+      col("created_date_key", "integer", "created_local_date as a number, YYYYMMDD, for tools that filter dates numerically."),
       col("updated_at", "datetime", "When the case last changed."),
       col("closed_at", "datetime", "When the case was closed. Empty while open."),
       col("closed_local_date", "date", "closed_at as a date in the report time zone."),
+      col("closed_date_key", "integer", "closed_local_date as a number, YYYYMMDD."),
       col("archived_at", "datetime", "When the case was archived, if it was."),
       col("minutes_to_close", "integer", "closed_at minus created_at in minutes. Empty while open."),
       col("age_days", "number", "Days from created_at to closed_at, or to the export time while open."),
@@ -178,6 +180,7 @@ export const TABLES: readonly TableDef[] = [
       col("detection_id", "string", "Detection resource name (alert://...)."),
       col("created_at", "datetime", "When the detection was created."),
       col("created_local_date", "date", "created_at as a date in the report time zone."),
+      col("created_date_key", "integer", "created_local_date as a number, YYYYMMDD, for tools that filter dates numerically."),
       col("first_seen_at", "datetime", "When the activity was first seen, when Sophos says."),
       col("severity", "number", "Severity score, 0 to 1."),
       col("severity_band", "string", "Critical (0.8 and up), High (0.6), Medium (0.4), Low (0.2) or Info."),
@@ -260,6 +263,7 @@ export const TABLES: readonly TableDef[] = [
     columns: [
       tenant,
       col("local_date", "date", "Day in the report time zone."),
+      col("date_key", "integer", "local_date as a number, YYYYMMDD, for tools that filter dates numerically."),
       col("severity_band", "string", "Critical, High, Medium, Low or Info."),
       col("severity_rank", "integer", "5 Critical down to 1 Info."),
       col("detector_id", "string", "Detector ID."),
@@ -276,6 +280,7 @@ export const TABLES: readonly TableDef[] = [
     columns: [
       tenant,
       col("local_date", "date", "Day in the report time zone."),
+      col("date_key", "integer", "local_date as a number, YYYYMMDD, for tools that filter dates numerically."),
       col("technique_id", "string", "ATT&CK technique ID."),
       col("tactic", "string", "ATT&CK tactic short name; empty when no enrichment gives one."),
       col("detections", "integer", "Detections created that day naming the technique."),
@@ -290,6 +295,7 @@ export const TABLES: readonly TableDef[] = [
     columns: [
       tenant,
       col("local_date", "date", "Day in the report time zone."),
+      col("date_key", "integer", "local_date as a number, YYYYMMDD, for tools that filter dates numerically."),
       col("sensor_type", "string", "Sensor type code (dim_sensor_type)."),
       col("detections", "integer", "Detections created that day with this sensor type."),
     ],
@@ -356,6 +362,7 @@ export const TABLES: readonly TableDef[] = [
       col("alert_id", "string", "Alert ID."),
       col("raised_at", "datetime", "When the alert was raised."),
       col("raised_local_date", "date", "raised_at as a date in the report time zone."),
+      col("raised_date_key", "integer", "raised_local_date as a number, YYYYMMDD."),
       col("severity", "string", "high, medium or low."),
       col("category", "string", "Alert category, for example malware or wireless."),
       col("product", "string", "Product that raised the alert."),

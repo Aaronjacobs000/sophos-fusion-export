@@ -16,7 +16,7 @@
 
 import { DETECTION_COUNT, DETECTION_SEARCH } from "../sophos/documents.js";
 import type { Row } from "../store/csv.js";
-import { isoSeconds, localDate, localDaysAgo, startOfLocalDay } from "../time.js";
+import { dateKey, isoSeconds, localDate, localDaysAgo, startOfLocalDay } from "../time.js";
 import { store, type Dataset, type RunContext } from "./context.js";
 import { sensorLabel } from "./sensor-labels.js";
 
@@ -119,6 +119,7 @@ export function mapDetection(d: FusionDetection, tenantId: string, timeZone: str
       detection_id: d.id,
       created_at: createdSeconds === null ? null : isoSeconds(createdSeconds),
       created_local_date: createdSeconds === null ? null : localDate(createdSeconds, timeZone),
+      created_date_key: createdSeconds === null ? null : dateKey(localDate(createdSeconds, timeZone)),
       first_seen_at: firstSeen === null ? null : isoSeconds(firstSeen),
       severity: finite(meta.severity),
       severity_band: band,
@@ -154,6 +155,7 @@ export function dailyCounts(rows: Iterable<Row>, tenantId: string): Row[] {
     const row = counts.get(key) ?? {
       tenant_id: tenantId,
       local_date: r.created_local_date,
+      date_key: r.created_date_key,
       severity_band: r.severity_band,
       severity_rank: r.severity_rank,
       detector_id: detector || null,
@@ -176,13 +178,13 @@ export function breakdownCounts(mapped: readonly MappedDetection[], tenantId: st
     if (!day) continue;
     for (const t of m.techniques) {
       const key = `${day}\u0001${t.technique_id}\u0001${t.tactic}`;
-      const row = techniques.get(key) ?? { tenant_id: tenantId, local_date: day, technique_id: t.technique_id, tactic: t.tactic, detections: 0 };
+      const row = techniques.get(key) ?? { tenant_id: tenantId, local_date: day, date_key: m.detection.created_date_key, technique_id: t.technique_id, tactic: t.tactic, detections: 0 };
       row.detections = Number(row.detections) + 1;
       techniques.set(key, row);
     }
     for (const s of m.sensors) {
       const key = `${day}\u0001${s.sensor_type}`;
-      const row = sensors.get(key) ?? { tenant_id: tenantId, local_date: day, sensor_type: s.sensor_type, detections: 0 };
+      const row = sensors.get(key) ?? { tenant_id: tenantId, local_date: day, date_key: m.detection.created_date_key, sensor_type: s.sensor_type, detections: 0 };
       row.detections = Number(row.detections) + 1;
       sensors.set(key, row);
     }

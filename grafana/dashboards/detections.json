@@ -1,0 +1,1229 @@
+{
+  "uid": "fusion-detections",
+  "title": "Fusion Export: Detections and ATT&CK",
+  "description": "Detection volume, detectors, MITRE ATT&CK tactics and techniques, and sources.",
+  "tags": [
+    "fusion-export",
+    "unofficial"
+  ],
+  "editable": false,
+  "graphTooltip": 1,
+  "timezone": "browser",
+  "schemaVersion": 41,
+  "version": 1,
+  "refresh": "",
+  "time": {
+    "from": "now-30d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
+  "links": [
+    {
+      "title": "Fusion Export",
+      "type": "dashboards",
+      "tags": [
+        "fusion-export"
+      ],
+      "asDropdown": false,
+      "includeVars": false,
+      "keepTime": true,
+      "targetBlank": false
+    }
+  ],
+  "panels": [
+    {
+      "id": 1,
+      "type": "text",
+      "title": "",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 2
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "Unofficial: built on the CSV tables of the Unofficial Sophos Fusion Data Exporter, not a Sophos product. Dates are in the exporter's report time zone. Detection detail is kept for 90 days by default; these panels use the daily counts, which the exporter keeps for good.",
+        "code": {
+          "language": "markdown",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        }
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Detections",
+      "gridPos": {
+        "x": 0,
+        "y": 2,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_detection_daily.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "date_key",
+              "text": "date_key",
+              "type": "number"
+            },
+            {
+              "selector": "detections",
+              "text": "detections",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "(date_key ?? 0) >= ${__from:date:YYYYMMDD} && (date_key ?? 0) <= ${__to:date:YYYYMMDD}",
+          "summarizeExpression": "sum(detections)",
+          "summarizeBy": "",
+          "summarizeAlias": ""
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "noValue": "0",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "High and critical",
+      "gridPos": {
+        "x": 6,
+        "y": 2,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_detection_daily.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "date_key",
+              "text": "date_key",
+              "type": "number"
+            },
+            {
+              "selector": "severity_rank",
+              "text": "severity_rank",
+              "type": "number"
+            },
+            {
+              "selector": "detections",
+              "text": "detections",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "(date_key ?? 0) >= ${__from:date:YYYYMMDD} && (date_key ?? 0) <= ${__to:date:YYYYMMDD} && severity_rank >= 4",
+          "summarizeExpression": "sum(detections)",
+          "summarizeBy": "",
+          "summarizeAlias": ""
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "noValue": "0",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "red"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Still open",
+      "gridPos": {
+        "x": 12,
+        "y": 2,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_detection_daily.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "date_key",
+              "text": "date_key",
+              "type": "number"
+            },
+            {
+              "selector": "open_detections",
+              "text": "open_detections",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "(date_key ?? 0) >= ${__from:date:YYYYMMDD} && (date_key ?? 0) <= ${__to:date:YYYYMMDD}",
+          "summarizeExpression": "sum(open_detections)",
+          "summarizeBy": "",
+          "summarizeAlias": ""
+        }
+      ],
+      "description": "Detections from the range still OPEN at the last export.",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "noValue": "0",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "orange"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Techniques seen",
+      "gridPos": {
+        "x": 18,
+        "y": 2,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_technique_daily.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "date_key",
+              "text": "date_key",
+              "type": "number"
+            },
+            {
+              "selector": "technique_id",
+              "text": "technique_id",
+              "type": "string"
+            },
+            {
+              "selector": "detections",
+              "text": "detections",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "(date_key ?? 0) >= ${__from:date:YYYYMMDD} && (date_key ?? 0) <= ${__to:date:YYYYMMDD}",
+          "summarizeExpression": "sum(detections)",
+          "summarizeBy": "technique_id",
+          "summarizeAlias": ""
+        }
+      ],
+      "description": "Distinct ATT&CK techniques named in the range.",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "count"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "noValue": "0",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "purple"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Detections per day by severity",
+      "gridPos": {
+        "x": 0,
+        "y": 6,
+        "w": 24,
+        "h": 9
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_detection_daily.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "local_date",
+              "text": "local_date",
+              "type": "string"
+            },
+            {
+              "selector": "severity_band",
+              "text": "severity_band",
+              "type": "string"
+            },
+            {
+              "selector": "detections",
+              "text": "detections",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "",
+          "summarizeExpression": "",
+          "summarizeBy": "",
+          "summarizeAlias": ""
+        }
+      ],
+      "transformations": [
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "local_date": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "severity_band": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "detections": {
+                "aggregations": [
+                  "sum"
+                ],
+                "operation": "aggregate"
+              }
+            }
+          }
+        },
+        {
+          "id": "groupingToMatrix",
+          "options": {
+            "columnField": "severity_band",
+            "rowField": "local_date",
+            "valueField": "detections (sum)",
+            "emptyValue": "zero"
+          }
+        },
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "local_date\\severity_band",
+                "destinationType": "time",
+                "dateFormat": "YYYY-MM-DD"
+              }
+            ],
+            "fields": {}
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "local_date\\severity_band"
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {
+              "local_date\\severity_band": 0,
+              "Critical": 1,
+              "High": 2,
+              "Medium": 3,
+              "Low": 4,
+              "Info": 5
+            },
+            "renameByName": {}
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 85,
+            "lineWidth": 1,
+            "barAlignment": 0,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            },
+            "showPoints": "never",
+            "axisSoftMin": 0
+          },
+          "unit": "none",
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Critical"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "dark-red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "High"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Medium"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Low"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "yellow"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Info"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "blue"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "id": 7,
+      "type": "barchart",
+      "title": "Top detectors",
+      "gridPos": {
+        "x": 0,
+        "y": 15,
+        "w": 12,
+        "h": 9
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_detection_daily.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "detector_id",
+              "text": "detector_id",
+              "type": "string"
+            },
+            {
+              "selector": "date_key",
+              "text": "date_key",
+              "type": "number"
+            },
+            {
+              "selector": "detections",
+              "text": "detections",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "(date_key ?? 0) >= ${__from:date:YYYYMMDD} && (date_key ?? 0) <= ${__to:date:YYYYMMDD}",
+          "summarizeExpression": "sum(detections)",
+          "summarizeBy": "detector_id",
+          "summarizeAlias": "detections"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/dim_detector.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "detector_id",
+              "text": "detector_id",
+              "type": "string"
+            },
+            {
+              "selector": "detector_name",
+              "text": "detector_name",
+              "type": "string"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "",
+          "summarizeExpression": "",
+          "summarizeBy": "",
+          "summarizeAlias": ""
+        }
+      ],
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "detector_id",
+            "mode": "inner"
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "detections",
+                "desc": true
+              }
+            ]
+          }
+        },
+        {
+          "id": "limit",
+          "options": {
+            "limitField": 10
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "detector_id": true
+            },
+            "indexByName": {
+              "detector_name": 0,
+              "detections": 1
+            },
+            "renameByName": {}
+          }
+        }
+      ],
+      "options": {
+        "orientation": "horizontal",
+        "xField": "detector_name",
+        "showValue": "always",
+        "groupWidth": 0.7,
+        "barWidth": 0.8,
+        "stacking": "none",
+        "legend": {
+          "showLegend": false,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelMaxLength": 40
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "custom": {
+            "fillOpacity": 85,
+            "lineWidth": 0,
+            "axisSoftMin": 0
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 8,
+      "type": "barchart",
+      "title": "Detections by ATT&CK tactic",
+      "gridPos": {
+        "x": 12,
+        "y": 15,
+        "w": 12,
+        "h": 9
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_technique_daily.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "tactic",
+              "text": "tactic",
+              "type": "string"
+            },
+            {
+              "selector": "date_key",
+              "text": "date_key",
+              "type": "number"
+            },
+            {
+              "selector": "detections",
+              "text": "detections",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "(date_key ?? 0) >= ${__from:date:YYYYMMDD} && (date_key ?? 0) <= ${__to:date:YYYYMMDD} && tactic != ''",
+          "summarizeExpression": "sum(detections)",
+          "summarizeBy": "tactic",
+          "summarizeAlias": "detections"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "detections",
+                "desc": true
+              }
+            ]
+          }
+        }
+      ],
+      "options": {
+        "orientation": "horizontal",
+        "xField": "tactic",
+        "showValue": "always",
+        "groupWidth": 0.7,
+        "barWidth": 0.8,
+        "stacking": "none",
+        "legend": {
+          "showLegend": false,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelMaxLength": 40
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "purple"
+          },
+          "custom": {
+            "fillOpacity": 85,
+            "lineWidth": 0,
+            "axisSoftMin": 0
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 9,
+      "type": "table",
+      "title": "Top ATT&CK techniques",
+      "gridPos": {
+        "x": 0,
+        "y": 24,
+        "w": 12,
+        "h": 10
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_technique_daily.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "technique_id",
+              "text": "technique_id",
+              "type": "string"
+            },
+            {
+              "selector": "date_key",
+              "text": "date_key",
+              "type": "number"
+            },
+            {
+              "selector": "detections",
+              "text": "detections",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "(date_key ?? 0) >= ${__from:date:YYYYMMDD} && (date_key ?? 0) <= ${__to:date:YYYYMMDD}",
+          "summarizeExpression": "sum(detections)",
+          "summarizeBy": "technique_id",
+          "summarizeAlias": "detections"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "detections",
+                "desc": true
+              }
+            ]
+          }
+        },
+        {
+          "id": "limit",
+          "options": {
+            "limitField": 15
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "technique_id": "Technique",
+              "detections": "Detections"
+            }
+          }
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": ""
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 10,
+      "type": "barchart",
+      "title": "Detections by source",
+      "gridPos": {
+        "x": 12,
+        "y": 24,
+        "w": 12,
+        "h": 10
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_sensor_daily.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "sensor_type",
+              "text": "sensor_type",
+              "type": "string"
+            },
+            {
+              "selector": "date_key",
+              "text": "date_key",
+              "type": "number"
+            },
+            {
+              "selector": "detections",
+              "text": "detections",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "(date_key ?? 0) >= ${__from:date:YYYYMMDD} && (date_key ?? 0) <= ${__to:date:YYYYMMDD}",
+          "summarizeExpression": "sum(detections)",
+          "summarizeBy": "sensor_type",
+          "summarizeAlias": "detections"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/dim_sensor_type.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "sensor_type",
+              "text": "sensor_type",
+              "type": "string"
+            },
+            {
+              "selector": "label",
+              "text": "label",
+              "type": "string"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "",
+          "summarizeExpression": "",
+          "summarizeBy": "",
+          "summarizeAlias": ""
+        }
+      ],
+      "description": "Sensor types that contributed, by readable name. A detection with two sources counts for both.",
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "sensor_type",
+            "mode": "inner"
+          }
+        },
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "label": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "detections": {
+                "aggregations": [
+                  "sum"
+                ],
+                "operation": "aggregate"
+              }
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "detections (sum)",
+                "desc": true
+              }
+            ]
+          }
+        },
+        {
+          "id": "limit",
+          "options": {
+            "limitField": 12
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "detections (sum)": "detections"
+            }
+          }
+        }
+      ],
+      "options": {
+        "orientation": "horizontal",
+        "xField": "label",
+        "showValue": "always",
+        "groupWidth": 0.7,
+        "barWidth": 0.8,
+        "stacking": "none",
+        "legend": {
+          "showLegend": false,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelMaxLength": 40
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          },
+          "custom": {
+            "fillOpacity": 85,
+            "lineWidth": 0,
+            "axisSoftMin": 0
+          }
+        },
+        "overrides": []
+      }
+    }
+  ]
+}

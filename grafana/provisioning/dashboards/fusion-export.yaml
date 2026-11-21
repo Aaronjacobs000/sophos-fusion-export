@@ -1,0 +1,14 @@
+# The Fusion Export dashboards, read from FUSION_EXPORT_DASHBOARDS (the
+# grafana/dashboards folder of this repository, or a copy of it).
+apiVersion: 1
+providers:
+  - name: Fusion Export
+    folder: Fusion Export
+    folderUid: fusion-export
+    type: file
+    disableDeletion: true
+    allowUiUpdates: false
+    updateIntervalSeconds: 30
+    options:
+      path: ${FUSION_EXPORT_DASHBOARDS}
+      foldersFromFilesStructure: false

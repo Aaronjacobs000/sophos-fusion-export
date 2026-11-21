@@ -67,6 +67,11 @@ export function localDate(value: unknown, timeZone: string): string | null {
   return `${String(p.year).padStart(4, "0")}-${String(p.month).padStart(2, "0")}-${String(p.day).padStart(2, "0")}`;
 }
 
+/** A YYYY-MM-DD date as the number YYYYMMDD, or null. */
+export function dateKey(day: string | null | undefined): number | null {
+  return day && /^\d{4}-\d{2}-\d{2}$/.test(day) ? Number(day.replace(/-/g, "")) : null;
+}
+
 /** Offset of the zone from UTC at an instant, in milliseconds. */
 function offsetMs(at: number, timeZone: string): number {
   const p = parts(new Date(at), timeZone);

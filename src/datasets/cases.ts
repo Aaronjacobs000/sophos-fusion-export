@@ -14,7 +14,7 @@
 import { CASE_REFERENCE_DATA, CASES_PAGE } from "../sophos/documents.js";
 import { isForbidden, isNotOnFusion } from "../sophos/session.js";
 import type { Row } from "../store/csv.js";
-import { daysBetween, isoSeconds, localDate, toDate } from "../time.js";
+import { dateKey, daysBetween, isoSeconds, localDate, toDate } from "../time.js";
 import { store, type Dataset, type RunContext } from "./context.js";
 
 /** Cases per page: the most Cases v2 serves. */
@@ -103,9 +103,11 @@ export function mapFusionCase(c: FusionCase, tenantId: string, timeZone: string,
     assignee_id: c.assigneeId ?? null,
     created_at: isoSeconds(c.createdAt),
     created_local_date: localDate(c.createdAt, timeZone),
+    created_date_key: dateKey(localDate(c.createdAt, timeZone)),
     updated_at: isoSeconds(c.updatedAt),
     closed_at: isoSeconds(c.closedAt),
     closed_local_date: localDate(c.closedAt, timeZone),
+    closed_date_key: dateKey(localDate(c.closedAt, timeZone)),
     archived_at: isoSeconds(c.archivedAt),
     minutes_to_close: minutes,
     age_days: ageDays,
@@ -183,9 +185,11 @@ export function mapLegacyCase(c: LegacyCase, tenantId: string, timeZone: string,
     assignee_id: c.assignee?.id ?? null,
     created_at: isoSeconds(c.createdAt),
     created_local_date: localDate(c.createdAt, timeZone),
+    created_date_key: dateKey(localDate(c.createdAt, timeZone)),
     updated_at: isoSeconds(c.updatedAt ?? c.createdAt),
     closed_at: isoSeconds(closedAt),
     closed_local_date: localDate(closedAt, timeZone),
+    closed_date_key: dateKey(localDate(closedAt, timeZone)),
     archived_at: null,
     minutes_to_close: minutes,
     age_days: ageDays,

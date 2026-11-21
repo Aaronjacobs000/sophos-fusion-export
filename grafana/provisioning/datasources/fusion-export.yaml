@@ -1,0 +1,18 @@
+# The exporter's CSV folder as a Grafana data source, through the Infinity
+# plugin (yesoreyeram-infinity-datasource). FUSION_EXPORT_CSV_URL is the base
+# URL of a server that serves the folder's table files, for example the
+# read-only grafana/csv-server.mjs on http://127.0.0.1:3301. Panels ask for
+# a file by name, such as /fact_case.csv.
+apiVersion: 1
+datasources:
+  - name: Fusion Export CSV
+    uid: fusion-export-csv
+    type: yesoreyeram-infinity-datasource
+    access: proxy
+    url: ${FUSION_EXPORT_CSV_URL}
+    isDefault: true
+    editable: false
+    jsonData:
+      allowedHosts:
+        - ${FUSION_EXPORT_CSV_URL}
+      timeoutInSeconds: 60

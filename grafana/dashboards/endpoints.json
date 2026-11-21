@@ -1,0 +1,1809 @@
+{
+  "uid": "fusion-endpoints",
+  "title": "Fusion Export: Endpoints, licences and alerts",
+  "description": "Endpoint health and coverage, Account Health Check scores, licences and product alerts.",
+  "tags": [
+    "fusion-export",
+    "unofficial"
+  ],
+  "editable": false,
+  "graphTooltip": 1,
+  "timezone": "browser",
+  "schemaVersion": 41,
+  "version": 1,
+  "refresh": "",
+  "time": {
+    "from": "now-30d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "templating": {
+    "list": [
+      {
+        "name": "snapshot",
+        "label": "Snapshot",
+        "type": "query",
+        "datasource": {
+          "type": "yesoreyeram-infinity-datasource",
+          "uid": "fusion-export-csv"
+        },
+        "query": {
+          "refId": "snapshots",
+          "queryType": "infinity",
+          "infinityQuery": {
+            "refId": "snapshots",
+            "datasource": {
+              "type": "yesoreyeram-infinity-datasource",
+              "uid": "fusion-export-csv"
+            },
+            "type": "csv",
+            "source": "url",
+            "url": "/fact_endpoint_snapshot.csv",
+            "url_options": {
+              "method": "GET",
+              "data": ""
+            },
+            "parser": "backend",
+            "format": "table",
+            "root_selector": "",
+            "columns": [
+              {
+                "selector": "snapshot_date",
+                "text": "snapshot_date",
+                "type": "string"
+              }
+            ],
+            "filters": [],
+            "computed_columns": [],
+            "filterExpression": "",
+            "summarizeExpression": "",
+            "summarizeBy": "",
+            "summarizeAlias": ""
+          }
+        },
+        "refresh": 1,
+        "sort": 2,
+        "includeAll": false,
+        "multi": false,
+        "current": {},
+        "options": [],
+        "hide": 0,
+        "description": "The endpoint, licence and health check snapshot to show. The newest is picked on load."
+      }
+    ]
+  },
+  "annotations": {
+    "list": []
+  },
+  "links": [
+    {
+      "title": "Fusion Export",
+      "type": "dashboards",
+      "tags": [
+        "fusion-export"
+      ],
+      "asDropdown": false,
+      "includeVars": false,
+      "keepTime": true,
+      "targetBlank": false
+    }
+  ],
+  "panels": [
+    {
+      "id": 1,
+      "type": "text",
+      "title": "",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 2
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "Unofficial: built on the CSV tables of the Unofficial Sophos Fusion Data Exporter, not a Sophos product. Dates are in the exporter's report time zone. Endpoints, licences and health check scores come from the snapshot picked above; the exporter takes one a day.",
+        "code": {
+          "language": "markdown",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        }
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Endpoints",
+      "gridPos": {
+        "x": 0,
+        "y": 2,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_endpoint_snapshot.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "snapshot_date",
+              "text": "snapshot_date",
+              "type": "string"
+            },
+            {
+              "selector": "endpoint_id",
+              "text": "endpoint_id",
+              "type": "string"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "snapshot_date =~ '^${snapshot}$'",
+          "summarizeExpression": "count(endpoint_id)",
+          "summarizeBy": "",
+          "summarizeAlias": ""
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "noValue": "0",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Servers",
+      "gridPos": {
+        "x": 4,
+        "y": 2,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_endpoint_snapshot.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "snapshot_date",
+              "text": "snapshot_date",
+              "type": "string"
+            },
+            {
+              "selector": "endpoint_type",
+              "text": "endpoint_type",
+              "type": "string"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [
+            {
+              "selector": "endpoint_type == 'server' ? 1 : 0",
+              "text": "servers",
+              "type": "number"
+            }
+          ],
+          "filterExpression": "snapshot_date =~ '^${snapshot}$'",
+          "summarizeExpression": "sum(servers)",
+          "summarizeBy": "",
+          "summarizeAlias": ""
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "noValue": "0",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Not in good health",
+      "gridPos": {
+        "x": 8,
+        "y": 2,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_endpoint_snapshot.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "snapshot_date",
+              "text": "snapshot_date",
+              "type": "string"
+            },
+            {
+              "selector": "health_overall",
+              "text": "health_overall",
+              "type": "string"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [
+            {
+              "selector": "health_overall != 'good' ? 1 : 0",
+              "text": "unhealthy",
+              "type": "number"
+            }
+          ],
+          "filterExpression": "snapshot_date =~ '^${snapshot}$'",
+          "summarizeExpression": "sum(unhealthy)",
+          "summarizeBy": "",
+          "summarizeAlias": ""
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "noValue": "0",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "red"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Not seen 7+ days",
+      "gridPos": {
+        "x": 12,
+        "y": 2,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_endpoint_snapshot.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "snapshot_date",
+              "text": "snapshot_date",
+              "type": "string"
+            },
+            {
+              "selector": "days_since_seen",
+              "text": "days_since_seen",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [
+            {
+              "selector": "days_since_seen >= 7 ? 1 : 0",
+              "text": "stale",
+              "type": "number"
+            }
+          ],
+          "filterExpression": "snapshot_date =~ '^${snapshot}$'",
+          "summarizeExpression": "sum(stale)",
+          "summarizeBy": "",
+          "summarizeAlias": ""
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "noValue": "0",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "orange"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Tamper protection off",
+      "gridPos": {
+        "x": 16,
+        "y": 2,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_endpoint_snapshot.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "snapshot_date",
+              "text": "snapshot_date",
+              "type": "string"
+            },
+            {
+              "selector": "tamper_protection_enabled",
+              "text": "tamper_protection_enabled",
+              "type": "string"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [
+            {
+              "selector": "tamper_protection_enabled == 'false' ? 1 : 0",
+              "text": "off",
+              "type": "number"
+            }
+          ],
+          "filterExpression": "snapshot_date =~ '^${snapshot}$'",
+          "summarizeExpression": "sum(off)",
+          "summarizeBy": "",
+          "summarizeAlias": ""
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "noValue": "0",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "orange"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 7,
+      "type": "stat",
+      "title": "Isolated",
+      "gridPos": {
+        "x": 20,
+        "y": 2,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_endpoint_snapshot.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "snapshot_date",
+              "text": "snapshot_date",
+              "type": "string"
+            },
+            {
+              "selector": "isolation_status",
+              "text": "isolation_status",
+              "type": "string"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [
+            {
+              "selector": "isolation_status == 'isolated' ? 1 : 0",
+              "text": "isolated",
+              "type": "number"
+            }
+          ],
+          "filterExpression": "snapshot_date =~ '^${snapshot}$'",
+          "summarizeExpression": "sum(isolated)",
+          "summarizeBy": "",
+          "summarizeAlias": ""
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "noValue": "0",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 8,
+      "type": "piechart",
+      "title": "Health",
+      "gridPos": {
+        "x": 0,
+        "y": 6,
+        "w": 6,
+        "h": 8
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_endpoint_snapshot.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "snapshot_date",
+              "text": "snapshot_date",
+              "type": "string"
+            },
+            {
+              "selector": "health_overall",
+              "text": "health_overall",
+              "type": "string"
+            },
+            {
+              "selector": "endpoint_id",
+              "text": "endpoint_id",
+              "type": "string"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "snapshot_date =~ '^${snapshot}$'",
+          "summarizeExpression": "count(endpoint_id)",
+          "summarizeBy": "health_overall",
+          "summarizeAlias": "endpoints"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": true,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "pieType": "donut",
+        "displayLabels": [],
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "values": [
+            "value",
+            "percent"
+          ]
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "good"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "suspicious"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "bad"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "unknown"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "text"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 9,
+      "type": "barchart",
+      "title": "Operating systems",
+      "gridPos": {
+        "x": 6,
+        "y": 6,
+        "w": 9,
+        "h": 8
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_endpoint_snapshot.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "snapshot_date",
+              "text": "snapshot_date",
+              "type": "string"
+            },
+            {
+              "selector": "os_name",
+              "text": "os_name",
+              "type": "string"
+            },
+            {
+              "selector": "endpoint_id",
+              "text": "endpoint_id",
+              "type": "string"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "snapshot_date =~ '^${snapshot}$'",
+          "summarizeExpression": "count(endpoint_id)",
+          "summarizeBy": "os_name",
+          "summarizeAlias": "endpoints"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "endpoints",
+                "desc": true
+              }
+            ]
+          }
+        }
+      ],
+      "options": {
+        "orientation": "horizontal",
+        "xField": "os_name",
+        "showValue": "always",
+        "groupWidth": 0.7,
+        "barWidth": 0.8,
+        "stacking": "none",
+        "legend": {
+          "showLegend": false,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelMaxLength": 40
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "custom": {
+            "fillOpacity": 85,
+            "lineWidth": 0,
+            "axisSoftMin": 0
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 10,
+      "type": "barchart",
+      "title": "Core agent versions",
+      "gridPos": {
+        "x": 15,
+        "y": 6,
+        "w": 9,
+        "h": 8
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_endpoint_snapshot.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "snapshot_date",
+              "text": "snapshot_date",
+              "type": "string"
+            },
+            {
+              "selector": "core_agent_version",
+              "text": "core_agent_version",
+              "type": "string"
+            },
+            {
+              "selector": "endpoint_id",
+              "text": "endpoint_id",
+              "type": "string"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "snapshot_date =~ '^${snapshot}$'",
+          "summarizeExpression": "count(endpoint_id)",
+          "summarizeBy": "core_agent_version",
+          "summarizeAlias": "endpoints"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "endpoints",
+                "desc": true
+              }
+            ]
+          }
+        }
+      ],
+      "options": {
+        "orientation": "horizontal",
+        "xField": "core_agent_version",
+        "showValue": "always",
+        "groupWidth": 0.7,
+        "barWidth": 0.8,
+        "stacking": "none",
+        "legend": {
+          "showLegend": false,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelMaxLength": 40
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "purple"
+          },
+          "custom": {
+            "fillOpacity": 85,
+            "lineWidth": 0,
+            "axisSoftMin": 0
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 11,
+      "type": "table",
+      "title": "Endpoints needing attention",
+      "gridPos": {
+        "x": 0,
+        "y": 14,
+        "w": 14,
+        "h": 9
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_endpoint_snapshot.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "snapshot_date",
+              "text": "snapshot_date",
+              "type": "string"
+            },
+            {
+              "selector": "endpoint_id",
+              "text": "endpoint_id",
+              "type": "string"
+            },
+            {
+              "selector": "hostname",
+              "text": "hostname",
+              "type": "string"
+            },
+            {
+              "selector": "endpoint_type",
+              "text": "endpoint_type",
+              "type": "string"
+            },
+            {
+              "selector": "os_name",
+              "text": "os_name",
+              "type": "string"
+            },
+            {
+              "selector": "health_overall",
+              "text": "health_overall",
+              "type": "string"
+            },
+            {
+              "selector": "days_since_seen",
+              "text": "days_since_seen",
+              "type": "number"
+            },
+            {
+              "selector": "tamper_protection_enabled",
+              "text": "tamper_protection_enabled",
+              "type": "string"
+            },
+            {
+              "selector": "group_name",
+              "text": "group_name",
+              "type": "string"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "snapshot_date =~ '^${snapshot}$' && (health_overall != 'good' || days_since_seen >= 7 || tamper_protection_enabled == 'false')",
+          "summarizeExpression": "",
+          "summarizeBy": "",
+          "summarizeAlias": ""
+        }
+      ],
+      "description": "Hostnames stay empty unless the exporter's personal data switch is on.",
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "days_since_seen",
+                "desc": true
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "snapshot_date": true
+            },
+            "indexByName": {
+              "hostname": 0,
+              "endpoint_id": 1,
+              "endpoint_type": 2,
+              "os_name": 3,
+              "health_overall": 4,
+              "days_since_seen": 5,
+              "tamper_protection_enabled": 6,
+              "group_name": 7
+            },
+            "renameByName": {
+              "endpoint_id": "Endpoint ID",
+              "hostname": "Hostname",
+              "endpoint_type": "Type",
+              "os_name": "OS",
+              "health_overall": "Health",
+              "days_since_seen": "Days since seen",
+              "tamper_protection_enabled": "Tamper protection",
+              "group_name": "Group"
+            }
+          }
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": ""
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 12,
+      "type": "barchart",
+      "title": "Account Health Check scores",
+      "gridPos": {
+        "x": 14,
+        "y": 14,
+        "w": 10,
+        "h": 9
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_health_check_snapshot.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "snapshot_date",
+              "text": "snapshot_date",
+              "type": "string"
+            },
+            {
+              "selector": "area",
+              "text": "area",
+              "type": "string"
+            },
+            {
+              "selector": "scope",
+              "text": "scope",
+              "type": "string"
+            },
+            {
+              "selector": "score",
+              "text": "score",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [
+            {
+              "selector": "area + ': ' + scope",
+              "text": "check",
+              "type": "string"
+            }
+          ],
+          "filterExpression": "snapshot_date =~ '^${snapshot}$'",
+          "summarizeExpression": "",
+          "summarizeBy": "",
+          "summarizeAlias": ""
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "snapshot_date": true,
+              "area": true,
+              "scope": true
+            },
+            "indexByName": {
+              "check": 0,
+              "score": 1
+            },
+            "renameByName": {}
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "score"
+              }
+            ]
+          }
+        }
+      ],
+      "options": {
+        "orientation": "horizontal",
+        "xField": "check",
+        "showValue": "always",
+        "groupWidth": 0.7,
+        "barWidth": 0.8,
+        "stacking": "none",
+        "legend": {
+          "showLegend": false,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelMaxLength": 40
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          },
+          "custom": {
+            "fillOpacity": 85,
+            "lineWidth": 0,
+            "axisSoftMin": 0
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 13,
+      "type": "table",
+      "title": "Licences",
+      "gridPos": {
+        "x": 0,
+        "y": 23,
+        "w": 14,
+        "h": 9
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_license.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "snapshot_date",
+              "text": "snapshot_date",
+              "type": "string"
+            },
+            {
+              "selector": "product_name",
+              "text": "product_name",
+              "type": "string"
+            },
+            {
+              "selector": "license_code",
+              "text": "license_code",
+              "type": "string"
+            },
+            {
+              "selector": "license_type",
+              "text": "license_type",
+              "type": "string"
+            },
+            {
+              "selector": "quantity",
+              "text": "quantity",
+              "type": "number"
+            },
+            {
+              "selector": "used",
+              "text": "used",
+              "type": "number"
+            },
+            {
+              "selector": "end_date",
+              "text": "end_date",
+              "type": "string"
+            },
+            {
+              "selector": "days_to_end",
+              "text": "days_to_end",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "snapshot_date =~ '^${snapshot}$'",
+          "summarizeExpression": "",
+          "summarizeBy": "",
+          "summarizeAlias": ""
+        }
+      ],
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "days_to_end"
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "snapshot_date": true
+            },
+            "indexByName": {
+              "product_name": 0,
+              "license_code": 1,
+              "license_type": 2,
+              "quantity": 3,
+              "used": 4,
+              "end_date": 5,
+              "days_to_end": 6
+            },
+            "renameByName": {
+              "product_name": "Product",
+              "license_code": "Code",
+              "license_type": "Type",
+              "quantity": "Quantity",
+              "used": "Used",
+              "end_date": "Ends",
+              "days_to_end": "Days left"
+            }
+          }
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": ""
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 14,
+      "type": "timeseries",
+      "title": "Alerts raised per day by severity",
+      "gridPos": {
+        "x": 14,
+        "y": 23,
+        "w": 10,
+        "h": 9
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_alert.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "raised_local_date",
+              "text": "raised_local_date",
+              "type": "string"
+            },
+            {
+              "selector": "severity",
+              "text": "severity",
+              "type": "string"
+            },
+            {
+              "selector": "alert_id",
+              "text": "alert_id",
+              "type": "string"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "",
+          "summarizeExpression": "",
+          "summarizeBy": "",
+          "summarizeAlias": ""
+        }
+      ],
+      "transformations": [
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "raised_local_date": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "severity": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "alert_id": {
+                "aggregations": [
+                  "count"
+                ],
+                "operation": "aggregate"
+              }
+            }
+          }
+        },
+        {
+          "id": "groupingToMatrix",
+          "options": {
+            "columnField": "severity",
+            "rowField": "raised_local_date",
+            "valueField": "alert_id (count)",
+            "emptyValue": "zero"
+          }
+        },
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "raised_local_date\\severity",
+                "destinationType": "time",
+                "dateFormat": "YYYY-MM-DD"
+              }
+            ],
+            "fields": {}
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "raised_local_date\\severity"
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {
+              "raised_local_date\\severity": 0,
+              "high": 1,
+              "medium": 2,
+              "low": 3
+            },
+            "renameByName": {}
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 85,
+            "lineWidth": 1,
+            "barAlignment": 0,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            },
+            "showPoints": "never",
+            "axisSoftMin": 0
+          },
+          "unit": "none",
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "high"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "medium"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "low"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "yellow"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "id": 15,
+      "type": "table",
+      "title": "Alerts",
+      "gridPos": {
+        "x": 0,
+        "y": 32,
+        "w": 24,
+        "h": 9
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_alert.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "raised_at",
+              "text": "raised_at",
+              "type": "string"
+            },
+            {
+              "selector": "severity",
+              "text": "severity",
+              "type": "string"
+            },
+            {
+              "selector": "category",
+              "text": "category",
+              "type": "string"
+            },
+            {
+              "selector": "product",
+              "text": "product",
+              "type": "string"
+            },
+            {
+              "selector": "alert_type",
+              "text": "alert_type",
+              "type": "string"
+            },
+            {
+              "selector": "last_seen_open_at",
+              "text": "last_seen_open_at",
+              "type": "string"
+            },
+            {
+              "selector": "raised_date_key",
+              "text": "raised_date_key",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "(raised_date_key ?? 0) >= ${__from:date:YYYYMMDD} && (raised_date_key ?? 0) <= ${__to:date:YYYYMMDD}",
+          "summarizeExpression": "",
+          "summarizeBy": "",
+          "summarizeAlias": ""
+        }
+      ],
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "raised_at",
+                "desc": true
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "raised_date_key": true
+            },
+            "indexByName": {
+              "raised_at": 0,
+              "severity": 1,
+              "category": 2,
+              "product": 3,
+              "alert_type": 4,
+              "last_seen_open_at": 5
+            },
+            "renameByName": {
+              "raised_at": "Raised (UTC)",
+              "severity": "Severity",
+              "category": "Category",
+              "product": "Product",
+              "alert_type": "Type",
+              "last_seen_open_at": "Last seen open (UTC)"
+            }
+          }
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": ""
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          }
+        },
+        "overrides": []
+      }
+    }
+  ]
+}
