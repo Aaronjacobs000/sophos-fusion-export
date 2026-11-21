@@ -1,0 +1,2 @@
+# Check out text files with LF on every platform: the golden CSV and docs tests compare bytes.
+* text=auto eol=lf
