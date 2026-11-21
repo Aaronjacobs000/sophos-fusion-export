@@ -30,7 +30,7 @@ function identifiers(expression) {
 const dashboards = readdirSync(new URL("grafana/dashboards/", root)).filter((f) => f.endsWith(".json"));
 
 test("there are Grafana dashboards to check", () => {
-  assert.deepEqual(dashboards.sort(), ["cases.json", "detections.json", "endpoints.json", "overview.json"]);
+  assert.deepEqual(dashboards.sort(), ["ai-defense.json", "cases.json", "detections.json", "endpoints.json", "overview.json"]);
 });
 
 for (const file of dashboards) {

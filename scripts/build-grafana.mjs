@@ -18,6 +18,9 @@ const SNAPSHOT = "snapshot_date =~ '^${snapshot}$'";
 const BAND_COLORS = { Critical: "dark-red", High: "red", Medium: "orange", Low: "yellow", Info: "blue" };
 const SEVERITY_COLORS = { Critical: "dark-red", High: "red", Medium: "orange", Low: "yellow", Informational: "blue", "Not set": "text" };
 const ALERT_COLORS = { high: "red", medium: "orange", low: "yellow" };
+const ACTION_COLORS = { ALLOWED: "green", WARNED: "orange", BLOCKED: "red", MODIFIED: "purple", UNKNOWN: "text", "Not reported": "text" };
+const RISK_COLORS = { CRITICAL: "dark-red", HIGH: "red", MEDIUM: "orange", LOW: "yellow", INFO: "blue", UNKNOWN: "text", ERROR: "text" };
+const SANCTION_COLORS = { APPROVED: "green", WARNED: "orange", BLOCKED: "red", NOT_COVERED: "text" };
 
 /** One Infinity CSV query. columns: [name, type] with type string, number or timestamp. */
 function csv(refId, file, columns, o = {}) {
@@ -376,8 +379,95 @@ const endpointsBoard = dashboard(
   { templating: [snapshotVariable] }
 );
 
+// ---------- AI Defense ----------
+nextId = 1;
+const AI_SNAPSHOT = "snapshot_date =~ '^${ai_snapshot}$'";
+const aiSnapshotVariable = {
+  ...snapshotVariable,
+  name: "ai_snapshot",
+  query: { refId: "snapshots", queryType: "infinity", infinityQuery: csv("snapshots", "fact_ai_defense_snapshot.csv", [["snapshot_date", "string"]]) },
+  description: "The AI application, user and license snapshot to show. The newest is picked on load.",
+};
+const actionLabel = ["action == '' ? 'Not reported' : action", "action_label", "string"];
+const aiBoard = dashboard(
+  "fusion-ai-defense",
+  "Fusion Export: AI Defense",
+  "Sophos AI Defense: AI application use, what policies blocked or warned, sanctioning status, users and policies.",
+  [
+    text({ x: 0, y: 0, w: 24, h: 2 }, `${NOTE} Activity panels follow the time range; the application, user and license panels show the snapshot picked above, which covers the exporter's inventory window (30 days by default).`),
+    stat("AI activities", { x: 0, y: 2, w: 4, h: 4 }, csv("A", "fact_ai_activity_daily.csv", [["date_key", "number"], ["activities", "number"]], { filter: RANGE("date_key"), summarize: "sum(activities)" }), { unit: "short", description: "Activities that started in the time range." }),
+    stat("Blocked", { x: 4, y: 2, w: 4, h: 4 }, csv("A", "fact_ai_activity_daily.csv", [["date_key", "number"], ["action", "string"], ["activities", "number"]], { filter: `${RANGE("date_key")} && action == 'BLOCKED'`, summarize: "sum(activities)" }), { unit: "short", color: "red" }),
+    stat("Warned", { x: 8, y: 2, w: 4, h: 4 }, csv("A", "fact_ai_activity_daily.csv", [["date_key", "number"], ["action", "string"], ["activities", "number"]], { filter: `${RANGE("date_key")} && action == 'WARNED'`, summarize: "sum(activities)" }), { unit: "short", color: "orange" }),
+    stat("Unsanctioned", { x: 12, y: 2, w: 4, h: 4 }, csv("A", "fact_ai_activity_daily.csv", [["date_key", "number"], ["unsanctioned_activities", "number"]], { filter: RANGE("date_key"), summarize: "sum(unsanctioned_activities)" }), { unit: "short", color: "purple", description: "Allowed activity for apps no policy covers." }),
+    stat("AI apps in use", { x: 16, y: 2, w: 4, h: 4 }, csv("A", "fact_ai_defense_snapshot.csv", [["snapshot_date", "string"], ["apps", "number"]], { filter: AI_SNAPSHOT, summarize: "sum(apps)" }), { description: "Applications in the inventory window of the snapshot, as Sophos counts them." }),
+    stat("AI users", { x: 20, y: 2, w: 4, h: 4 }, csv("A", "fact_ai_defense_snapshot.csv", [["snapshot_date", "string"], ["users", "number"]], { filter: AI_SNAPSHOT, summarize: "sum(users)" }), { description: "Users in the inventory window of the snapshot, as Sophos counts them." }),
+    stackedDaily("AI activity per day by action", { x: 0, y: 6, w: 12, h: 9 }, csv("A", "fact_ai_activity_daily.csv", [["local_date", "string"], ["action", "string"], ["activities", "number"]], { computed: [actionLabel] }), "local_date", "action_label", ["sum", "activities"], ACTION_COLORS),
+    pie("Activity by risk", { x: 12, y: 6, w: 6, h: 9 }, csv("A", "fact_ai_activity_daily.csv", [["risk", "string"], ["date_key", "number"], ["activities", "number"]], { filter: RANGE("date_key"), summarize: "sum(activities)", by: "risk", alias: "activities" }), RISK_COLORS),
+    bars("Activity by AI application", { x: 0, y: 15, w: 12, h: 9 }, [csv("A", "fact_ai_activity_daily.csv", [["application_name", "string"], ["date_key", "number"], ["activities", "number"]], { filter: RANGE("date_key"), summarize: "sum(activities)", by: "application_name", alias: "activities" })], {
+      xField: "application_name",
+      color: "blue",
+      transformations: [{ id: "sortBy", options: { fields: {}, sort: [{ field: "activities", desc: true }] } }, { id: "limit", options: { limitField: 12 } }],
+    }),
+    bars("Blocked and warned by application", { x: 12, y: 15, w: 12, h: 9 }, [csv("A", "fact_ai_activity_daily.csv", [["application_name", "string"], ["date_key", "number"], ["action", "string"], ["activities", "number"]], { filter: `${RANGE("date_key")} && (action == 'BLOCKED' || action == 'WARNED')`, summarize: "sum(activities)", by: "application_name", alias: "activities" })], {
+      xField: "application_name",
+      color: "red",
+      transformations: [{ id: "sortBy", options: { fields: {}, sort: [{ field: "activities", desc: true }] } }, { id: "limit", options: { limitField: 12 } }],
+      description: "Activities the tenant's AI Defense policies blocked or warned on.",
+    }),
+    table(
+      "AI applications and sanctioning",
+      { x: 0, y: 24, w: 24, h: 10 },
+      csv("A", "fact_ai_app_snapshot.csv", [["snapshot_date", "string"], ["application_name", "string"], ["provider", "string"], ["risk", "string"], ["sanctioning_status", "string"], ["activities", "number"], ["unique_users", "number"], ["unsanctioned_activities", "number"], ["last_seen_at", "string"]], { filter: AI_SNAPSHOT }),
+      {
+        sort: [{ field: "activities", desc: true }],
+        hide: ["snapshot_date"],
+        order: ["application_name", "provider", "risk", "sanctioning_status", "activities", "unique_users", "unsanctioned_activities", "last_seen_at"],
+        rename: { application_name: "Application", provider: "Provider", risk: "Risk", sanctioning_status: "Sanctioning", activities: "Activities", unique_users: "Users", unsanctioned_activities: "Unsanctioned", last_seen_at: "Last seen (UTC)" },
+        description: "The snapshot's inventory window. Sanctioning is what the tenant's policies give each application.",
+      }
+    ),
+    pie("Applications by sanctioning status", { x: 18, y: 6, w: 6, h: 9 }, csv("A", "fact_ai_app_snapshot.csv", [["snapshot_date", "string"], ["sanctioning_status", "string"], ["application_id", "string"]], { filter: AI_SNAPSHOT, summarize: "count(application_id)", by: "sanctioning_status", alias: "applications" }), SANCTION_COLORS),
+    table(
+      "Users, highest risk first",
+      { x: 0, y: 34, w: 24, h: 10 },
+      csv("A", "fact_ai_user_snapshot.csv", [["snapshot_date", "string"], ["user_key", "string"], ["user_name", "string"], ["risk", "string"], ["risk_rank", "number"], ["apps_used", "number"], ["activities", "number"], ["policy_violations", "number"], ["top_app_name", "string"], ["last_seen_at", "string"]], { filter: AI_SNAPSHOT }),
+      {
+        sort: [{ field: "risk_rank", desc: true }, { field: "policy_violations", desc: true }],
+        hide: ["snapshot_date", "risk_rank"],
+        order: ["user_name", "user_key", "risk", "apps_used", "activities", "policy_violations", "top_app_name", "last_seen_at"],
+        rename: { user_name: "User", user_key: "User key", risk: "Risk", apps_used: "Apps", activities: "Activities", policy_violations: "Blocked or warned", top_app_name: "Top app", last_seen_at: "Last seen (UTC)" },
+        description: "User names stay empty unless the exporter's personal data switch is on; the user key is a hash that matches across tables.",
+      }
+    ),
+    table(
+      "Policies, in the order Sophos checks them",
+      { x: 0, y: 44, w: 24, h: 7 },
+      csv("A", "dim_ai_policy.csv", [["rank", "number"], ["policy_name", "string"], ["state", "string"], ["enforcement_status", "string"], ["origin", "string"], ["block_rules", "number"], ["warn_rules", "number"], ["allow_rules", "number"], ["generative_ai_category_action", "string"]]),
+      {
+        sort: [{ field: "rank" }],
+        order: ["rank", "policy_name", "state", "enforcement_status", "origin", "block_rules", "warn_rules", "allow_rules", "generative_ai_category_action"],
+        rename: { rank: "Rank", policy_name: "Policy", state: "State", enforcement_status: "Enforcement", origin: "Origin", block_rules: "Block rules", warn_rules: "Warn rules", allow_rules: "Allow rules", generative_ai_category_action: "Other Generative AI" },
+      }
+    ),
+    table(
+      "Latest blocked and warned activity",
+      { x: 0, y: 51, w: 24, h: 10 },
+      csv("A", "fact_ai_activity.csv", [["start_time", "string"], ["start_date_key", "number"], ["application_name", "string"], ["action", "string"], ["risk", "string"], ["policy_name", "string"], ["actor_type", "string"], ["device_type", "string"], ["sensor_types", "string"], ["records", "number"]], { filter: `${RANGE("start_date_key")} && (action == 'BLOCKED' || action == 'WARNED')` }),
+      {
+        sort: [{ field: "start_time", desc: true }],
+        limit: 50,
+        hide: ["start_date_key"],
+        order: ["start_time", "application_name", "action", "risk", "policy_name", "actor_type", "device_type", "sensor_types", "records"],
+        rename: { start_time: "Started (UTC)", application_name: "Application", action: "Action", risk: "Risk", policy_name: "Policy", actor_type: "Actor", device_type: "Device", sensor_types: "Seen by", records: "Records" },
+        description: "The 50 most recent in the time range. Activity detail is kept for 90 days by default.",
+      }
+    ),
+  ],
+  { templating: [aiSnapshotVariable] }
+);
+
 const out = new URL("../grafana/dashboards/", import.meta.url);
-for (const [file, board] of [["overview.json", overview], ["cases.json", casesBoard], ["detections.json", detectionsBoard], ["endpoints.json", endpointsBoard]]) {
+for (const [file, board] of [["overview.json", overview], ["cases.json", casesBoard], ["detections.json", detectionsBoard], ["endpoints.json", endpointsBoard], ["ai-defense.json", aiBoard]]) {
   writeFileSync(new URL(file, out), `${JSON.stringify(board, null, 2)}\n`);
   console.log(`wrote grafana/dashboards/${file}: ${board.panels.length} panels`);
 }

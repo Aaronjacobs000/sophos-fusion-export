@@ -1,0 +1,2129 @@
+{
+  "uid": "fusion-ai-defense",
+  "title": "Fusion Export: AI Defense",
+  "description": "Sophos AI Defense: AI application use, what policies blocked or warned, sanctioning status, users and policies.",
+  "tags": [
+    "fusion-export",
+    "unofficial"
+  ],
+  "editable": false,
+  "graphTooltip": 1,
+  "timezone": "browser",
+  "schemaVersion": 41,
+  "version": 1,
+  "refresh": "",
+  "time": {
+    "from": "now-30d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "templating": {
+    "list": [
+      {
+        "name": "ai_snapshot",
+        "label": "Snapshot",
+        "type": "query",
+        "datasource": {
+          "type": "yesoreyeram-infinity-datasource",
+          "uid": "fusion-export-csv"
+        },
+        "query": {
+          "refId": "snapshots",
+          "queryType": "infinity",
+          "infinityQuery": {
+            "refId": "snapshots",
+            "datasource": {
+              "type": "yesoreyeram-infinity-datasource",
+              "uid": "fusion-export-csv"
+            },
+            "type": "csv",
+            "source": "url",
+            "url": "/fact_ai_defense_snapshot.csv",
+            "url_options": {
+              "method": "GET",
+              "data": ""
+            },
+            "parser": "backend",
+            "format": "table",
+            "root_selector": "",
+            "columns": [
+              {
+                "selector": "snapshot_date",
+                "text": "snapshot_date",
+                "type": "string"
+              }
+            ],
+            "filters": [],
+            "computed_columns": [],
+            "filterExpression": "",
+            "summarizeExpression": "",
+            "summarizeBy": "",
+            "summarizeAlias": ""
+          }
+        },
+        "refresh": 1,
+        "sort": 2,
+        "includeAll": false,
+        "multi": false,
+        "current": {},
+        "options": [],
+        "hide": 0,
+        "description": "The AI application, user and license snapshot to show. The newest is picked on load."
+      }
+    ]
+  },
+  "annotations": {
+    "list": []
+  },
+  "links": [
+    {
+      "title": "Fusion Export",
+      "type": "dashboards",
+      "tags": [
+        "fusion-export"
+      ],
+      "asDropdown": false,
+      "includeVars": false,
+      "keepTime": true,
+      "targetBlank": false
+    }
+  ],
+  "panels": [
+    {
+      "id": 1,
+      "type": "text",
+      "title": "",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 2
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "Unofficial: built on the CSV tables of the Unofficial Sophos Fusion Data Exporter, not a Sophos product. Dates are in the exporter's report time zone. Activity panels follow the time range; the application, user and license panels show the snapshot picked above, which covers the exporter's inventory window (30 days by default).",
+        "code": {
+          "language": "markdown",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        }
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "AI activities",
+      "gridPos": {
+        "x": 0,
+        "y": 2,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_ai_activity_daily.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "date_key",
+              "text": "date_key",
+              "type": "number"
+            },
+            {
+              "selector": "activities",
+              "text": "activities",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "(date_key ?? 0) >= ${__from:date:YYYYMMDD} && (date_key ?? 0) <= ${__to:date:YYYYMMDD}",
+          "summarizeExpression": "sum(activities)",
+          "summarizeBy": "",
+          "summarizeAlias": ""
+        }
+      ],
+      "description": "Activities that started in the time range.",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "noValue": "0",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Blocked",
+      "gridPos": {
+        "x": 4,
+        "y": 2,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_ai_activity_daily.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "date_key",
+              "text": "date_key",
+              "type": "number"
+            },
+            {
+              "selector": "action",
+              "text": "action",
+              "type": "string"
+            },
+            {
+              "selector": "activities",
+              "text": "activities",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "(date_key ?? 0) >= ${__from:date:YYYYMMDD} && (date_key ?? 0) <= ${__to:date:YYYYMMDD} && action == 'BLOCKED'",
+          "summarizeExpression": "sum(activities)",
+          "summarizeBy": "",
+          "summarizeAlias": ""
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "noValue": "0",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "red"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Warned",
+      "gridPos": {
+        "x": 8,
+        "y": 2,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_ai_activity_daily.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "date_key",
+              "text": "date_key",
+              "type": "number"
+            },
+            {
+              "selector": "action",
+              "text": "action",
+              "type": "string"
+            },
+            {
+              "selector": "activities",
+              "text": "activities",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "(date_key ?? 0) >= ${__from:date:YYYYMMDD} && (date_key ?? 0) <= ${__to:date:YYYYMMDD} && action == 'WARNED'",
+          "summarizeExpression": "sum(activities)",
+          "summarizeBy": "",
+          "summarizeAlias": ""
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "noValue": "0",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "orange"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Unsanctioned",
+      "gridPos": {
+        "x": 12,
+        "y": 2,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_ai_activity_daily.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "date_key",
+              "text": "date_key",
+              "type": "number"
+            },
+            {
+              "selector": "unsanctioned_activities",
+              "text": "unsanctioned_activities",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "(date_key ?? 0) >= ${__from:date:YYYYMMDD} && (date_key ?? 0) <= ${__to:date:YYYYMMDD}",
+          "summarizeExpression": "sum(unsanctioned_activities)",
+          "summarizeBy": "",
+          "summarizeAlias": ""
+        }
+      ],
+      "description": "Allowed activity for apps no policy covers.",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "noValue": "0",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "purple"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "AI apps in use",
+      "gridPos": {
+        "x": 16,
+        "y": 2,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_ai_defense_snapshot.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "snapshot_date",
+              "text": "snapshot_date",
+              "type": "string"
+            },
+            {
+              "selector": "apps",
+              "text": "apps",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "snapshot_date =~ '^${ai_snapshot}$'",
+          "summarizeExpression": "sum(apps)",
+          "summarizeBy": "",
+          "summarizeAlias": ""
+        }
+      ],
+      "description": "Applications in the inventory window of the snapshot, as Sophos counts them.",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "noValue": "0",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 7,
+      "type": "stat",
+      "title": "AI users",
+      "gridPos": {
+        "x": 20,
+        "y": 2,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_ai_defense_snapshot.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "snapshot_date",
+              "text": "snapshot_date",
+              "type": "string"
+            },
+            {
+              "selector": "users",
+              "text": "users",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "snapshot_date =~ '^${ai_snapshot}$'",
+          "summarizeExpression": "sum(users)",
+          "summarizeBy": "",
+          "summarizeAlias": ""
+        }
+      ],
+      "description": "Users in the inventory window of the snapshot, as Sophos counts them.",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "noValue": "0",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "AI activity per day by action",
+      "gridPos": {
+        "x": 0,
+        "y": 6,
+        "w": 12,
+        "h": 9
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_ai_activity_daily.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "local_date",
+              "text": "local_date",
+              "type": "string"
+            },
+            {
+              "selector": "action",
+              "text": "action",
+              "type": "string"
+            },
+            {
+              "selector": "activities",
+              "text": "activities",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [
+            {
+              "selector": "action == '' ? 'Not reported' : action",
+              "text": "action_label",
+              "type": "string"
+            }
+          ],
+          "filterExpression": "",
+          "summarizeExpression": "",
+          "summarizeBy": "",
+          "summarizeAlias": ""
+        }
+      ],
+      "transformations": [
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "local_date": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "action_label": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "activities": {
+                "aggregations": [
+                  "sum"
+                ],
+                "operation": "aggregate"
+              }
+            }
+          }
+        },
+        {
+          "id": "groupingToMatrix",
+          "options": {
+            "columnField": "action_label",
+            "rowField": "local_date",
+            "valueField": "activities (sum)",
+            "emptyValue": "zero"
+          }
+        },
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "local_date\\action_label",
+                "destinationType": "time",
+                "dateFormat": "YYYY-MM-DD"
+              }
+            ],
+            "fields": {}
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "local_date\\action_label"
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {
+              "local_date\\action_label": 0,
+              "ALLOWED": 1,
+              "WARNED": 2,
+              "BLOCKED": 3,
+              "MODIFIED": 4,
+              "UNKNOWN": 5,
+              "Not reported": 6
+            },
+            "renameByName": {}
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 85,
+            "lineWidth": 1,
+            "barAlignment": 0,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            },
+            "showPoints": "never",
+            "axisSoftMin": 0
+          },
+          "unit": "none",
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ALLOWED"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "WARNED"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "BLOCKED"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "MODIFIED"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "purple"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "UNKNOWN"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "text"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Not reported"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "text"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "id": 9,
+      "type": "piechart",
+      "title": "Activity by risk",
+      "gridPos": {
+        "x": 12,
+        "y": 6,
+        "w": 6,
+        "h": 9
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_ai_activity_daily.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "risk",
+              "text": "risk",
+              "type": "string"
+            },
+            {
+              "selector": "date_key",
+              "text": "date_key",
+              "type": "number"
+            },
+            {
+              "selector": "activities",
+              "text": "activities",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "(date_key ?? 0) >= ${__from:date:YYYYMMDD} && (date_key ?? 0) <= ${__to:date:YYYYMMDD}",
+          "summarizeExpression": "sum(activities)",
+          "summarizeBy": "risk",
+          "summarizeAlias": "activities"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": true,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "pieType": "donut",
+        "displayLabels": [],
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "values": [
+            "value",
+            "percent"
+          ]
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "CRITICAL"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "dark-red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "HIGH"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "MEDIUM"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "LOW"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "yellow"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "INFO"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "blue"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "UNKNOWN"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "text"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ERROR"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "text"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 10,
+      "type": "barchart",
+      "title": "Activity by AI application",
+      "gridPos": {
+        "x": 0,
+        "y": 15,
+        "w": 12,
+        "h": 9
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_ai_activity_daily.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "application_name",
+              "text": "application_name",
+              "type": "string"
+            },
+            {
+              "selector": "date_key",
+              "text": "date_key",
+              "type": "number"
+            },
+            {
+              "selector": "activities",
+              "text": "activities",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "(date_key ?? 0) >= ${__from:date:YYYYMMDD} && (date_key ?? 0) <= ${__to:date:YYYYMMDD}",
+          "summarizeExpression": "sum(activities)",
+          "summarizeBy": "application_name",
+          "summarizeAlias": "activities"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "activities",
+                "desc": true
+              }
+            ]
+          }
+        },
+        {
+          "id": "limit",
+          "options": {
+            "limitField": 12
+          }
+        }
+      ],
+      "options": {
+        "orientation": "horizontal",
+        "xField": "application_name",
+        "showValue": "always",
+        "groupWidth": 0.7,
+        "barWidth": 0.8,
+        "stacking": "none",
+        "legend": {
+          "showLegend": false,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelMaxLength": 40
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "custom": {
+            "fillOpacity": 85,
+            "lineWidth": 0,
+            "axisSoftMin": 0
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 11,
+      "type": "barchart",
+      "title": "Blocked and warned by application",
+      "gridPos": {
+        "x": 12,
+        "y": 15,
+        "w": 12,
+        "h": 9
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_ai_activity_daily.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "application_name",
+              "text": "application_name",
+              "type": "string"
+            },
+            {
+              "selector": "date_key",
+              "text": "date_key",
+              "type": "number"
+            },
+            {
+              "selector": "action",
+              "text": "action",
+              "type": "string"
+            },
+            {
+              "selector": "activities",
+              "text": "activities",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "(date_key ?? 0) >= ${__from:date:YYYYMMDD} && (date_key ?? 0) <= ${__to:date:YYYYMMDD} && (action == 'BLOCKED' || action == 'WARNED')",
+          "summarizeExpression": "sum(activities)",
+          "summarizeBy": "application_name",
+          "summarizeAlias": "activities"
+        }
+      ],
+      "description": "Activities the tenant's AI Defense policies blocked or warned on.",
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "activities",
+                "desc": true
+              }
+            ]
+          }
+        },
+        {
+          "id": "limit",
+          "options": {
+            "limitField": 12
+          }
+        }
+      ],
+      "options": {
+        "orientation": "horizontal",
+        "xField": "application_name",
+        "showValue": "always",
+        "groupWidth": 0.7,
+        "barWidth": 0.8,
+        "stacking": "none",
+        "legend": {
+          "showLegend": false,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelMaxLength": 40
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "red"
+          },
+          "custom": {
+            "fillOpacity": 85,
+            "lineWidth": 0,
+            "axisSoftMin": 0
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 12,
+      "type": "table",
+      "title": "AI applications and sanctioning",
+      "gridPos": {
+        "x": 0,
+        "y": 24,
+        "w": 24,
+        "h": 10
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_ai_app_snapshot.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "snapshot_date",
+              "text": "snapshot_date",
+              "type": "string"
+            },
+            {
+              "selector": "application_name",
+              "text": "application_name",
+              "type": "string"
+            },
+            {
+              "selector": "provider",
+              "text": "provider",
+              "type": "string"
+            },
+            {
+              "selector": "risk",
+              "text": "risk",
+              "type": "string"
+            },
+            {
+              "selector": "sanctioning_status",
+              "text": "sanctioning_status",
+              "type": "string"
+            },
+            {
+              "selector": "activities",
+              "text": "activities",
+              "type": "number"
+            },
+            {
+              "selector": "unique_users",
+              "text": "unique_users",
+              "type": "number"
+            },
+            {
+              "selector": "unsanctioned_activities",
+              "text": "unsanctioned_activities",
+              "type": "number"
+            },
+            {
+              "selector": "last_seen_at",
+              "text": "last_seen_at",
+              "type": "string"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "snapshot_date =~ '^${ai_snapshot}$'",
+          "summarizeExpression": "",
+          "summarizeBy": "",
+          "summarizeAlias": ""
+        }
+      ],
+      "description": "The snapshot's inventory window. Sanctioning is what the tenant's policies give each application.",
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "activities",
+                "desc": true
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "snapshot_date": true
+            },
+            "indexByName": {
+              "application_name": 0,
+              "provider": 1,
+              "risk": 2,
+              "sanctioning_status": 3,
+              "activities": 4,
+              "unique_users": 5,
+              "unsanctioned_activities": 6,
+              "last_seen_at": 7
+            },
+            "renameByName": {
+              "application_name": "Application",
+              "provider": "Provider",
+              "risk": "Risk",
+              "sanctioning_status": "Sanctioning",
+              "activities": "Activities",
+              "unique_users": "Users",
+              "unsanctioned_activities": "Unsanctioned",
+              "last_seen_at": "Last seen (UTC)"
+            }
+          }
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": ""
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 13,
+      "type": "piechart",
+      "title": "Applications by sanctioning status",
+      "gridPos": {
+        "x": 18,
+        "y": 6,
+        "w": 6,
+        "h": 9
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_ai_app_snapshot.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "snapshot_date",
+              "text": "snapshot_date",
+              "type": "string"
+            },
+            {
+              "selector": "sanctioning_status",
+              "text": "sanctioning_status",
+              "type": "string"
+            },
+            {
+              "selector": "application_id",
+              "text": "application_id",
+              "type": "string"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "snapshot_date =~ '^${ai_snapshot}$'",
+          "summarizeExpression": "count(application_id)",
+          "summarizeBy": "sanctioning_status",
+          "summarizeAlias": "applications"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": true,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "pieType": "donut",
+        "displayLabels": [],
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "values": [
+            "value",
+            "percent"
+          ]
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "APPROVED"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "WARNED"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "BLOCKED"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "NOT_COVERED"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "text"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 14,
+      "type": "table",
+      "title": "Users, highest risk first",
+      "gridPos": {
+        "x": 0,
+        "y": 34,
+        "w": 24,
+        "h": 10
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_ai_user_snapshot.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "snapshot_date",
+              "text": "snapshot_date",
+              "type": "string"
+            },
+            {
+              "selector": "user_key",
+              "text": "user_key",
+              "type": "string"
+            },
+            {
+              "selector": "user_name",
+              "text": "user_name",
+              "type": "string"
+            },
+            {
+              "selector": "risk",
+              "text": "risk",
+              "type": "string"
+            },
+            {
+              "selector": "risk_rank",
+              "text": "risk_rank",
+              "type": "number"
+            },
+            {
+              "selector": "apps_used",
+              "text": "apps_used",
+              "type": "number"
+            },
+            {
+              "selector": "activities",
+              "text": "activities",
+              "type": "number"
+            },
+            {
+              "selector": "policy_violations",
+              "text": "policy_violations",
+              "type": "number"
+            },
+            {
+              "selector": "top_app_name",
+              "text": "top_app_name",
+              "type": "string"
+            },
+            {
+              "selector": "last_seen_at",
+              "text": "last_seen_at",
+              "type": "string"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "snapshot_date =~ '^${ai_snapshot}$'",
+          "summarizeExpression": "",
+          "summarizeBy": "",
+          "summarizeAlias": ""
+        }
+      ],
+      "description": "User names stay empty unless the exporter's personal data switch is on; the user key is a hash that matches across tables.",
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "risk_rank",
+                "desc": true
+              },
+              {
+                "field": "policy_violations",
+                "desc": true
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "snapshot_date": true,
+              "risk_rank": true
+            },
+            "indexByName": {
+              "user_name": 0,
+              "user_key": 1,
+              "risk": 2,
+              "apps_used": 3,
+              "activities": 4,
+              "policy_violations": 5,
+              "top_app_name": 6,
+              "last_seen_at": 7
+            },
+            "renameByName": {
+              "user_name": "User",
+              "user_key": "User key",
+              "risk": "Risk",
+              "apps_used": "Apps",
+              "activities": "Activities",
+              "policy_violations": "Blocked or warned",
+              "top_app_name": "Top app",
+              "last_seen_at": "Last seen (UTC)"
+            }
+          }
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": ""
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 15,
+      "type": "table",
+      "title": "Policies, in the order Sophos checks them",
+      "gridPos": {
+        "x": 0,
+        "y": 44,
+        "w": 24,
+        "h": 7
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/dim_ai_policy.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "rank",
+              "text": "rank",
+              "type": "number"
+            },
+            {
+              "selector": "policy_name",
+              "text": "policy_name",
+              "type": "string"
+            },
+            {
+              "selector": "state",
+              "text": "state",
+              "type": "string"
+            },
+            {
+              "selector": "enforcement_status",
+              "text": "enforcement_status",
+              "type": "string"
+            },
+            {
+              "selector": "origin",
+              "text": "origin",
+              "type": "string"
+            },
+            {
+              "selector": "block_rules",
+              "text": "block_rules",
+              "type": "number"
+            },
+            {
+              "selector": "warn_rules",
+              "text": "warn_rules",
+              "type": "number"
+            },
+            {
+              "selector": "allow_rules",
+              "text": "allow_rules",
+              "type": "number"
+            },
+            {
+              "selector": "generative_ai_category_action",
+              "text": "generative_ai_category_action",
+              "type": "string"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "",
+          "summarizeExpression": "",
+          "summarizeBy": "",
+          "summarizeAlias": ""
+        }
+      ],
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "rank"
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {
+              "rank": 0,
+              "policy_name": 1,
+              "state": 2,
+              "enforcement_status": 3,
+              "origin": 4,
+              "block_rules": 5,
+              "warn_rules": 6,
+              "allow_rules": 7,
+              "generative_ai_category_action": 8
+            },
+            "renameByName": {
+              "rank": "Rank",
+              "policy_name": "Policy",
+              "state": "State",
+              "enforcement_status": "Enforcement",
+              "origin": "Origin",
+              "block_rules": "Block rules",
+              "warn_rules": "Warn rules",
+              "allow_rules": "Allow rules",
+              "generative_ai_category_action": "Other Generative AI"
+            }
+          }
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": ""
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 16,
+      "type": "table",
+      "title": "Latest blocked and warned activity",
+      "gridPos": {
+        "x": 0,
+        "y": 51,
+        "w": 24,
+        "h": 10
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "fusion-export-csv"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "fusion-export-csv"
+          },
+          "type": "csv",
+          "source": "url",
+          "url": "/fact_ai_activity.csv",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "",
+          "columns": [
+            {
+              "selector": "start_time",
+              "text": "start_time",
+              "type": "string"
+            },
+            {
+              "selector": "start_date_key",
+              "text": "start_date_key",
+              "type": "number"
+            },
+            {
+              "selector": "application_name",
+              "text": "application_name",
+              "type": "string"
+            },
+            {
+              "selector": "action",
+              "text": "action",
+              "type": "string"
+            },
+            {
+              "selector": "risk",
+              "text": "risk",
+              "type": "string"
+            },
+            {
+              "selector": "policy_name",
+              "text": "policy_name",
+              "type": "string"
+            },
+            {
+              "selector": "actor_type",
+              "text": "actor_type",
+              "type": "string"
+            },
+            {
+              "selector": "device_type",
+              "text": "device_type",
+              "type": "string"
+            },
+            {
+              "selector": "sensor_types",
+              "text": "sensor_types",
+              "type": "string"
+            },
+            {
+              "selector": "records",
+              "text": "records",
+              "type": "number"
+            }
+          ],
+          "filters": [],
+          "computed_columns": [],
+          "filterExpression": "(start_date_key ?? 0) >= ${__from:date:YYYYMMDD} && (start_date_key ?? 0) <= ${__to:date:YYYYMMDD} && (action == 'BLOCKED' || action == 'WARNED')",
+          "summarizeExpression": "",
+          "summarizeBy": "",
+          "summarizeAlias": ""
+        }
+      ],
+      "description": "The 50 most recent in the time range. Activity detail is kept for 90 days by default.",
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "start_time",
+                "desc": true
+              }
+            ]
+          }
+        },
+        {
+          "id": "limit",
+          "options": {
+            "limitField": 50
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "start_date_key": true
+            },
+            "indexByName": {
+              "start_time": 0,
+              "application_name": 1,
+              "action": 2,
+              "risk": 3,
+              "policy_name": 4,
+              "actor_type": 5,
+              "device_type": 6,
+              "sensor_types": 7,
+              "records": 8
+            },
+            "renameByName": {
+              "start_time": "Started (UTC)",
+              "application_name": "Application",
+              "action": "Action",
+              "risk": "Risk",
+              "policy_name": "Policy",
+              "actor_type": "Actor",
+              "device_type": "Device",
+              "sensor_types": "Seen by",
+              "records": "Records"
+            }
+          }
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": ""
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          }
+        },
+        "overrides": []
+      }
+    }
+  ]
+}
