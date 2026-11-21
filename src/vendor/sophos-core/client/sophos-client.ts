@@ -321,8 +321,13 @@ export class SophosClient {
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
 
-        // Don't retry on 4xx client errors (message contains "error NNN:" where NNN is 4xx)
-        if (/Sophos API error 4\d\d:/.test(lastError.message)) {
+        // Don't retry on 4xx client errors. Exporter local fix: the status decides, not the
+        // message, which reads "Sophos API error (404): ..." when the body is not JSON and so
+        // slipped past the old /Sophos API error 4\d\d:/ test into two needless retries.
+        if (
+          (lastError instanceof SophosApiRequestError && lastError.status >= 400 && lastError.status < 500) ||
+          /Sophos API error 4\d\d:/.test(lastError.message)
+        ) {
           throw lastError;
         }
 

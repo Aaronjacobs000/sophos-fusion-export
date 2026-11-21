@@ -14,6 +14,7 @@ Local modifications, each marked "Exporter local modification" in the source:
 | `auth/token-manager.ts`, `client/tenant-resolver.ts`, `client/sophos-client.ts`, `client/fusion-client.ts` | Call an injected fetch instead of the global one, so the exporter's read-only, rate limited guard sees every request. |
 | `client/fusion-client.ts` | `putPresigned` (the case file upload, a write) is removed. |
 | `index.ts` | Replaced: exports only the copied files, and `createSophosCore` takes the fetch every client uses. |
+| `client/sophos-client.ts` | Bug fix: a 4xx whose body is not JSON is no longer retried. The old check matched the message `Sophos API error 404:`, but a non-JSON body gives `Sophos API error (404):`, so it was sent twice more. |
 
 ## SecOps Toolkit (adapted)
 
