@@ -44,13 +44,13 @@ test("azuredeploy.json: parameters, secrets, the job's variables and its output 
 
 test("Dockerfile: pinned base, non-root, and the same Node.js major as CI", async () => {
   const dockerfile = await read("Dockerfile");
-  assert.match(dockerfile, /^ARG NODE_IMAGE=node:24\.\d+\.\d+-alpine[\d.]+@sha256:[0-9a-f]{64}$/m, "the base image is pinned by version and digest");
-  assert.match(dockerfile, /^USER node$/m);
-  assert.match(dockerfile, /^ENTRYPOINT \["node", "\/app\/dist\/cli.js"\]$/m);
+  assert.match(dockerfile, /^ARG NODE_IMAGE=node:24\.\d+\.\d+-alpine[\d.]+@sha256:[0-9a-f]{64}\r?$/m, "the base image is pinned by version and digest");
+  assert.match(dockerfile, /^USER node\r?$/m);
+  assert.match(dockerfile, /^ENTRYPOINT \["node", "\/app\/dist\/cli.js"\]\r?$/m);
   const ci = await read(".github/workflows/ci.yml");
   assert.match(ci, /node: \['22', '24'\]/);
   const ignore = await read(".dockerignore");
-  assert.match(ignore, /^\*$/m, "the build context starts empty");
+  assert.match(ignore, /^\*\r?$/m, "the build context starts empty");
 });
 
 test("README: the Deploy to Azure button opens azuredeploy.json on main", async () => {

@@ -5,7 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import {
   assertIdentityEndpoint,
   keyVaultOrigin,
@@ -148,9 +148,9 @@ test("config: sharepoint.auth, the config in FUSION_EXPORT_CONFIG_JSON, and the 
 
   const json = JSON.stringify({ outputDir: "/data", reportTimezone: "Australia/Sydney", sharepoint: { siteUrl: "https://contoso.sharepoint.com/sites/r", auth: "managedIdentity" } });
   const fromEnv = settings(parseArgs(["run"]), { FUSION_EXPORT_CONFIG_JSON: json });
-  assert.equal(fromEnv.outputDir, "/data");
+  assert.equal(fromEnv.outputDir, resolve("/data"));
   assert.equal(fromEnv.reportTimezone, "Australia/Sydney");
-  assert.equal(settings(parseArgs(["run", "--out", "/tmp/x"]), { FUSION_EXPORT_CONFIG_JSON: json }).outputDir, "/tmp/x");
+  assert.equal(settings(parseArgs(["run", "--out", "/tmp/x"]), { FUSION_EXPORT_CONFIG_JSON: json }).outputDir, resolve("/tmp/x"));
   assert.equal(settings(parseArgs(["run", "--no-upload"]), { FUSION_EXPORT_CONFIG_JSON: json }).sharepoint, undefined);
   assert.throws(() => settings(parseArgs(["run", "--config", "x.json"]), { FUSION_EXPORT_CONFIG_JSON: json }), /not both/);
   assert.throws(() => settings(parseArgs(["run"]), { FUSION_EXPORT_CONFIG_JSON: "{" }), /FUSION_EXPORT_CONFIG_JSON is not valid JSON/);
