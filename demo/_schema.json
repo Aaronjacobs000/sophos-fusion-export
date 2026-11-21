@@ -1,0 +1,1417 @@
+{
+  "schemaVersion": "1.0",
+  "generator": "sophos-fusion-export",
+  "conventions": {
+    "encoding": "UTF-8, no byte order mark",
+    "delimiter": ",",
+    "header": true,
+    "nullValue": "",
+    "datetime": "ISO 8601 UTC with Z, second precision",
+    "date": "YYYY-MM-DD in the report time zone",
+    "boolean": "true or false"
+  },
+  "tables": [
+    {
+      "name": "dim_tenant",
+      "file": "dim_tenant.csv",
+      "version": "1.0",
+      "description": "The tenant this credential reads. One row per tenant.",
+      "load": "upsert",
+      "key": [
+        "tenant_id"
+      ],
+      "personalOnly": false,
+      "columns": [
+        {
+          "name": "tenant_id",
+          "type": "string",
+          "personal": false,
+          "description": "Sophos Central tenant ID (a UUID)."
+        },
+        {
+          "name": "tenant_name",
+          "type": "string",
+          "personal": false,
+          "description": "Display name: the configured tenantName, else the name Sophos returns on alerts, else the tenant ID."
+        },
+        {
+          "name": "fusion_tenant_id",
+          "type": "string",
+          "personal": false,
+          "description": "The tenant's ID in Sophos Fusion GraphQL, as cases report it. Empty for a Classic tenant."
+        },
+        {
+          "name": "partner_id",
+          "type": "string",
+          "personal": false,
+          "description": "Partner that manages the tenant, from the Licenses API. Empty when none."
+        },
+        {
+          "name": "organization_id",
+          "type": "string",
+          "personal": false,
+          "description": "Organization the tenant belongs to, from the Licenses API. Empty when none."
+        },
+        {
+          "name": "data_region",
+          "type": "string",
+          "personal": false,
+          "description": "Sophos Central data region host, for example https://api-eu01.central.sophos.com."
+        },
+        {
+          "name": "platform",
+          "type": "string",
+          "personal": false,
+          "description": "fusion when the tenant answers Sophos Fusion Cases v2, classic when it is still on cases v1."
+        },
+        {
+          "name": "report_timezone",
+          "type": "string",
+          "personal": false,
+          "description": "IANA time zone the *_local_date columns use."
+        },
+        {
+          "name": "license_codes",
+          "type": "string",
+          "personal": false,
+          "description": "Licence codes the tenant holds, joined with |."
+        },
+        {
+          "name": "exported_at",
+          "type": "datetime",
+          "personal": false,
+          "description": "When this row was last written."
+        }
+      ]
+    },
+    {
+      "name": "fact_license",
+      "file": "fact_license.csv",
+      "version": "1.0",
+      "description": "Licences held by the tenant, one snapshot a day.",
+      "load": "snapshot",
+      "key": [
+        "tenant_id",
+        "snapshot_date",
+        "license_id"
+      ],
+      "personalOnly": false,
+      "columns": [
+        {
+          "name": "tenant_id",
+          "type": "string",
+          "personal": false,
+          "description": "Sophos Central tenant ID (a UUID)."
+        },
+        {
+          "name": "snapshot_date",
+          "type": "date",
+          "personal": false,
+          "description": "Day of the snapshot in the report time zone."
+        },
+        {
+          "name": "license_id",
+          "type": "string",
+          "personal": false,
+          "description": "Sophos licence record ID."
+        },
+        {
+          "name": "license_code",
+          "type": "string",
+          "personal": false,
+          "description": "Licence code, for example XDR-MSP or CIXAXDR."
+        },
+        {
+          "name": "generic_code",
+          "type": "string",
+          "personal": false,
+          "description": "Sophos generic product code, when sent."
+        },
+        {
+          "name": "product_name",
+          "type": "string",
+          "personal": false,
+          "description": "Product name Sophos gives the licence."
+        },
+        {
+          "name": "license_type",
+          "type": "string",
+          "personal": false,
+          "description": "term, trial, usage (MSP monthly) or another value Sophos sends."
+        },
+        {
+          "name": "quantity",
+          "type": "integer",
+          "personal": false,
+          "description": "Licensed quantity. Empty when unlimited."
+        },
+        {
+          "name": "used",
+          "type": "integer",
+          "personal": false,
+          "description": "Current usage count Sophos reports. Empty when it sends none."
+        },
+        {
+          "name": "unlimited",
+          "type": "boolean",
+          "personal": false,
+          "description": "True for an unlimited licence."
+        },
+        {
+          "name": "perpetual",
+          "type": "boolean",
+          "personal": false,
+          "description": "True for a perpetual licence."
+        },
+        {
+          "name": "start_date",
+          "type": "date",
+          "personal": false,
+          "description": "Licence start date."
+        },
+        {
+          "name": "end_date",
+          "type": "date",
+          "personal": false,
+          "description": "Licence end date. Empty for a perpetual licence."
+        },
+        {
+          "name": "days_to_end",
+          "type": "integer",
+          "personal": false,
+          "description": "Days from the snapshot date to the end date. Negative once expired."
+        }
+      ]
+    },
+    {
+      "name": "fact_case",
+      "file": "fact_case.csv",
+      "version": "1.0",
+      "description": "Cases, current state, one row per case (Sophos Fusion Cases v2, or cases v1 for a Classic tenant).",
+      "load": "upsert",
+      "key": [
+        "tenant_id",
+        "case_id"
+      ],
+      "personalOnly": false,
+      "columns": [
+        {
+          "name": "tenant_id",
+          "type": "string",
+          "personal": false,
+          "description": "Sophos Central tenant ID (a UUID)."
+        },
+        {
+          "name": "case_id",
+          "type": "string",
+          "personal": false,
+          "description": "Case ID."
+        },
+        {
+          "name": "short_id",
+          "type": "string",
+          "personal": false,
+          "description": "Human readable case ID, for example G-01560."
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "personal": true,
+          "description": "Case title. Often names a host or user, so it is personal data."
+        },
+        {
+          "name": "severity",
+          "type": "integer",
+          "personal": false,
+          "description": "2 informational, 4 low, 6 medium, 8 high, 10 critical. 0 when not set."
+        },
+        {
+          "name": "severity_label",
+          "type": "string",
+          "personal": false,
+          "description": "Informational, Low, Medium, High, Critical, or Not set."
+        },
+        {
+          "name": "case_type_id",
+          "type": "string",
+          "personal": false,
+          "description": "Case type ID (dim_case_type)."
+        },
+        {
+          "name": "case_type",
+          "type": "string",
+          "personal": false,
+          "description": "Case type title."
+        },
+        {
+          "name": "primary_status_id",
+          "type": "string",
+          "personal": false,
+          "description": "Primary status ID (dim_case_status)."
+        },
+        {
+          "name": "primary_status",
+          "type": "string",
+          "personal": false,
+          "description": "Primary status title."
+        },
+        {
+          "name": "secondary_status",
+          "type": "string",
+          "personal": false,
+          "description": "Secondary status title, when set."
+        },
+        {
+          "name": "is_closed",
+          "type": "boolean",
+          "personal": false,
+          "description": "True when the primary status is a closed one."
+        },
+        {
+          "name": "primary_verdict",
+          "type": "string",
+          "personal": false,
+          "description": "Primary verdict title, when set."
+        },
+        {
+          "name": "secondary_verdict",
+          "type": "string",
+          "personal": false,
+          "description": "Secondary verdict title, when set."
+        },
+        {
+          "name": "close_reason",
+          "type": "string",
+          "personal": true,
+          "description": "Free text the closer typed, so it is personal data."
+        },
+        {
+          "name": "managed_by",
+          "type": "string",
+          "personal": false,
+          "description": "PROVIDER (Sophos MDR or the partner), CUSTOMER, or empty when not yet claimed."
+        },
+        {
+          "name": "created_by_mdr",
+          "type": "boolean",
+          "personal": false,
+          "description": "True when the tenant's MDR provider created the case."
+        },
+        {
+          "name": "created_by_partner",
+          "type": "boolean",
+          "personal": false,
+          "description": "True when the tenant's partner created the case."
+        },
+        {
+          "name": "assignee_id",
+          "type": "string",
+          "personal": false,
+          "description": "ID of the assigned user, client or group, or a mention such as @sophos."
+        },
+        {
+          "name": "created_at",
+          "type": "datetime",
+          "personal": false,
+          "description": "When the case was created."
+        },
+        {
+          "name": "created_local_date",
+          "type": "date",
+          "personal": false,
+          "description": "created_at as a date in the report time zone."
+        },
+        {
+          "name": "created_date_key",
+          "type": "integer",
+          "personal": false,
+          "description": "created_local_date as a number, YYYYMMDD, for tools that filter dates numerically."
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime",
+          "personal": false,
+          "description": "When the case last changed."
+        },
+        {
+          "name": "closed_at",
+          "type": "datetime",
+          "personal": false,
+          "description": "When the case was closed. Empty while open."
+        },
+        {
+          "name": "closed_local_date",
+          "type": "date",
+          "personal": false,
+          "description": "closed_at as a date in the report time zone."
+        },
+        {
+          "name": "closed_date_key",
+          "type": "integer",
+          "personal": false,
+          "description": "closed_local_date as a number, YYYYMMDD."
+        },
+        {
+          "name": "archived_at",
+          "type": "datetime",
+          "personal": false,
+          "description": "When the case was archived, if it was."
+        },
+        {
+          "name": "minutes_to_close",
+          "type": "integer",
+          "personal": false,
+          "description": "closed_at minus created_at in minutes. Empty while open."
+        },
+        {
+          "name": "age_days",
+          "type": "number",
+          "personal": false,
+          "description": "Days from created_at to closed_at, or to the export time while open."
+        },
+        {
+          "name": "risk_score",
+          "type": "number",
+          "personal": false,
+          "description": "Case risk score."
+        },
+        {
+          "name": "source",
+          "type": "string",
+          "personal": false,
+          "description": "How the case was generated, when Sophos says."
+        },
+        {
+          "name": "tags",
+          "type": "string",
+          "personal": false,
+          "description": "Case tags joined with |."
+        },
+        {
+          "name": "detections_count",
+          "type": "integer",
+          "personal": false,
+          "description": "Detections attached to the case."
+        },
+        {
+          "name": "events_count",
+          "type": "integer",
+          "personal": false,
+          "description": "Events attached to the case."
+        },
+        {
+          "name": "assets_count",
+          "type": "integer",
+          "personal": false,
+          "description": "Assets attached to the case."
+        },
+        {
+          "name": "api_version",
+          "type": "string",
+          "personal": false,
+          "description": "v2 (Sophos Fusion) or v1 (cases v1, Classic)."
+        },
+        {
+          "name": "exported_at",
+          "type": "datetime",
+          "personal": false,
+          "description": "When this row was last written."
+        }
+      ]
+    },
+    {
+      "name": "dim_case_type",
+      "file": "dim_case_type.csv",
+      "version": "1.0",
+      "description": "Case types the tenant can use. Fusion builds these from licensed services.",
+      "load": "reference",
+      "key": [
+        "tenant_id",
+        "case_type_id"
+      ],
+      "personalOnly": false,
+      "columns": [
+        {
+          "name": "tenant_id",
+          "type": "string",
+          "personal": false,
+          "description": "Sophos Central tenant ID (a UUID)."
+        },
+        {
+          "name": "case_type_id",
+          "type": "string",
+          "personal": false,
+          "description": "Case type ID."
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "personal": false,
+          "description": "Machine name."
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "personal": false,
+          "description": "Display title."
+        },
+        {
+          "name": "managed_by",
+          "type": "string",
+          "personal": false,
+          "description": "PROVIDER, CUSTOMER or empty."
+        }
+      ]
+    },
+    {
+      "name": "dim_case_status",
+      "file": "dim_case_status.csv",
+      "version": "1.0",
+      "description": "Primary and secondary case statuses the tenant can use.",
+      "load": "reference",
+      "key": [
+        "tenant_id",
+        "status_id"
+      ],
+      "personalOnly": false,
+      "columns": [
+        {
+          "name": "tenant_id",
+          "type": "string",
+          "personal": false,
+          "description": "Sophos Central tenant ID (a UUID)."
+        },
+        {
+          "name": "status_id",
+          "type": "string",
+          "personal": false,
+          "description": "Status ID."
+        },
+        {
+          "name": "level",
+          "type": "string",
+          "personal": false,
+          "description": "primary or secondary."
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "personal": false,
+          "description": "Machine name."
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "personal": false,
+          "description": "Display title."
+        },
+        {
+          "name": "is_closed",
+          "type": "boolean",
+          "personal": false,
+          "description": "For a primary status: true when it closes the case."
+        }
+      ]
+    },
+    {
+      "name": "dim_case_verdict",
+      "file": "dim_case_verdict.csv",
+      "version": "1.0",
+      "description": "Primary and secondary case verdicts the tenant can use.",
+      "load": "reference",
+      "key": [
+        "tenant_id",
+        "verdict_id"
+      ],
+      "personalOnly": false,
+      "columns": [
+        {
+          "name": "tenant_id",
+          "type": "string",
+          "personal": false,
+          "description": "Sophos Central tenant ID (a UUID)."
+        },
+        {
+          "name": "verdict_id",
+          "type": "string",
+          "personal": false,
+          "description": "Verdict ID."
+        },
+        {
+          "name": "level",
+          "type": "string",
+          "personal": false,
+          "description": "primary or secondary."
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "personal": false,
+          "description": "Machine name."
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "personal": false,
+          "description": "Display title."
+        }
+      ]
+    },
+    {
+      "name": "fact_detection",
+      "file": "fact_detection.csv",
+      "version": "1.0",
+      "description": "Detections (Sophos Fusion Detections v2), one row per detection. The last detectionTrailingDays are pulled again on every run because status changes after creation.",
+      "load": "window",
+      "key": [
+        "tenant_id",
+        "detection_id"
+      ],
+      "personalOnly": false,
+      "columns": [
+        {
+          "name": "tenant_id",
+          "type": "string",
+          "personal": false,
+          "description": "Sophos Central tenant ID (a UUID)."
+        },
+        {
+          "name": "detection_id",
+          "type": "string",
+          "personal": false,
+          "description": "Detection resource name (alert://...)."
+        },
+        {
+          "name": "created_at",
+          "type": "datetime",
+          "personal": false,
+          "description": "When the detection was created."
+        },
+        {
+          "name": "created_local_date",
+          "type": "date",
+          "personal": false,
+          "description": "created_at as a date in the report time zone."
+        },
+        {
+          "name": "created_date_key",
+          "type": "integer",
+          "personal": false,
+          "description": "created_local_date as a number, YYYYMMDD, for tools that filter dates numerically."
+        },
+        {
+          "name": "first_seen_at",
+          "type": "datetime",
+          "personal": false,
+          "description": "When the activity was first seen, when Sophos says."
+        },
+        {
+          "name": "severity",
+          "type": "number",
+          "personal": false,
+          "description": "Severity score, 0 to 1."
+        },
+        {
+          "name": "severity_band",
+          "type": "string",
+          "personal": false,
+          "description": "Critical (0.8 and up), High (0.6), Medium (0.4), Low (0.2) or Info."
+        },
+        {
+          "name": "severity_rank",
+          "type": "integer",
+          "personal": false,
+          "description": "5 Critical, 4 High, 3 Medium, 2 Low, 1 Info, for sorting."
+        },
+        {
+          "name": "confidence",
+          "type": "number",
+          "personal": false,
+          "description": "Confidence, 0 to 1."
+        },
+        {
+          "name": "threat_score",
+          "type": "number",
+          "personal": false,
+          "description": "Threat score Sophos assigns."
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "personal": false,
+          "description": "OPEN, TRUE_POSITIVE_BENIGN, TRUE_POSITIVE_MALICIOUS, FALSE_POSITIVE, NOT_ACTIONABLE, OTHER, SUPPRESSED, AUTO_CLOSE or DISMISSED."
+        },
+        {
+          "name": "resolution_reason",
+          "type": "string",
+          "personal": false,
+          "description": "Resolution reason, when set."
+        },
+        {
+          "name": "detector_id",
+          "type": "string",
+          "personal": false,
+          "description": "Detector ID (dim_detector)."
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "personal": false,
+          "description": "Detection title."
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "personal": true,
+          "description": "Detection description. Can quote command lines, hosts and users, so it is personal data."
+        },
+        {
+          "name": "technique_count",
+          "type": "integer",
+          "personal": false,
+          "description": "MITRE ATT&CK techniques the detection names."
+        },
+        {
+          "name": "sensor_count",
+          "type": "integer",
+          "personal": false,
+          "description": "Sensor types that contributed."
+        },
+        {
+          "name": "case_count",
+          "type": "integer",
+          "personal": false,
+          "description": "Cases (investigations) the detection is attached to."
+        },
+        {
+          "name": "case_ids",
+          "type": "string",
+          "personal": false,
+          "description": "Those case IDs joined with |."
+        },
+        {
+          "name": "exported_at",
+          "type": "datetime",
+          "personal": false,
+          "description": "When this row was last written."
+        }
+      ]
+    },
+    {
+      "name": "bridge_detection_technique",
+      "file": "bridge_detection_technique.csv",
+      "version": "1.0",
+      "description": "MITRE ATT&CK techniques and tactics per detection. One row per detection, technique and tactic; tactic is empty when no enrichment gives one.",
+      "load": "window",
+      "key": [
+        "tenant_id",
+        "detection_id",
+        "technique_id",
+        "tactic"
+      ],
+      "personalOnly": false,
+      "columns": [
+        {
+          "name": "tenant_id",
+          "type": "string",
+          "personal": false,
+          "description": "Sophos Central tenant ID (a UUID)."
+        },
+        {
+          "name": "detection_id",
+          "type": "string",
+          "personal": false,
+          "description": "Detection resource name."
+        },
+        {
+          "name": "technique_id",
+          "type": "string",
+          "personal": false,
+          "description": "ATT&CK technique ID, for example T1078.002."
+        },
+        {
+          "name": "tactic",
+          "type": "string",
+          "personal": false,
+          "description": "ATT&CK tactic short name, for example lateral-movement."
+        }
+      ]
+    },
+    {
+      "name": "bridge_detection_sensor",
+      "file": "bridge_detection_sensor.csv",
+      "version": "1.0",
+      "description": "Sensor types per detection.",
+      "load": "window",
+      "key": [
+        "tenant_id",
+        "detection_id",
+        "sensor_type"
+      ],
+      "personalOnly": false,
+      "columns": [
+        {
+          "name": "tenant_id",
+          "type": "string",
+          "personal": false,
+          "description": "Sophos Central tenant ID (a UUID)."
+        },
+        {
+          "name": "detection_id",
+          "type": "string",
+          "personal": false,
+          "description": "Detection resource name."
+        },
+        {
+          "name": "sensor_type",
+          "type": "string",
+          "personal": false,
+          "description": "Sensor type code (dim_sensor_type)."
+        }
+      ]
+    },
+    {
+      "name": "bridge_detection_entity",
+      "file": "bridge_detection_entity.csv",
+      "version": "1.0",
+      "description": "Source and target entities per detection (hosts, users, IP addresses, processes). Written only with the personal data switch on.",
+      "load": "window",
+      "key": [
+        "tenant_id",
+        "detection_id",
+        "role",
+        "subtype",
+        "display_name"
+      ],
+      "personalOnly": true,
+      "columns": [
+        {
+          "name": "tenant_id",
+          "type": "string",
+          "personal": false,
+          "description": "Sophos Central tenant ID (a UUID)."
+        },
+        {
+          "name": "detection_id",
+          "type": "string",
+          "personal": false,
+          "description": "Detection resource name."
+        },
+        {
+          "name": "role",
+          "type": "string",
+          "personal": false,
+          "description": "source or target."
+        },
+        {
+          "name": "subtype",
+          "type": "string",
+          "personal": false,
+          "description": "Entity kind, for example Endpoint, User or IpAddress."
+        },
+        {
+          "name": "display_name",
+          "type": "string",
+          "personal": true,
+          "description": "Entity name."
+        }
+      ]
+    },
+    {
+      "name": "dim_detector",
+      "file": "dim_detector.csv",
+      "version": "1.0",
+      "description": "Detectors seen in detections.",
+      "load": "upsert",
+      "key": [
+        "tenant_id",
+        "detector_id"
+      ],
+      "personalOnly": false,
+      "columns": [
+        {
+          "name": "tenant_id",
+          "type": "string",
+          "personal": false,
+          "description": "Sophos Central tenant ID (a UUID)."
+        },
+        {
+          "name": "detector_id",
+          "type": "string",
+          "personal": false,
+          "description": "Detector ID."
+        },
+        {
+          "name": "detector_name",
+          "type": "string",
+          "personal": false,
+          "description": "Detector name."
+        }
+      ]
+    },
+    {
+      "name": "dim_mitre_technique",
+      "file": "dim_mitre_technique.csv",
+      "version": "1.0",
+      "description": "MITRE ATT&CK techniques seen in detections.",
+      "load": "upsert",
+      "key": [
+        "tenant_id",
+        "technique_id"
+      ],
+      "personalOnly": false,
+      "columns": [
+        {
+          "name": "tenant_id",
+          "type": "string",
+          "personal": false,
+          "description": "Sophos Central tenant ID (a UUID)."
+        },
+        {
+          "name": "technique_id",
+          "type": "string",
+          "personal": false,
+          "description": "Technique ID."
+        },
+        {
+          "name": "technique_name",
+          "type": "string",
+          "personal": false,
+          "description": "Technique name, when an enrichment gives it."
+        },
+        {
+          "name": "tactics",
+          "type": "string",
+          "personal": false,
+          "description": "Tactics joined with |."
+        }
+      ]
+    },
+    {
+      "name": "dim_sensor_type",
+      "file": "dim_sensor_type.csv",
+      "version": "1.0",
+      "description": "Sensor types seen in detections, with a readable label.",
+      "load": "upsert",
+      "key": [
+        "tenant_id",
+        "sensor_type"
+      ],
+      "personalOnly": false,
+      "columns": [
+        {
+          "name": "tenant_id",
+          "type": "string",
+          "personal": false,
+          "description": "Sophos Central tenant ID (a UUID)."
+        },
+        {
+          "name": "sensor_type",
+          "type": "string",
+          "personal": false,
+          "description": "Sensor type code, for example ENDPOINT_SOPHOS."
+        },
+        {
+          "name": "label",
+          "type": "string",
+          "personal": false,
+          "description": "Readable label, for example Endpoint."
+        }
+      ]
+    },
+    {
+      "name": "fact_detection_daily",
+      "file": "fact_detection_daily.csv",
+      "version": "1.0",
+      "description": "Detection counts by day, severity band and detector. Kept after detection detail is pruned, so long trends survive Sophos's retention.",
+      "load": "window",
+      "key": [
+        "tenant_id",
+        "local_date",
+        "severity_band",
+        "detector_id"
+      ],
+      "personalOnly": false,
+      "columns": [
+        {
+          "name": "tenant_id",
+          "type": "string",
+          "personal": false,
+          "description": "Sophos Central tenant ID (a UUID)."
+        },
+        {
+          "name": "local_date",
+          "type": "date",
+          "personal": false,
+          "description": "Day in the report time zone."
+        },
+        {
+          "name": "date_key",
+          "type": "integer",
+          "personal": false,
+          "description": "local_date as a number, YYYYMMDD, for tools that filter dates numerically."
+        },
+        {
+          "name": "severity_band",
+          "type": "string",
+          "personal": false,
+          "description": "Critical, High, Medium, Low or Info."
+        },
+        {
+          "name": "severity_rank",
+          "type": "integer",
+          "personal": false,
+          "description": "5 Critical down to 1 Info."
+        },
+        {
+          "name": "detector_id",
+          "type": "string",
+          "personal": false,
+          "description": "Detector ID."
+        },
+        {
+          "name": "detections",
+          "type": "integer",
+          "personal": false,
+          "description": "Detections created that day."
+        },
+        {
+          "name": "open_detections",
+          "type": "integer",
+          "personal": false,
+          "description": "Of those, detections still OPEN at export time."
+        }
+      ]
+    },
+    {
+      "name": "fact_technique_daily",
+      "file": "fact_technique_daily.csv",
+      "version": "1.0",
+      "description": "Detection counts by day, MITRE ATT&CK technique and tactic. Kept after detection detail is pruned.",
+      "load": "window",
+      "key": [
+        "tenant_id",
+        "local_date",
+        "technique_id",
+        "tactic"
+      ],
+      "personalOnly": false,
+      "columns": [
+        {
+          "name": "tenant_id",
+          "type": "string",
+          "personal": false,
+          "description": "Sophos Central tenant ID (a UUID)."
+        },
+        {
+          "name": "local_date",
+          "type": "date",
+          "personal": false,
+          "description": "Day in the report time zone."
+        },
+        {
+          "name": "date_key",
+          "type": "integer",
+          "personal": false,
+          "description": "local_date as a number, YYYYMMDD, for tools that filter dates numerically."
+        },
+        {
+          "name": "technique_id",
+          "type": "string",
+          "personal": false,
+          "description": "ATT&CK technique ID."
+        },
+        {
+          "name": "tactic",
+          "type": "string",
+          "personal": false,
+          "description": "ATT&CK tactic short name; empty when no enrichment gives one."
+        },
+        {
+          "name": "detections",
+          "type": "integer",
+          "personal": false,
+          "description": "Detections created that day naming the technique."
+        }
+      ]
+    },
+    {
+      "name": "fact_sensor_daily",
+      "file": "fact_sensor_daily.csv",
+      "version": "1.0",
+      "description": "Detection counts by day and sensor type. Kept after detection detail is pruned.",
+      "load": "window",
+      "key": [
+        "tenant_id",
+        "local_date",
+        "sensor_type"
+      ],
+      "personalOnly": false,
+      "columns": [
+        {
+          "name": "tenant_id",
+          "type": "string",
+          "personal": false,
+          "description": "Sophos Central tenant ID (a UUID)."
+        },
+        {
+          "name": "local_date",
+          "type": "date",
+          "personal": false,
+          "description": "Day in the report time zone."
+        },
+        {
+          "name": "date_key",
+          "type": "integer",
+          "personal": false,
+          "description": "local_date as a number, YYYYMMDD, for tools that filter dates numerically."
+        },
+        {
+          "name": "sensor_type",
+          "type": "string",
+          "personal": false,
+          "description": "Sensor type code (dim_sensor_type)."
+        },
+        {
+          "name": "detections",
+          "type": "integer",
+          "personal": false,
+          "description": "Detections created that day with this sensor type."
+        }
+      ]
+    },
+    {
+      "name": "fact_endpoint_snapshot",
+      "file": "fact_endpoint_snapshot.csv",
+      "version": "1.0",
+      "description": "Endpoint health and coverage, one snapshot a day per endpoint (Endpoint API).",
+      "load": "snapshot",
+      "key": [
+        "tenant_id",
+        "snapshot_date",
+        "endpoint_id"
+      ],
+      "personalOnly": false,
+      "columns": [
+        {
+          "name": "tenant_id",
+          "type": "string",
+          "personal": false,
+          "description": "Sophos Central tenant ID (a UUID)."
+        },
+        {
+          "name": "snapshot_date",
+          "type": "date",
+          "personal": false,
+          "description": "Day of the snapshot in the report time zone."
+        },
+        {
+          "name": "endpoint_id",
+          "type": "string",
+          "personal": false,
+          "description": "Endpoint ID. Equals host_id in the Sophos Data Lake."
+        },
+        {
+          "name": "endpoint_type",
+          "type": "string",
+          "personal": false,
+          "description": "computer, server or securityVm."
+        },
+        {
+          "name": "hostname",
+          "type": "string",
+          "personal": true,
+          "description": "Hostname."
+        },
+        {
+          "name": "os_platform",
+          "type": "string",
+          "personal": false,
+          "description": "windows, macOS or linux."
+        },
+        {
+          "name": "os_name",
+          "type": "string",
+          "personal": false,
+          "description": "Operating system name."
+        },
+        {
+          "name": "os_build",
+          "type": "string",
+          "personal": false,
+          "description": "major.minor.build."
+        },
+        {
+          "name": "health_overall",
+          "type": "string",
+          "personal": false,
+          "description": "good, suspicious, bad or unknown."
+        },
+        {
+          "name": "health_threats",
+          "type": "string",
+          "personal": false,
+          "description": "Threat health."
+        },
+        {
+          "name": "health_services",
+          "type": "string",
+          "personal": false,
+          "description": "Service health."
+        },
+        {
+          "name": "last_seen_at",
+          "type": "datetime",
+          "personal": false,
+          "description": "When the endpoint last checked in."
+        },
+        {
+          "name": "days_since_seen",
+          "type": "number",
+          "personal": false,
+          "description": "Days from last_seen_at to the snapshot time."
+        },
+        {
+          "name": "online",
+          "type": "boolean",
+          "personal": false,
+          "description": "Online at snapshot time, when Sophos says."
+        },
+        {
+          "name": "tamper_protection_enabled",
+          "type": "boolean",
+          "personal": false,
+          "description": "Tamper protection on."
+        },
+        {
+          "name": "tamper_protection_supported",
+          "type": "boolean",
+          "personal": false,
+          "description": "Tamper protection supported on this endpoint."
+        },
+        {
+          "name": "isolation_status",
+          "type": "string",
+          "personal": false,
+          "description": "isolated or notIsolated."
+        },
+        {
+          "name": "lockdown_status",
+          "type": "string",
+          "personal": false,
+          "description": "Server lockdown status."
+        },
+        {
+          "name": "group_name",
+          "type": "string",
+          "personal": false,
+          "description": "Endpoint group."
+        },
+        {
+          "name": "mdr_managed",
+          "type": "boolean",
+          "personal": false,
+          "description": "Managed by Sophos MDR, when Sophos says."
+        },
+        {
+          "name": "protection_package",
+          "type": "string",
+          "personal": false,
+          "description": "Assigned protection package, for example XDR or MDR."
+        },
+        {
+          "name": "core_agent_version",
+          "type": "string",
+          "personal": false,
+          "description": "Core agent version."
+        },
+        {
+          "name": "products",
+          "type": "string",
+          "personal": false,
+          "description": "Installed product codes joined with |."
+        },
+        {
+          "name": "ipv4_addresses",
+          "type": "string",
+          "personal": true,
+          "description": "IPv4 addresses joined with |."
+        },
+        {
+          "name": "associated_person",
+          "type": "string",
+          "personal": true,
+          "description": "Associated person."
+        }
+      ]
+    },
+    {
+      "name": "fact_health_check_snapshot",
+      "file": "fact_health_check_snapshot.csv",
+      "version": "1.0",
+      "description": "Account Health Check scores, one snapshot a day per check.",
+      "load": "snapshot",
+      "key": [
+        "tenant_id",
+        "snapshot_date",
+        "area",
+        "scope"
+      ],
+      "personalOnly": false,
+      "columns": [
+        {
+          "name": "tenant_id",
+          "type": "string",
+          "personal": false,
+          "description": "Sophos Central tenant ID (a UUID)."
+        },
+        {
+          "name": "snapshot_date",
+          "type": "date",
+          "personal": false,
+          "description": "Day of the snapshot in the report time zone."
+        },
+        {
+          "name": "area",
+          "type": "string",
+          "personal": false,
+          "description": "protection, policy, exclusions or tamperProtection."
+        },
+        {
+          "name": "scope",
+          "type": "string",
+          "personal": false,
+          "description": "What the score covers, for example computer, server, policy.computer.threat-protection or global."
+        },
+        {
+          "name": "score",
+          "type": "number",
+          "personal": false,
+          "description": "Score, 0 to 100."
+        },
+        {
+          "name": "total",
+          "type": "integer",
+          "personal": false,
+          "description": "Items checked, when Sophos says."
+        },
+        {
+          "name": "issue_count",
+          "type": "integer",
+          "personal": false,
+          "description": "Items failing the check (not fully protected, not on recommended settings, risky exclusions, tamper protection off)."
+        },
+        {
+          "name": "snoozed",
+          "type": "boolean",
+          "personal": false,
+          "description": "The check is snoozed."
+        }
+      ]
+    },
+    {
+      "name": "fact_alert",
+      "file": "fact_alert.csv",
+      "version": "1.0",
+      "description": "Sophos Central product alerts (Common API), current state per alert. Useful for tenants without XDR or MDR. An alert leaves the API once acknowledged, but stays in this table.",
+      "load": "upsert",
+      "key": [
+        "tenant_id",
+        "alert_id"
+      ],
+      "personalOnly": false,
+      "columns": [
+        {
+          "name": "tenant_id",
+          "type": "string",
+          "personal": false,
+          "description": "Sophos Central tenant ID (a UUID)."
+        },
+        {
+          "name": "alert_id",
+          "type": "string",
+          "personal": false,
+          "description": "Alert ID."
+        },
+        {
+          "name": "raised_at",
+          "type": "datetime",
+          "personal": false,
+          "description": "When the alert was raised."
+        },
+        {
+          "name": "raised_local_date",
+          "type": "date",
+          "personal": false,
+          "description": "raised_at as a date in the report time zone."
+        },
+        {
+          "name": "raised_date_key",
+          "type": "integer",
+          "personal": false,
+          "description": "raised_local_date as a number, YYYYMMDD."
+        },
+        {
+          "name": "severity",
+          "type": "string",
+          "personal": false,
+          "description": "high, medium or low."
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "personal": false,
+          "description": "Alert category, for example malware or wireless."
+        },
+        {
+          "name": "product",
+          "type": "string",
+          "personal": false,
+          "description": "Product that raised the alert."
+        },
+        {
+          "name": "alert_type",
+          "type": "string",
+          "personal": false,
+          "description": "Alert type code."
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "personal": false,
+          "description": "Alert status Sophos reports."
+        },
+        {
+          "name": "managed_agent_id",
+          "type": "string",
+          "personal": false,
+          "description": "Endpoint or device the alert is about, when any."
+        },
+        {
+          "name": "managed_agent_type",
+          "type": "string",
+          "personal": false,
+          "description": "Kind of that device."
+        },
+        {
+          "name": "event_count",
+          "type": "integer",
+          "personal": false,
+          "description": "Events correlated into the alert."
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "personal": true,
+          "description": "Alert text. Often names hosts and users, so it is personal data."
+        },
+        {
+          "name": "last_seen_open_at",
+          "type": "datetime",
+          "personal": false,
+          "description": "Last export run that still saw the alert in the API."
+        }
+      ]
+    }
+  ]
+}

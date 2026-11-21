@@ -1,0 +1,7 @@
+tenant_id,snapshot_date,area,scope,score,total,issue_count,snoozed
+00000000-0000-4000-8000-00000000d3e0,2026-11-21,exclusions,global,60,,2,false
+00000000-0000-4000-8000-00000000d3e0,2026-11-21,policy,computer.threat-protection,80,3,1,false
+00000000-0000-4000-8000-00000000d3e0,2026-11-21,protection,computer,95,20,1,false
+00000000-0000-4000-8000-00000000d3e0,2026-11-21,protection,server,100,8,0,false
+00000000-0000-4000-8000-00000000d3e0,2026-11-21,tamperProtection,computer,90,20,2,false
+00000000-0000-4000-8000-00000000d3e0,2026-11-21,tamperProtection,server,100,8,0,false

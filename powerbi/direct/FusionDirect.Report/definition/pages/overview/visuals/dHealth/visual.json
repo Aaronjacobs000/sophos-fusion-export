@@ -1,0 +1,79 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.0.0/schema.json",
+  "name": "dHealth",
+  "position": {
+    "x": 856,
+    "y": 448,
+    "z": 9000,
+    "width": 408,
+    "height": 256,
+    "tabOrder": 9000
+  },
+  "visual": {
+    "visualType": "donutChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_endpoint_snapshot"
+                    }
+                  },
+                  "Property": "health_overall"
+                }
+              },
+              "queryRef": "fact_endpoint_snapshot.health_overall",
+              "nativeQueryRef": "health_overall",
+              "displayName": "Health"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_endpoint_snapshot"
+                    }
+                  },
+                  "Property": "Endpoints"
+                }
+              },
+              "queryRef": "fact_endpoint_snapshot.Endpoints",
+              "nativeQueryRef": "Endpoints"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Endpoint health'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

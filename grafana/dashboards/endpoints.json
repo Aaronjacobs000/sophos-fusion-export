@@ -1,7 +1,7 @@
 {
   "uid": "fusion-endpoints",
-  "title": "Fusion Export: Endpoints, licences and alerts",
-  "description": "Endpoint health and coverage, Account Health Check scores, licences and product alerts.",
+  "title": "Fusion Export: Endpoints, licenses and alerts",
+  "description": "Endpoint health and coverage, Account Health Check scores, licenses and product alerts.",
   "tags": [
     "fusion-export",
     "unofficial"
@@ -68,7 +68,7 @@
         "current": {},
         "options": [],
         "hide": 0,
-        "description": "The endpoint, licence and health check snapshot to show. The newest is picked on load."
+        "description": "The endpoint, license and health check snapshot to show. The newest is picked on load."
       }
     ]
   },
@@ -101,7 +101,7 @@
       },
       "options": {
         "mode": "markdown",
-        "content": "Unofficial: built on the CSV tables of the Unofficial Sophos Fusion Data Exporter, not a Sophos product. Dates are in the exporter's report time zone. Endpoints, licences and health check scores come from the snapshot picked above; the exporter takes one a day.",
+        "content": "Unofficial: built on the CSV tables of the Unofficial Sophos Fusion Data Exporter, not a Sophos product. Dates are in the exporter's report time zone. Endpoints, licenses and health check scores come from the snapshot picked above; the exporter takes one a day.",
         "code": {
           "language": "markdown",
           "showLineNumbers": false,
@@ -1324,7 +1324,7 @@
     {
       "id": 13,
       "type": "table",
-      "title": "Licences",
+      "title": "Licenses",
       "gridPos": {
         "x": 0,
         "y": 23,

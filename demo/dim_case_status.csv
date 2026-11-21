@@ -1,0 +1,5 @@
+tenant_id,status_id,level,name,title,is_closed
+00000000-0000-4000-8000-00000000d3e0,s-closed,primary,closed,Closed,true
+00000000-0000-4000-8000-00000000d3e0,s-cust,primary,customer_action_required,Customer Action Required,false
+00000000-0000-4000-8000-00000000d3e0,s-new,primary,new,New,false
+00000000-0000-4000-8000-00000000d3e0,s-prog,primary,in_progress,In Progress,false

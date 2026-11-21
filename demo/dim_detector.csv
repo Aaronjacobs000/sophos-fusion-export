@@ -1,0 +1,7 @@
+tenant_id,detector_id,detector_name
+00000000-0000-4000-8000-00000000d3e0,app:demo:custom,Custom Alerts
+00000000-0000-4000-8000-00000000d3e0,app:demo:email,Email Watchlist
+00000000-0000-4000-8000-00000000d3e0,app:demo:identity,Identity Risk
+00000000-0000-4000-8000-00000000d3e0,app:demo:ndr,Network Anomaly
+00000000-0000-4000-8000-00000000d3e0,app:demo:tactic,Tactic Graphs Detector
+00000000-0000-4000-8000-00000000d3e0,app:demo:watchlist,Endpoint Watchlist

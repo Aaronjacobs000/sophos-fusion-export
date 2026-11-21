@@ -1,0 +1,2465 @@
+{
+  "compatibilityLevel": 1567,
+  "model": {
+    "name": "FusionExport",
+    "description": "Unofficial Sophos Fusion Data Exporter: the CSV tables from a SharePoint or OneDrive folder. Not a Sophos product.",
+    "culture": "en-US",
+    "defaultPowerBIDataSourceVersion": "powerBI_V3",
+    "sourceQueryCulture": "en-US",
+    "dataAccessOptions": {
+      "legacyRedirects": true,
+      "returnErrorValuesAsNull": true
+    },
+    "queryGroups": [
+      {
+        "folder": "Parameters"
+      },
+      {
+        "folder": "Helpers"
+      }
+    ],
+    "expressions": [
+      {
+        "name": "SharePointSiteUrl",
+        "kind": "m",
+        "expression": "\"https://contoso.sharepoint.com/sites/reporting\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=true]",
+        "description": "The SharePoint site (or OneDrive for Business URL) that holds the exporter's CSV folder, for example https://contoso.sharepoint.com/sites/reporting.",
+        "lineageTag": "43423f65-e558-49cf-8342-3f65e55819cf",
+        "queryGroup": "Parameters",
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Text"
+          }
+        ]
+      },
+      {
+        "name": "ExportFolder",
+        "kind": "m",
+        "expression": "\"FusionExport\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=true]",
+        "description": "The folder path inside the site's Documents library, as the exporter's sharepoint.folder setting names it, for example FusionExport/acme.",
+        "lineageTag": "4ac3b76a-3ac4-4694-8ac3-b76a3ac40694",
+        "queryGroup": "Parameters",
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Text"
+          }
+        ]
+      },
+      {
+        "name": "FusionFiles",
+        "kind": "m",
+        "description": "The CSV files in the export folder. Every table reads its file from here.",
+        "lineageTag": "d428d638-e586-4452-8428-d638e586c452",
+        "queryGroup": "Helpers",
+        "expression": [
+          "let",
+          "    Files = SharePoint.Files(SharePointSiteUrl, [ApiVersion = 15]),",
+          "    Folder = \"/\" & Text.Trim(ExportFolder, \"/\") & \"/\",",
+          "    InFolder = Table.SelectRows(Files, each Text.EndsWith([Folder Path], Folder) and Text.EndsWith([Name], \".csv\"))",
+          "in",
+          "    InFolder"
+        ]
+      },
+      {
+        "name": "FusionTable",
+        "kind": "m",
+        "description": "Reads one exporter CSV with its schema types: empty cells become null, UTC timestamps become date/time values, and missing columns read as null.",
+        "lineageTag": "3d16b977-03c1-45a5-8d16-b97703c165a5",
+        "queryGroup": "Helpers",
+        "expression": [
+          "(fileName as text, columns as list) as table =>",
+          "let",
+          "    Match = Table.SelectRows(FusionFiles, each [Name] = fileName),",
+          "    Content = if Table.RowCount(Match) = 1 then Match{0}[Content] else error Error.Record(\"Fusion Export\", fileName & \" was not found in the export folder, or found more than once.\", Table.RowCount(Match)),",
+          "    Csv = Csv.Document(Content, [Delimiter = \",\", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),",
+          "    Promoted = Table.PromoteHeaders(Csv, [PromoteAllScalars = true]),",
+          "    Names = List.Transform(columns, each _{0}),",
+          "    Selected = Table.SelectColumns(Promoted, Names, MissingField.UseNull),",
+          "    Blanked = Table.ReplaceValue(Selected, \"\", null, Replacer.ReplaceValue, Names),",
+          "    TypeOf = [text = type text, integer = Int64.Type, number = type number, boolean = type logical, date = type date, datetime = type datetimezone],",
+          "    Typed = Table.TransformColumnTypes(Blanked, List.Transform(columns, each {_{0}, Record.Field(TypeOf, _{1})}), \"en-US\"),",
+          "    Zoned = List.Select(columns, each _{1} = \"datetime\"),",
+          "    Utc = Table.TransformColumns(Typed, List.Transform(Zoned, each {_{0}, DateTimeZone.RemoveZone, type datetime}))",
+          "in",
+          "    Utc"
+        ]
+      }
+    ],
+    "tables": [
+      {
+        "name": "dim_tenant",
+        "description": "The tenant this credential reads. One row per tenant.",
+        "lineageTag": "a1959b7a-3df3-47e4-8195-9b7a3df347e4",
+        "columns": [
+          {
+            "name": "tenant_id",
+            "dataType": "string",
+            "sourceColumn": "tenant_id",
+            "summarizeBy": "none",
+            "isHidden": false,
+            "description": "Sophos Central tenant ID (a UUID).",
+            "lineageTag": "de2ecd8c-ccab-48b2-8e2e-cd8cccabd8b2"
+          },
+          {
+            "name": "tenant_name",
+            "dataType": "string",
+            "sourceColumn": "tenant_name",
+            "summarizeBy": "none",
+            "description": "Display name: the configured tenantName, else the name Sophos returns on alerts, else the tenant ID.",
+            "lineageTag": "8ac61b62-2ea4-479c-8ac6-1b622ea4479c"
+          },
+          {
+            "name": "fusion_tenant_id",
+            "dataType": "string",
+            "sourceColumn": "fusion_tenant_id",
+            "summarizeBy": "none",
+            "description": "The tenant's ID in Sophos Fusion GraphQL, as cases report it. Empty for a Classic tenant.",
+            "lineageTag": "9d5cbc33-0f02-4b01-8d5c-bc330f02cb01"
+          },
+          {
+            "name": "partner_id",
+            "dataType": "string",
+            "sourceColumn": "partner_id",
+            "summarizeBy": "none",
+            "description": "Partner that manages the tenant, from the Licenses API. Empty when none.",
+            "lineageTag": "f5838f56-d2ea-4b94-8583-8f56d2ea8b94"
+          },
+          {
+            "name": "organization_id",
+            "dataType": "string",
+            "sourceColumn": "organization_id",
+            "summarizeBy": "none",
+            "description": "Organization the tenant belongs to, from the Licenses API. Empty when none.",
+            "lineageTag": "78492d51-8871-4a4f-8849-2d5188715a4f"
+          },
+          {
+            "name": "data_region",
+            "dataType": "string",
+            "sourceColumn": "data_region",
+            "summarizeBy": "none",
+            "description": "Sophos Central data region host, for example https://api-eu01.central.sophos.com.",
+            "lineageTag": "098f86d9-6cdb-45e7-898f-86d96cdb65e7"
+          },
+          {
+            "name": "platform",
+            "dataType": "string",
+            "sourceColumn": "platform",
+            "summarizeBy": "none",
+            "description": "fusion when the tenant answers Sophos Fusion Cases v2, classic when it is still on cases v1.",
+            "lineageTag": "294485df-db3d-4545-8944-85dfdb3d4545"
+          },
+          {
+            "name": "report_timezone",
+            "dataType": "string",
+            "sourceColumn": "report_timezone",
+            "summarizeBy": "none",
+            "description": "IANA time zone the *_local_date columns use.",
+            "lineageTag": "08905004-873e-4262-8890-5004873e5262"
+          },
+          {
+            "name": "license_codes",
+            "dataType": "string",
+            "sourceColumn": "license_codes",
+            "summarizeBy": "none",
+            "description": "License codes the tenant holds, joined with |.",
+            "lineageTag": "60a5ac3a-0fe8-470c-80a5-ac3a0fe8b70c"
+          },
+          {
+            "name": "exported_at",
+            "dataType": "dateTime",
+            "sourceColumn": "exported_at",
+            "formatString": "yyyy-mm-dd hh:nn:ss",
+            "summarizeBy": "none",
+            "description": "When this row was last written.",
+            "lineageTag": "a20a1a99-0735-4707-820a-1a9907358707"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "dim_tenant",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = FusionTable(\"dim_tenant.csv\", {{\"tenant_id\", \"text\"}, {\"tenant_name\", \"text\"}, {\"fusion_tenant_id\", \"text\"}, {\"partner_id\", \"text\"}, {\"organization_id\", \"text\"}, {\"data_region\", \"text\"}, {\"platform\", \"text\"}, {\"report_timezone\", \"text\"}, {\"license_codes\", \"text\"}, {\"exported_at\", \"datetime\"}})",
+                "in",
+                "    Source"
+              ]
+            }
+          }
+        ],
+        "measures": []
+      },
+      {
+        "name": "fact_license",
+        "description": "Licenses held by the tenant, one snapshot a day.",
+        "lineageTag": "b3ec5a23-496d-41ad-83ec-5a23496d11ad",
+        "columns": [
+          {
+            "name": "tenant_id",
+            "dataType": "string",
+            "sourceColumn": "tenant_id",
+            "summarizeBy": "none",
+            "isHidden": false,
+            "description": "Sophos Central tenant ID (a UUID).",
+            "lineageTag": "6b0a99d5-d863-48b3-8b0a-99d5d86348b3"
+          },
+          {
+            "name": "snapshot_date",
+            "dataType": "dateTime",
+            "sourceColumn": "snapshot_date",
+            "formatString": "yyyy-mm-dd",
+            "summarizeBy": "none",
+            "description": "Day of the snapshot in the report time zone.",
+            "lineageTag": "3d193564-2018-486a-8d19-35642018786a"
+          },
+          {
+            "name": "license_id",
+            "dataType": "string",
+            "sourceColumn": "license_id",
+            "summarizeBy": "none",
+            "description": "Sophos license record ID.",
+            "lineageTag": "5218b9de-246b-4cb4-8218-b9de246b3cb4"
+          },
+          {
+            "name": "license_code",
+            "dataType": "string",
+            "sourceColumn": "license_code",
+            "summarizeBy": "none",
+            "description": "License code, for example XDR-MSP or CIXAXDR.",
+            "lineageTag": "bdc40b8a-9bf4-41c0-8dc4-0b8a9bf421c0"
+          },
+          {
+            "name": "generic_code",
+            "dataType": "string",
+            "sourceColumn": "generic_code",
+            "summarizeBy": "none",
+            "description": "Sophos generic product code, when sent.",
+            "lineageTag": "881e6184-76d1-41ae-881e-618476d191ae"
+          },
+          {
+            "name": "product_name",
+            "dataType": "string",
+            "sourceColumn": "product_name",
+            "summarizeBy": "none",
+            "description": "Product name Sophos gives the license.",
+            "lineageTag": "10e51f00-24ca-46ba-80e5-1f0024caf6ba"
+          },
+          {
+            "name": "license_type",
+            "dataType": "string",
+            "sourceColumn": "license_type",
+            "summarizeBy": "none",
+            "description": "term, trial, usage (MSP monthly) or another value Sophos sends.",
+            "lineageTag": "ce5ca9eb-98ff-4ba9-8e5c-a9eb98ff7ba9"
+          },
+          {
+            "name": "quantity",
+            "dataType": "int64",
+            "sourceColumn": "quantity",
+            "summarizeBy": "sum",
+            "description": "Licensed quantity. Empty when unlimited.",
+            "lineageTag": "3aef8b06-1fc0-4e3c-8aef-8b061fc03e3c"
+          },
+          {
+            "name": "used",
+            "dataType": "int64",
+            "sourceColumn": "used",
+            "summarizeBy": "sum",
+            "description": "Current usage count Sophos reports. Empty when it sends none.",
+            "lineageTag": "ac442a8e-bffb-47fc-8c44-2a8ebffb07fc"
+          },
+          {
+            "name": "unlimited",
+            "dataType": "boolean",
+            "sourceColumn": "unlimited",
+            "summarizeBy": "none",
+            "description": "True for an unlimited license.",
+            "lineageTag": "deb71fca-f457-4264-8eb7-1fcaf457d264"
+          },
+          {
+            "name": "perpetual",
+            "dataType": "boolean",
+            "sourceColumn": "perpetual",
+            "summarizeBy": "none",
+            "description": "True for a perpetual license.",
+            "lineageTag": "ae5b035f-2740-4f49-8e5b-035f2740cf49"
+          },
+          {
+            "name": "start_date",
+            "dataType": "dateTime",
+            "sourceColumn": "start_date",
+            "formatString": "yyyy-mm-dd",
+            "summarizeBy": "none",
+            "description": "License start date.",
+            "lineageTag": "4e0baed2-60db-4ad0-8e0b-aed260db6ad0"
+          },
+          {
+            "name": "end_date",
+            "dataType": "dateTime",
+            "sourceColumn": "end_date",
+            "formatString": "yyyy-mm-dd",
+            "summarizeBy": "none",
+            "description": "License end date. Empty for a perpetual license.",
+            "lineageTag": "4d77dd1d-3209-44af-8d77-dd1d320924af"
+          },
+          {
+            "name": "days_to_end",
+            "dataType": "int64",
+            "sourceColumn": "days_to_end",
+            "summarizeBy": "sum",
+            "description": "Days from the snapshot date to the end date. Negative once expired.",
+            "lineageTag": "273b79be-32df-49c0-873b-79be32dfe9c0"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "fact_license",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = FusionTable(\"fact_license.csv\", {{\"tenant_id\", \"text\"}, {\"snapshot_date\", \"date\"}, {\"license_id\", \"text\"}, {\"license_code\", \"text\"}, {\"generic_code\", \"text\"}, {\"product_name\", \"text\"}, {\"license_type\", \"text\"}, {\"quantity\", \"integer\"}, {\"used\", \"integer\"}, {\"unlimited\", \"boolean\"}, {\"perpetual\", \"boolean\"}, {\"start_date\", \"date\"}, {\"end_date\", \"date\"}, {\"days_to_end\", \"integer\"}})",
+                "in",
+                "    Source"
+              ]
+            }
+          }
+        ],
+        "measures": [
+          {
+            "name": "Licensed quantity",
+            "expression": "VAR LatestSnapshot = MAX(fact_license[snapshot_date])\nRETURN CALCULATE(SUM(fact_license[quantity]), fact_license[snapshot_date] = LatestSnapshot)",
+            "formatString": "#,0",
+            "description": "Licensed quantity in the latest snapshot. Unlimited licenses have none.",
+            "lineageTag": "3f32afa1-d73c-487f-8f32-afa1d73c187f"
+          },
+          {
+            "name": "Licenses used",
+            "expression": "VAR LatestSnapshot = MAX(fact_license[snapshot_date])\nRETURN CALCULATE(SUM(fact_license[used]), fact_license[snapshot_date] = LatestSnapshot)",
+            "formatString": "#,0",
+            "description": "Usage Sophos reports, latest snapshot.",
+            "lineageTag": "273d5562-86a2-43a4-873d-556286a2c3a4"
+          }
+        ]
+      },
+      {
+        "name": "fact_case",
+        "description": "Cases, current state, one row per case (Sophos Fusion Cases v2, or cases v1 for a Classic tenant).",
+        "lineageTag": "93a6ef4c-f2e0-4b7e-83a6-ef4cf2e00b7e",
+        "columns": [
+          {
+            "name": "tenant_id",
+            "dataType": "string",
+            "sourceColumn": "tenant_id",
+            "summarizeBy": "none",
+            "isHidden": false,
+            "description": "Sophos Central tenant ID (a UUID).",
+            "lineageTag": "4aa36726-2f72-49c4-8aa3-67262f7269c4"
+          },
+          {
+            "name": "case_id",
+            "dataType": "string",
+            "sourceColumn": "case_id",
+            "summarizeBy": "none",
+            "description": "Case ID.",
+            "lineageTag": "282f4f42-32fb-4d78-882f-4f4232fbdd78"
+          },
+          {
+            "name": "short_id",
+            "dataType": "string",
+            "sourceColumn": "short_id",
+            "summarizeBy": "none",
+            "description": "Human readable case ID, for example G-01560.",
+            "lineageTag": "9893d2a8-416a-4c9e-8893-d2a8416a3c9e"
+          },
+          {
+            "name": "title",
+            "dataType": "string",
+            "sourceColumn": "title",
+            "summarizeBy": "none",
+            "description": "Case title. Often names a host or user, so it is personal data.",
+            "lineageTag": "bf40dff0-3b6e-48b2-8f40-dff03b6eb8b2"
+          },
+          {
+            "name": "severity",
+            "dataType": "int64",
+            "sourceColumn": "severity",
+            "summarizeBy": "sum",
+            "description": "2 informational, 4 low, 6 medium, 8 high, 10 critical. 0 when not set.",
+            "lineageTag": "0a0fc491-5310-4057-8a0f-c4915310f057"
+          },
+          {
+            "name": "severity_label",
+            "dataType": "string",
+            "sourceColumn": "severity_label",
+            "summarizeBy": "none",
+            "description": "Informational, Low, Medium, High, Critical, or Not set.",
+            "lineageTag": "630b4cf0-ac5a-4c66-830b-4cf0ac5a0c66"
+          },
+          {
+            "name": "case_type_id",
+            "dataType": "string",
+            "sourceColumn": "case_type_id",
+            "summarizeBy": "none",
+            "description": "Case type ID (dim_case_type).",
+            "lineageTag": "043af0e5-abe7-476b-843a-f0e5abe7076b"
+          },
+          {
+            "name": "case_type",
+            "dataType": "string",
+            "sourceColumn": "case_type",
+            "summarizeBy": "none",
+            "description": "Case type title.",
+            "lineageTag": "3cd99cf7-1d1e-4a05-8cd9-9cf71d1e9a05"
+          },
+          {
+            "name": "primary_status_id",
+            "dataType": "string",
+            "sourceColumn": "primary_status_id",
+            "summarizeBy": "none",
+            "description": "Primary status ID (dim_case_status).",
+            "lineageTag": "4981d46d-f467-4217-8981-d46df467b217"
+          },
+          {
+            "name": "primary_status",
+            "dataType": "string",
+            "sourceColumn": "primary_status",
+            "summarizeBy": "none",
+            "description": "Primary status title.",
+            "lineageTag": "f68906cf-ecdc-4999-8689-06cfecdcd999"
+          },
+          {
+            "name": "secondary_status",
+            "dataType": "string",
+            "sourceColumn": "secondary_status",
+            "summarizeBy": "none",
+            "description": "Secondary status title, when set.",
+            "lineageTag": "792a5ebf-3bbf-42b9-892a-5ebf3bbf62b9"
+          },
+          {
+            "name": "is_closed",
+            "dataType": "boolean",
+            "sourceColumn": "is_closed",
+            "summarizeBy": "none",
+            "description": "True when the primary status is a closed one.",
+            "lineageTag": "5dcbd5c3-66be-4429-8dcb-d5c366be2429"
+          },
+          {
+            "name": "primary_verdict",
+            "dataType": "string",
+            "sourceColumn": "primary_verdict",
+            "summarizeBy": "none",
+            "description": "Primary verdict title, when set.",
+            "lineageTag": "2060a6b6-75fa-4d9c-8060-a6b675facd9c"
+          },
+          {
+            "name": "secondary_verdict",
+            "dataType": "string",
+            "sourceColumn": "secondary_verdict",
+            "summarizeBy": "none",
+            "description": "Secondary verdict title, when set.",
+            "lineageTag": "c0bc43c6-6802-43bc-80bc-43c6680213bc"
+          },
+          {
+            "name": "close_reason",
+            "dataType": "string",
+            "sourceColumn": "close_reason",
+            "summarizeBy": "none",
+            "description": "Free text the closer typed, so it is personal data.",
+            "lineageTag": "05b66233-f4c4-4725-85b6-6233f4c44725"
+          },
+          {
+            "name": "managed_by",
+            "dataType": "string",
+            "sourceColumn": "managed_by",
+            "summarizeBy": "none",
+            "description": "PROVIDER (Sophos MDR or the partner), CUSTOMER, or empty when not yet claimed.",
+            "lineageTag": "5caef941-f4fd-47a7-8cae-f941f4fd27a7"
+          },
+          {
+            "name": "created_by_mdr",
+            "dataType": "boolean",
+            "sourceColumn": "created_by_mdr",
+            "summarizeBy": "none",
+            "description": "True when the tenant's MDR provider created the case.",
+            "lineageTag": "6d4c7b74-3c6b-4c3a-8d4c-7b743c6b5c3a"
+          },
+          {
+            "name": "created_by_partner",
+            "dataType": "boolean",
+            "sourceColumn": "created_by_partner",
+            "summarizeBy": "none",
+            "description": "True when the tenant's partner created the case.",
+            "lineageTag": "a2055b4b-8ae0-4dc5-8205-5b4b8ae05dc5"
+          },
+          {
+            "name": "assignee_id",
+            "dataType": "string",
+            "sourceColumn": "assignee_id",
+            "summarizeBy": "none",
+            "description": "ID of the assigned user, client or group, or a mention such as @sophos.",
+            "lineageTag": "5636edd7-c3f2-4bc5-8636-edd7c3f26bc5"
+          },
+          {
+            "name": "created_at",
+            "dataType": "dateTime",
+            "sourceColumn": "created_at",
+            "formatString": "yyyy-mm-dd hh:nn:ss",
+            "summarizeBy": "none",
+            "description": "When the case was created.",
+            "lineageTag": "65698402-6f9a-4214-8569-84026f9aa214"
+          },
+          {
+            "name": "created_local_date",
+            "dataType": "dateTime",
+            "sourceColumn": "created_local_date",
+            "formatString": "yyyy-mm-dd",
+            "summarizeBy": "none",
+            "description": "created_at as a date in the report time zone.",
+            "lineageTag": "075b181f-84e8-4919-875b-181f84e85919"
+          },
+          {
+            "name": "created_date_key",
+            "dataType": "int64",
+            "sourceColumn": "created_date_key",
+            "summarizeBy": "none",
+            "description": "created_local_date as a number, YYYYMMDD, for tools that filter dates numerically.",
+            "lineageTag": "cadf88c3-838a-4ab5-8adf-88c3838a5ab5"
+          },
+          {
+            "name": "updated_at",
+            "dataType": "dateTime",
+            "sourceColumn": "updated_at",
+            "formatString": "yyyy-mm-dd hh:nn:ss",
+            "summarizeBy": "none",
+            "description": "When the case last changed.",
+            "lineageTag": "81e30adf-5dd5-4e51-81e3-0adf5dd58e51"
+          },
+          {
+            "name": "closed_at",
+            "dataType": "dateTime",
+            "sourceColumn": "closed_at",
+            "formatString": "yyyy-mm-dd hh:nn:ss",
+            "summarizeBy": "none",
+            "description": "When the case was closed. Empty while open.",
+            "lineageTag": "ac6ba5a2-ff3e-4338-8c6b-a5a2ff3e6338"
+          },
+          {
+            "name": "closed_local_date",
+            "dataType": "dateTime",
+            "sourceColumn": "closed_local_date",
+            "formatString": "yyyy-mm-dd",
+            "summarizeBy": "none",
+            "description": "closed_at as a date in the report time zone.",
+            "lineageTag": "82cc13ff-58d3-41bd-82cc-13ff58d3a1bd"
+          },
+          {
+            "name": "closed_date_key",
+            "dataType": "int64",
+            "sourceColumn": "closed_date_key",
+            "summarizeBy": "none",
+            "description": "closed_local_date as a number, YYYYMMDD.",
+            "lineageTag": "4d051723-6710-4339-8d05-17236710a339"
+          },
+          {
+            "name": "archived_at",
+            "dataType": "dateTime",
+            "sourceColumn": "archived_at",
+            "formatString": "yyyy-mm-dd hh:nn:ss",
+            "summarizeBy": "none",
+            "description": "When the case was archived, if it was.",
+            "lineageTag": "848cc680-a45a-4a8a-848c-c680a45aca8a"
+          },
+          {
+            "name": "minutes_to_close",
+            "dataType": "int64",
+            "sourceColumn": "minutes_to_close",
+            "summarizeBy": "sum",
+            "description": "closed_at minus created_at in minutes. Empty while open.",
+            "lineageTag": "3e191072-8606-414c-8e19-10728606f14c"
+          },
+          {
+            "name": "age_days",
+            "dataType": "double",
+            "sourceColumn": "age_days",
+            "summarizeBy": "sum",
+            "description": "Days from created_at to closed_at, or to the export time while open.",
+            "lineageTag": "bf4761e9-80c3-4237-8f47-61e980c30237"
+          },
+          {
+            "name": "risk_score",
+            "dataType": "double",
+            "sourceColumn": "risk_score",
+            "summarizeBy": "sum",
+            "description": "Case risk score.",
+            "lineageTag": "34cacb44-d4df-4bea-84ca-cb44d4df0bea"
+          },
+          {
+            "name": "source",
+            "dataType": "string",
+            "sourceColumn": "source",
+            "summarizeBy": "none",
+            "description": "How the case was generated, when Sophos says.",
+            "lineageTag": "ddb7d48b-bc05-42dd-8db7-d48bbc0562dd"
+          },
+          {
+            "name": "tags",
+            "dataType": "string",
+            "sourceColumn": "tags",
+            "summarizeBy": "none",
+            "description": "Case tags joined with |.",
+            "lineageTag": "adcd113f-516a-4371-8dcd-113f516a5371"
+          },
+          {
+            "name": "detections_count",
+            "dataType": "int64",
+            "sourceColumn": "detections_count",
+            "summarizeBy": "sum",
+            "description": "Detections attached to the case.",
+            "lineageTag": "f849b29a-1aba-45bc-8849-b29a1aba45bc"
+          },
+          {
+            "name": "events_count",
+            "dataType": "int64",
+            "sourceColumn": "events_count",
+            "summarizeBy": "sum",
+            "description": "Events attached to the case.",
+            "lineageTag": "9545ba9b-593a-4fe5-8545-ba9b593adfe5"
+          },
+          {
+            "name": "assets_count",
+            "dataType": "int64",
+            "sourceColumn": "assets_count",
+            "summarizeBy": "sum",
+            "description": "Assets attached to the case.",
+            "lineageTag": "c4725f9b-7f27-4cad-8472-5f9b7f27fcad"
+          },
+          {
+            "name": "api_version",
+            "dataType": "string",
+            "sourceColumn": "api_version",
+            "summarizeBy": "none",
+            "description": "v2 (Sophos Fusion) or v1 (cases v1, Classic).",
+            "lineageTag": "e0879cf9-cd05-4753-8087-9cf9cd057753"
+          },
+          {
+            "name": "exported_at",
+            "dataType": "dateTime",
+            "sourceColumn": "exported_at",
+            "formatString": "yyyy-mm-dd hh:nn:ss",
+            "summarizeBy": "none",
+            "description": "When this row was last written.",
+            "lineageTag": "13ae0143-4567-4db9-83ae-014345672db9"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "fact_case",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = FusionTable(\"fact_case.csv\", {{\"tenant_id\", \"text\"}, {\"case_id\", \"text\"}, {\"short_id\", \"text\"}, {\"title\", \"text\"}, {\"severity\", \"integer\"}, {\"severity_label\", \"text\"}, {\"case_type_id\", \"text\"}, {\"case_type\", \"text\"}, {\"primary_status_id\", \"text\"}, {\"primary_status\", \"text\"}, {\"secondary_status\", \"text\"}, {\"is_closed\", \"boolean\"}, {\"primary_verdict\", \"text\"}, {\"secondary_verdict\", \"text\"}, {\"close_reason\", \"text\"}, {\"managed_by\", \"text\"}, {\"created_by_mdr\", \"boolean\"}, {\"created_by_partner\", \"boolean\"}, {\"assignee_id\", \"text\"}, {\"created_at\", \"datetime\"}, {\"created_local_date\", \"date\"}, {\"created_date_key\", \"integer\"}, {\"updated_at\", \"datetime\"}, {\"closed_at\", \"datetime\"}, {\"closed_local_date\", \"date\"}, {\"closed_date_key\", \"integer\"}, {\"archived_at\", \"datetime\"}, {\"minutes_to_close\", \"integer\"}, {\"age_days\", \"number\"}, {\"risk_score\", \"number\"}, {\"source\", \"text\"}, {\"tags\", \"text\"}, {\"detections_count\", \"integer\"}, {\"events_count\", \"integer\"}, {\"assets_count\", \"integer\"}, {\"api_version\", \"text\"}, {\"exported_at\", \"datetime\"}})",
+                "in",
+                "    Source"
+              ]
+            }
+          }
+        ],
+        "measures": [
+          {
+            "name": "Cases",
+            "expression": "COUNTROWS(fact_case) + 0",
+            "formatString": "0",
+            "description": "Cases created in the selected dates.",
+            "lineageTag": "1c159bd9-a1d9-458b-8c15-9bd9a1d9b58b"
+          },
+          {
+            "name": "Open cases",
+            "expression": "CALCULATE(COUNTROWS(fact_case), fact_case[is_closed] == FALSE(), REMOVEFILTERS('Date')) + 0",
+            "formatString": "0",
+            "description": "Cases not closed, whatever dates are selected.",
+            "lineageTag": "86bb7201-f7ae-49cf-86bb-7201f7aee9cf"
+          },
+          {
+            "name": "Closed cases",
+            "expression": "CALCULATE(COUNTROWS(fact_case), USERELATIONSHIP(fact_case[closed_local_date], 'Date'[Date]), fact_case[is_closed] == TRUE()) + 0",
+            "formatString": "0",
+            "description": "Cases closed in the selected dates.",
+            "lineageTag": "cec04711-0aae-4ccf-8ec0-47110aaebccf"
+          },
+          {
+            "name": "Mean hours to close",
+            "expression": "CALCULATE(DIVIDE(AVERAGE(fact_case[minutes_to_close]), 60), USERELATIONSHIP(fact_case[closed_local_date], 'Date'[Date]))",
+            "formatString": "0.0",
+            "description": "Created to closed, for cases closed in the selected dates. Sophos sends no first response time.",
+            "lineageTag": "652c1d6b-4a29-4f09-852c-1d6b4a295f09"
+          },
+          {
+            "name": "Median hours to close",
+            "expression": "CALCULATE(DIVIDE(MEDIAN(fact_case[minutes_to_close]), 60), USERELATIONSHIP(fact_case[closed_local_date], 'Date'[Date]))",
+            "formatString": "0.0",
+            "description": "Median created to closed, for cases closed in the selected dates.",
+            "lineageTag": "9d6caec2-f70d-4098-8d6c-aec2f70df098"
+          },
+          {
+            "name": "Mean open case age (days)",
+            "expression": "CALCULATE(AVERAGE(fact_case[age_days]), fact_case[is_closed] == FALSE(), REMOVEFILTERS('Date'))",
+            "formatString": "0.0",
+            "description": "Days since creation of the cases still open, as of the last export.",
+            "lineageTag": "f0e15814-b641-44d6-80e1-5814b64194d6"
+          },
+          {
+            "name": "Provider managed share",
+            "expression": "DIVIDE(CALCULATE(COUNTROWS(fact_case), fact_case[managed_by] = \"PROVIDER\"), COUNTROWS(fact_case))",
+            "formatString": "0%",
+            "description": "Share of cases Sophos MDR or the partner manages.",
+            "lineageTag": "d6d10843-afc5-499d-86d1-0843afc5099d"
+          }
+        ]
+      },
+      {
+        "name": "dim_case_type",
+        "description": "Case types the tenant can use. Fusion builds these from licensed services.",
+        "lineageTag": "3dd80bab-7b9b-4db1-8dd8-0bab7b9b9db1",
+        "columns": [
+          {
+            "name": "tenant_id",
+            "dataType": "string",
+            "sourceColumn": "tenant_id",
+            "summarizeBy": "none",
+            "isHidden": false,
+            "description": "Sophos Central tenant ID (a UUID).",
+            "lineageTag": "515b60ad-5584-42b7-815b-60ad558422b7"
+          },
+          {
+            "name": "case_type_id",
+            "dataType": "string",
+            "sourceColumn": "case_type_id",
+            "summarizeBy": "none",
+            "description": "Case type ID.",
+            "lineageTag": "cf46021c-1f81-4162-8f46-021c1f81b162"
+          },
+          {
+            "name": "name",
+            "dataType": "string",
+            "sourceColumn": "name",
+            "summarizeBy": "none",
+            "description": "Machine name.",
+            "lineageTag": "7ea0595c-e73e-4722-8ea0-595ce73ef722"
+          },
+          {
+            "name": "title",
+            "dataType": "string",
+            "sourceColumn": "title",
+            "summarizeBy": "none",
+            "description": "Display title.",
+            "lineageTag": "740fa317-7662-4545-840f-a31776625545"
+          },
+          {
+            "name": "managed_by",
+            "dataType": "string",
+            "sourceColumn": "managed_by",
+            "summarizeBy": "none",
+            "description": "PROVIDER, CUSTOMER or empty.",
+            "lineageTag": "b94bf678-8e85-4c26-894b-f6788e850c26"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "dim_case_type",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = FusionTable(\"dim_case_type.csv\", {{\"tenant_id\", \"text\"}, {\"case_type_id\", \"text\"}, {\"name\", \"text\"}, {\"title\", \"text\"}, {\"managed_by\", \"text\"}})",
+                "in",
+                "    Source"
+              ]
+            }
+          }
+        ],
+        "measures": []
+      },
+      {
+        "name": "dim_case_status",
+        "description": "Primary and secondary case statuses the tenant can use.",
+        "lineageTag": "cc4fce65-27d9-4237-8c4f-ce6527d96237",
+        "columns": [
+          {
+            "name": "tenant_id",
+            "dataType": "string",
+            "sourceColumn": "tenant_id",
+            "summarizeBy": "none",
+            "isHidden": false,
+            "description": "Sophos Central tenant ID (a UUID).",
+            "lineageTag": "53b2da0f-15f8-4725-83b2-da0f15f8b725"
+          },
+          {
+            "name": "status_id",
+            "dataType": "string",
+            "sourceColumn": "status_id",
+            "summarizeBy": "none",
+            "description": "Status ID.",
+            "lineageTag": "621aba09-9ce3-47ab-821a-ba099ce3d7ab"
+          },
+          {
+            "name": "level",
+            "dataType": "string",
+            "sourceColumn": "level",
+            "summarizeBy": "none",
+            "description": "primary or secondary.",
+            "lineageTag": "e200d6b9-4306-4e23-8200-d6b943064e23"
+          },
+          {
+            "name": "name",
+            "dataType": "string",
+            "sourceColumn": "name",
+            "summarizeBy": "none",
+            "description": "Machine name.",
+            "lineageTag": "15a5cdca-228c-4bbc-85a5-cdca228cebbc"
+          },
+          {
+            "name": "title",
+            "dataType": "string",
+            "sourceColumn": "title",
+            "summarizeBy": "none",
+            "description": "Display title.",
+            "lineageTag": "0c5b91bd-c478-4f5f-8c5b-91bdc478ff5f"
+          },
+          {
+            "name": "is_closed",
+            "dataType": "boolean",
+            "sourceColumn": "is_closed",
+            "summarizeBy": "none",
+            "description": "For a primary status: true when it closes the case.",
+            "lineageTag": "ad654e46-8aad-4bbc-8d65-4e468aad2bbc"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "dim_case_status",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = FusionTable(\"dim_case_status.csv\", {{\"tenant_id\", \"text\"}, {\"status_id\", \"text\"}, {\"level\", \"text\"}, {\"name\", \"text\"}, {\"title\", \"text\"}, {\"is_closed\", \"boolean\"}})",
+                "in",
+                "    Source"
+              ]
+            }
+          }
+        ],
+        "measures": []
+      },
+      {
+        "name": "dim_case_verdict",
+        "description": "Primary and secondary case verdicts the tenant can use.",
+        "lineageTag": "a3563cf4-3b80-428a-8356-3cf43b80828a",
+        "columns": [
+          {
+            "name": "tenant_id",
+            "dataType": "string",
+            "sourceColumn": "tenant_id",
+            "summarizeBy": "none",
+            "isHidden": false,
+            "description": "Sophos Central tenant ID (a UUID).",
+            "lineageTag": "1481b7be-ff0b-4080-8481-b7beff0b7080"
+          },
+          {
+            "name": "verdict_id",
+            "dataType": "string",
+            "sourceColumn": "verdict_id",
+            "summarizeBy": "none",
+            "description": "Verdict ID.",
+            "lineageTag": "d3b010cd-2266-4b8f-83b0-10cd2266fb8f"
+          },
+          {
+            "name": "level",
+            "dataType": "string",
+            "sourceColumn": "level",
+            "summarizeBy": "none",
+            "description": "primary or secondary.",
+            "lineageTag": "6966a10c-13c1-48aa-8966-a10c13c118aa"
+          },
+          {
+            "name": "name",
+            "dataType": "string",
+            "sourceColumn": "name",
+            "summarizeBy": "none",
+            "description": "Machine name.",
+            "lineageTag": "2f211e8d-970b-489f-8f21-1e8d970b589f"
+          },
+          {
+            "name": "title",
+            "dataType": "string",
+            "sourceColumn": "title",
+            "summarizeBy": "none",
+            "description": "Display title.",
+            "lineageTag": "5272d228-8c88-4416-8272-d2288c889416"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "dim_case_verdict",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = FusionTable(\"dim_case_verdict.csv\", {{\"tenant_id\", \"text\"}, {\"verdict_id\", \"text\"}, {\"level\", \"text\"}, {\"name\", \"text\"}, {\"title\", \"text\"}})",
+                "in",
+                "    Source"
+              ]
+            }
+          }
+        ],
+        "measures": []
+      },
+      {
+        "name": "fact_detection",
+        "description": "Detections (Sophos Fusion Detections v2), one row per detection. The last detectionTrailingDays are pulled again on every run because status changes after creation.",
+        "lineageTag": "eaa35f0b-7e15-429d-8aa3-5f0b7e15129d",
+        "columns": [
+          {
+            "name": "tenant_id",
+            "dataType": "string",
+            "sourceColumn": "tenant_id",
+            "summarizeBy": "none",
+            "isHidden": false,
+            "description": "Sophos Central tenant ID (a UUID).",
+            "lineageTag": "ce64a3cd-fdfa-4ac3-8e64-a3cdfdfa9ac3"
+          },
+          {
+            "name": "detection_id",
+            "dataType": "string",
+            "sourceColumn": "detection_id",
+            "summarizeBy": "none",
+            "description": "Detection resource name (alert://...).",
+            "lineageTag": "d57816de-8204-440c-8578-16de8204440c"
+          },
+          {
+            "name": "created_at",
+            "dataType": "dateTime",
+            "sourceColumn": "created_at",
+            "formatString": "yyyy-mm-dd hh:nn:ss",
+            "summarizeBy": "none",
+            "description": "When the detection was created.",
+            "lineageTag": "85c1bc47-ef39-4ec5-85c1-bc47ef397ec5"
+          },
+          {
+            "name": "created_local_date",
+            "dataType": "dateTime",
+            "sourceColumn": "created_local_date",
+            "formatString": "yyyy-mm-dd",
+            "summarizeBy": "none",
+            "description": "created_at as a date in the report time zone.",
+            "lineageTag": "e91f80a6-5399-4374-891f-80a653991374"
+          },
+          {
+            "name": "created_date_key",
+            "dataType": "int64",
+            "sourceColumn": "created_date_key",
+            "summarizeBy": "none",
+            "description": "created_local_date as a number, YYYYMMDD, for tools that filter dates numerically.",
+            "lineageTag": "ed1dec12-164b-4a00-8d1d-ec12164b7a00"
+          },
+          {
+            "name": "first_seen_at",
+            "dataType": "dateTime",
+            "sourceColumn": "first_seen_at",
+            "formatString": "yyyy-mm-dd hh:nn:ss",
+            "summarizeBy": "none",
+            "description": "When the activity was first seen, when Sophos says.",
+            "lineageTag": "be1650e9-be0e-448f-8e16-50e9be0eb48f"
+          },
+          {
+            "name": "severity",
+            "dataType": "double",
+            "sourceColumn": "severity",
+            "summarizeBy": "sum",
+            "description": "Severity score, 0 to 1.",
+            "lineageTag": "c0ebefd0-7c89-4b62-80eb-efd07c89fb62"
+          },
+          {
+            "name": "severity_band",
+            "dataType": "string",
+            "sourceColumn": "severity_band",
+            "summarizeBy": "none",
+            "description": "Critical (0.8 and up), High (0.6), Medium (0.4), Low (0.2) or Info.",
+            "lineageTag": "5e187b2e-ac93-4820-8e18-7b2eac932820"
+          },
+          {
+            "name": "severity_rank",
+            "dataType": "int64",
+            "sourceColumn": "severity_rank",
+            "summarizeBy": "sum",
+            "description": "5 Critical, 4 High, 3 Medium, 2 Low, 1 Info, for sorting.",
+            "lineageTag": "0a4c5d3f-70e7-4549-8a4c-5d3f70e7f549"
+          },
+          {
+            "name": "confidence",
+            "dataType": "double",
+            "sourceColumn": "confidence",
+            "summarizeBy": "sum",
+            "description": "Confidence, 0 to 1.",
+            "lineageTag": "3d15fa3b-6e39-4eb1-8d15-fa3b6e399eb1"
+          },
+          {
+            "name": "threat_score",
+            "dataType": "double",
+            "sourceColumn": "threat_score",
+            "summarizeBy": "sum",
+            "description": "Threat score Sophos assigns.",
+            "lineageTag": "88a6d6d2-3c77-40f0-88a6-d6d23c7710f0"
+          },
+          {
+            "name": "status",
+            "dataType": "string",
+            "sourceColumn": "status",
+            "summarizeBy": "none",
+            "description": "OPEN, TRUE_POSITIVE_BENIGN, TRUE_POSITIVE_MALICIOUS, FALSE_POSITIVE, NOT_ACTIONABLE, OTHER, SUPPRESSED, AUTO_CLOSE or DISMISSED.",
+            "lineageTag": "7744e0a9-a5b9-4afb-8744-e0a9a5b9cafb"
+          },
+          {
+            "name": "resolution_reason",
+            "dataType": "string",
+            "sourceColumn": "resolution_reason",
+            "summarizeBy": "none",
+            "description": "Resolution reason, when set.",
+            "lineageTag": "37033792-803f-45f4-8703-3792803f65f4"
+          },
+          {
+            "name": "detector_id",
+            "dataType": "string",
+            "sourceColumn": "detector_id",
+            "summarizeBy": "none",
+            "description": "Detector ID (dim_detector).",
+            "lineageTag": "2aa530f3-479d-4ffd-8aa5-30f3479dfffd"
+          },
+          {
+            "name": "title",
+            "dataType": "string",
+            "sourceColumn": "title",
+            "summarizeBy": "none",
+            "description": "Detection title.",
+            "lineageTag": "401c0277-26a1-43f9-801c-027726a153f9"
+          },
+          {
+            "name": "description",
+            "dataType": "string",
+            "sourceColumn": "description",
+            "summarizeBy": "none",
+            "description": "Detection description. Can quote command lines, hosts and users, so it is personal data.",
+            "lineageTag": "d090d273-e292-4add-8090-d273e2923add"
+          },
+          {
+            "name": "technique_count",
+            "dataType": "int64",
+            "sourceColumn": "technique_count",
+            "summarizeBy": "sum",
+            "description": "MITRE ATT&CK techniques the detection names.",
+            "lineageTag": "64333527-3f97-49f1-8433-35273f9719f1"
+          },
+          {
+            "name": "sensor_count",
+            "dataType": "int64",
+            "sourceColumn": "sensor_count",
+            "summarizeBy": "sum",
+            "description": "Sensor types that contributed.",
+            "lineageTag": "5ee24ab1-1911-476b-8ee2-4ab11911e76b"
+          },
+          {
+            "name": "case_count",
+            "dataType": "int64",
+            "sourceColumn": "case_count",
+            "summarizeBy": "sum",
+            "description": "Cases (investigations) the detection is attached to.",
+            "lineageTag": "540c012b-3899-4771-840c-012b38998771"
+          },
+          {
+            "name": "case_ids",
+            "dataType": "string",
+            "sourceColumn": "case_ids",
+            "summarizeBy": "none",
+            "description": "Those case IDs joined with |.",
+            "lineageTag": "028e6b3e-ab4f-46f4-828e-6b3eab4f66f4"
+          },
+          {
+            "name": "exported_at",
+            "dataType": "dateTime",
+            "sourceColumn": "exported_at",
+            "formatString": "yyyy-mm-dd hh:nn:ss",
+            "summarizeBy": "none",
+            "description": "When this row was last written.",
+            "lineageTag": "78c9b12c-5178-470a-88c9-b12c5178870a"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "fact_detection",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = FusionTable(\"fact_detection.csv\", {{\"tenant_id\", \"text\"}, {\"detection_id\", \"text\"}, {\"created_at\", \"datetime\"}, {\"created_local_date\", \"date\"}, {\"created_date_key\", \"integer\"}, {\"first_seen_at\", \"datetime\"}, {\"severity\", \"number\"}, {\"severity_band\", \"text\"}, {\"severity_rank\", \"integer\"}, {\"confidence\", \"number\"}, {\"threat_score\", \"number\"}, {\"status\", \"text\"}, {\"resolution_reason\", \"text\"}, {\"detector_id\", \"text\"}, {\"title\", \"text\"}, {\"description\", \"text\"}, {\"technique_count\", \"integer\"}, {\"sensor_count\", \"integer\"}, {\"case_count\", \"integer\"}, {\"case_ids\", \"text\"}, {\"exported_at\", \"datetime\"}})",
+                "in",
+                "    Source"
+              ]
+            }
+          }
+        ],
+        "measures": [
+          {
+            "name": "Detection rows",
+            "expression": "COUNTROWS(fact_detection) + 0",
+            "formatString": "#,0",
+            "description": "Detection detail rows (kept for the retention period).",
+            "lineageTag": "868aded5-cc50-4f27-868a-ded5cc509f27"
+          }
+        ]
+      },
+      {
+        "name": "bridge_detection_technique",
+        "description": "MITRE ATT&CK techniques and tactics per detection. One row per detection, technique and tactic; tactic is empty when no enrichment gives one.",
+        "lineageTag": "b67307e5-b8ce-4e5b-8673-07e5b8ce7e5b",
+        "columns": [
+          {
+            "name": "tenant_id",
+            "dataType": "string",
+            "sourceColumn": "tenant_id",
+            "summarizeBy": "none",
+            "isHidden": false,
+            "description": "Sophos Central tenant ID (a UUID).",
+            "lineageTag": "17b99f8f-0123-4ca9-87b9-9f8f01233ca9"
+          },
+          {
+            "name": "detection_id",
+            "dataType": "string",
+            "sourceColumn": "detection_id",
+            "summarizeBy": "none",
+            "description": "Detection resource name.",
+            "lineageTag": "9f32a840-b1ec-425a-8f32-a840b1ec725a"
+          },
+          {
+            "name": "technique_id",
+            "dataType": "string",
+            "sourceColumn": "technique_id",
+            "summarizeBy": "none",
+            "description": "ATT&CK technique ID, for example T1078.002.",
+            "lineageTag": "45e10963-ce79-4711-85e1-0963ce797711"
+          },
+          {
+            "name": "tactic",
+            "dataType": "string",
+            "sourceColumn": "tactic",
+            "summarizeBy": "none",
+            "description": "ATT&CK tactic short name, for example lateral-movement.",
+            "lineageTag": "f917730d-3c69-4507-8917-730d3c691507"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "bridge_detection_technique",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = FusionTable(\"bridge_detection_technique.csv\", {{\"tenant_id\", \"text\"}, {\"detection_id\", \"text\"}, {\"technique_id\", \"text\"}, {\"tactic\", \"text\"}})",
+                "in",
+                "    Source"
+              ]
+            }
+          }
+        ],
+        "measures": []
+      },
+      {
+        "name": "bridge_detection_sensor",
+        "description": "Sensor types per detection.",
+        "lineageTag": "9900c67f-df5d-4345-8900-c67fdf5d8345",
+        "columns": [
+          {
+            "name": "tenant_id",
+            "dataType": "string",
+            "sourceColumn": "tenant_id",
+            "summarizeBy": "none",
+            "isHidden": false,
+            "description": "Sophos Central tenant ID (a UUID).",
+            "lineageTag": "1e796271-0916-479b-8e79-62710916b79b"
+          },
+          {
+            "name": "detection_id",
+            "dataType": "string",
+            "sourceColumn": "detection_id",
+            "summarizeBy": "none",
+            "description": "Detection resource name.",
+            "lineageTag": "11f380ea-9a01-4f84-81f3-80ea9a01ef84"
+          },
+          {
+            "name": "sensor_type",
+            "dataType": "string",
+            "sourceColumn": "sensor_type",
+            "summarizeBy": "none",
+            "description": "Sensor type code (dim_sensor_type).",
+            "lineageTag": "69a43076-76d3-42fc-89a4-307676d342fc"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "bridge_detection_sensor",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = FusionTable(\"bridge_detection_sensor.csv\", {{\"tenant_id\", \"text\"}, {\"detection_id\", \"text\"}, {\"sensor_type\", \"text\"}})",
+                "in",
+                "    Source"
+              ]
+            }
+          }
+        ],
+        "measures": []
+      },
+      {
+        "name": "bridge_detection_entity",
+        "description": "Source and target entities per detection (hosts, users, IP addresses, processes). Written only with the personal data switch on.",
+        "lineageTag": "d13465c6-f205-4f44-8134-65c6f205cf44",
+        "columns": [
+          {
+            "name": "tenant_id",
+            "dataType": "string",
+            "sourceColumn": "tenant_id",
+            "summarizeBy": "none",
+            "isHidden": false,
+            "description": "Sophos Central tenant ID (a UUID).",
+            "lineageTag": "9580bad8-4dbd-4352-8580-bad84dbd0352"
+          },
+          {
+            "name": "detection_id",
+            "dataType": "string",
+            "sourceColumn": "detection_id",
+            "summarizeBy": "none",
+            "description": "Detection resource name.",
+            "lineageTag": "ce4c4b19-64e1-4a27-8e4c-4b1964e1aa27"
+          },
+          {
+            "name": "role",
+            "dataType": "string",
+            "sourceColumn": "role",
+            "summarizeBy": "none",
+            "description": "source or target.",
+            "lineageTag": "4b34e0c8-38ed-4c26-8b34-e0c838edcc26"
+          },
+          {
+            "name": "subtype",
+            "dataType": "string",
+            "sourceColumn": "subtype",
+            "summarizeBy": "none",
+            "description": "Entity kind, for example Endpoint, User or IpAddress.",
+            "lineageTag": "a3854f6a-9680-4d28-8385-4f6a96809d28"
+          },
+          {
+            "name": "display_name",
+            "dataType": "string",
+            "sourceColumn": "display_name",
+            "summarizeBy": "none",
+            "description": "Entity name.",
+            "lineageTag": "a0915840-849e-44ce-8091-5840849ea4ce"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "bridge_detection_entity",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = FusionTable(\"bridge_detection_entity.csv\", {{\"tenant_id\", \"text\"}, {\"detection_id\", \"text\"}, {\"role\", \"text\"}, {\"subtype\", \"text\"}, {\"display_name\", \"text\"}})",
+                "in",
+                "    Source"
+              ]
+            }
+          }
+        ],
+        "measures": []
+      },
+      {
+        "name": "dim_detector",
+        "description": "Detectors seen in detections.",
+        "lineageTag": "8c2c0014-07e9-4082-8c2c-001407e99082",
+        "columns": [
+          {
+            "name": "tenant_id",
+            "dataType": "string",
+            "sourceColumn": "tenant_id",
+            "summarizeBy": "none",
+            "isHidden": false,
+            "description": "Sophos Central tenant ID (a UUID).",
+            "lineageTag": "0481ef9e-3c83-4c88-8481-ef9e3c833c88"
+          },
+          {
+            "name": "detector_id",
+            "dataType": "string",
+            "sourceColumn": "detector_id",
+            "summarizeBy": "none",
+            "description": "Detector ID.",
+            "lineageTag": "0c4f8cb8-5bc2-45b6-8c4f-8cb85bc205b6"
+          },
+          {
+            "name": "detector_name",
+            "dataType": "string",
+            "sourceColumn": "detector_name",
+            "summarizeBy": "none",
+            "description": "Detector name.",
+            "lineageTag": "874b382e-f813-4fa0-874b-382ef8135fa0"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "dim_detector",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = FusionTable(\"dim_detector.csv\", {{\"tenant_id\", \"text\"}, {\"detector_id\", \"text\"}, {\"detector_name\", \"text\"}})",
+                "in",
+                "    Source"
+              ]
+            }
+          }
+        ],
+        "measures": []
+      },
+      {
+        "name": "dim_mitre_technique",
+        "description": "MITRE ATT&CK techniques seen in detections.",
+        "lineageTag": "29a12294-1683-4946-89a1-229416837946",
+        "columns": [
+          {
+            "name": "tenant_id",
+            "dataType": "string",
+            "sourceColumn": "tenant_id",
+            "summarizeBy": "none",
+            "isHidden": false,
+            "description": "Sophos Central tenant ID (a UUID).",
+            "lineageTag": "694c661e-0023-4abc-894c-661e0023fabc"
+          },
+          {
+            "name": "technique_id",
+            "dataType": "string",
+            "sourceColumn": "technique_id",
+            "summarizeBy": "none",
+            "description": "Technique ID.",
+            "lineageTag": "e55dbeb0-0e36-477e-855d-beb00e36c77e"
+          },
+          {
+            "name": "technique_name",
+            "dataType": "string",
+            "sourceColumn": "technique_name",
+            "summarizeBy": "none",
+            "description": "Technique name, when an enrichment gives it.",
+            "lineageTag": "54499ef6-a1f0-41f8-8449-9ef6a1f021f8"
+          },
+          {
+            "name": "tactics",
+            "dataType": "string",
+            "sourceColumn": "tactics",
+            "summarizeBy": "none",
+            "description": "Tactics joined with |.",
+            "lineageTag": "8b3b4147-1e34-4625-8b3b-41471e341625"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "dim_mitre_technique",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = FusionTable(\"dim_mitre_technique.csv\", {{\"tenant_id\", \"text\"}, {\"technique_id\", \"text\"}, {\"technique_name\", \"text\"}, {\"tactics\", \"text\"}})",
+                "in",
+                "    Source"
+              ]
+            }
+          }
+        ],
+        "measures": []
+      },
+      {
+        "name": "dim_sensor_type",
+        "description": "Sensor types seen in detections, with a readable label.",
+        "lineageTag": "7790f2b9-f3f5-4003-8790-f2b9f3f5f003",
+        "columns": [
+          {
+            "name": "tenant_id",
+            "dataType": "string",
+            "sourceColumn": "tenant_id",
+            "summarizeBy": "none",
+            "isHidden": false,
+            "description": "Sophos Central tenant ID (a UUID).",
+            "lineageTag": "625bde83-acfd-4c61-825b-de83acfdac61"
+          },
+          {
+            "name": "sensor_type",
+            "dataType": "string",
+            "sourceColumn": "sensor_type",
+            "summarizeBy": "none",
+            "description": "Sensor type code, for example ENDPOINT_SOPHOS.",
+            "lineageTag": "a88d96d4-48dd-4466-888d-96d448dd7466"
+          },
+          {
+            "name": "label",
+            "dataType": "string",
+            "sourceColumn": "label",
+            "summarizeBy": "none",
+            "description": "Readable label, for example Endpoint.",
+            "lineageTag": "19bcb78d-6293-4407-89bc-b78d62934407"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "dim_sensor_type",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = FusionTable(\"dim_sensor_type.csv\", {{\"tenant_id\", \"text\"}, {\"sensor_type\", \"text\"}, {\"label\", \"text\"}})",
+                "in",
+                "    Source"
+              ]
+            }
+          }
+        ],
+        "measures": []
+      },
+      {
+        "name": "fact_detection_daily",
+        "description": "Detection counts by day, severity band and detector. Kept after detection detail is pruned, so long trends survive Sophos's retention.",
+        "lineageTag": "dada46e5-7674-45c3-8ada-46e5767495c3",
+        "columns": [
+          {
+            "name": "tenant_id",
+            "dataType": "string",
+            "sourceColumn": "tenant_id",
+            "summarizeBy": "none",
+            "isHidden": false,
+            "description": "Sophos Central tenant ID (a UUID).",
+            "lineageTag": "6cbc568f-6c27-49a1-8cbc-568f6c27f9a1"
+          },
+          {
+            "name": "local_date",
+            "dataType": "dateTime",
+            "sourceColumn": "local_date",
+            "formatString": "yyyy-mm-dd",
+            "summarizeBy": "none",
+            "description": "Day in the report time zone.",
+            "lineageTag": "a6cd2b1d-fd23-483f-86cd-2b1dfd23e83f"
+          },
+          {
+            "name": "date_key",
+            "dataType": "int64",
+            "sourceColumn": "date_key",
+            "summarizeBy": "none",
+            "description": "local_date as a number, YYYYMMDD, for tools that filter dates numerically.",
+            "lineageTag": "b7b1640d-f7a6-438f-87b1-640df7a6138f"
+          },
+          {
+            "name": "severity_band",
+            "dataType": "string",
+            "sourceColumn": "severity_band",
+            "summarizeBy": "none",
+            "description": "Critical, High, Medium, Low or Info.",
+            "lineageTag": "42604d64-1f5d-4c3a-8260-4d641f5d1c3a"
+          },
+          {
+            "name": "severity_rank",
+            "dataType": "int64",
+            "sourceColumn": "severity_rank",
+            "summarizeBy": "sum",
+            "description": "5 Critical down to 1 Info.",
+            "lineageTag": "882c5549-0d7c-450f-882c-55490d7c450f"
+          },
+          {
+            "name": "detector_id",
+            "dataType": "string",
+            "sourceColumn": "detector_id",
+            "summarizeBy": "none",
+            "description": "Detector ID.",
+            "lineageTag": "a9d00831-139f-4d3f-89d0-0831139fcd3f"
+          },
+          {
+            "name": "detections",
+            "dataType": "int64",
+            "sourceColumn": "detections",
+            "summarizeBy": "sum",
+            "description": "Detections created that day.",
+            "lineageTag": "7f944611-5f30-4743-8f94-46115f30a743"
+          },
+          {
+            "name": "open_detections",
+            "dataType": "int64",
+            "sourceColumn": "open_detections",
+            "summarizeBy": "sum",
+            "description": "Of those, detections still OPEN at export time.",
+            "lineageTag": "f43cc236-f606-4688-843c-c236f6069688"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "fact_detection_daily",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = FusionTable(\"fact_detection_daily.csv\", {{\"tenant_id\", \"text\"}, {\"local_date\", \"date\"}, {\"date_key\", \"integer\"}, {\"severity_band\", \"text\"}, {\"severity_rank\", \"integer\"}, {\"detector_id\", \"text\"}, {\"detections\", \"integer\"}, {\"open_detections\", \"integer\"}})",
+                "in",
+                "    Source"
+              ]
+            }
+          }
+        ],
+        "measures": [
+          {
+            "name": "Total detections",
+            "expression": "SUM(fact_detection_daily[detections]) + 0",
+            "formatString": "#,0",
+            "description": "Detections created in the selected dates (daily counts, kept past detail retention).",
+            "lineageTag": "f0888215-2c3e-4a27-8088-82152c3e1a27"
+          },
+          {
+            "name": "High and critical detections",
+            "expression": "CALCULATE(SUM(fact_detection_daily[detections]), fact_detection_daily[severity_rank] >= 4) + 0",
+            "formatString": "#,0",
+            "description": "Detections with severity 0.6 and up.",
+            "lineageTag": "1cacf311-e879-492b-8cac-f311e879992b"
+          },
+          {
+            "name": "Open detections",
+            "expression": "SUM(fact_detection_daily[open_detections]) + 0",
+            "formatString": "#,0",
+            "description": "Detections from the selected dates still OPEN at the last export.",
+            "lineageTag": "b6d748e1-ca20-49df-86d7-48e1ca2099df"
+          }
+        ]
+      },
+      {
+        "name": "fact_technique_daily",
+        "description": "Detection counts by day, MITRE ATT&CK technique and tactic. Kept after detection detail is pruned.",
+        "lineageTag": "f6ae3998-14d8-407e-86ae-399814d8b07e",
+        "columns": [
+          {
+            "name": "tenant_id",
+            "dataType": "string",
+            "sourceColumn": "tenant_id",
+            "summarizeBy": "none",
+            "isHidden": false,
+            "description": "Sophos Central tenant ID (a UUID).",
+            "lineageTag": "3b24cf22-9019-4ec4-8b24-cf229019dec4"
+          },
+          {
+            "name": "local_date",
+            "dataType": "dateTime",
+            "sourceColumn": "local_date",
+            "formatString": "yyyy-mm-dd",
+            "summarizeBy": "none",
+            "description": "Day in the report time zone.",
+            "lineageTag": "91953816-9792-4864-8195-381697924864"
+          },
+          {
+            "name": "date_key",
+            "dataType": "int64",
+            "sourceColumn": "date_key",
+            "summarizeBy": "none",
+            "description": "local_date as a number, YYYYMMDD, for tools that filter dates numerically.",
+            "lineageTag": "78b02ea2-7139-4e50-88b0-2ea27139be50"
+          },
+          {
+            "name": "technique_id",
+            "dataType": "string",
+            "sourceColumn": "technique_id",
+            "summarizeBy": "none",
+            "description": "ATT&CK technique ID.",
+            "lineageTag": "6d9dddec-91c7-47c6-8d9d-ddec91c7b7c6"
+          },
+          {
+            "name": "tactic",
+            "dataType": "string",
+            "sourceColumn": "tactic",
+            "summarizeBy": "none",
+            "description": "ATT&CK tactic short name; empty when no enrichment gives one.",
+            "lineageTag": "a5a4f532-da7b-45d8-85a4-f532da7bf5d8"
+          },
+          {
+            "name": "detections",
+            "dataType": "int64",
+            "sourceColumn": "detections",
+            "summarizeBy": "sum",
+            "description": "Detections created that day naming the technique.",
+            "lineageTag": "e8ab777a-35c1-4ae8-88ab-777a35c13ae8"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "fact_technique_daily",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = FusionTable(\"fact_technique_daily.csv\", {{\"tenant_id\", \"text\"}, {\"local_date\", \"date\"}, {\"date_key\", \"integer\"}, {\"technique_id\", \"text\"}, {\"tactic\", \"text\"}, {\"detections\", \"integer\"}})",
+                "in",
+                "    Source"
+              ]
+            }
+          }
+        ],
+        "measures": [
+          {
+            "name": "Technique detections",
+            "expression": "SUM(fact_technique_daily[detections]) + 0",
+            "formatString": "#,0",
+            "description": "Detections naming the technique, in the selected dates.",
+            "lineageTag": "2ed14d2a-4ede-4f40-8ed1-4d2a4ede6f40"
+          }
+        ]
+      },
+      {
+        "name": "fact_sensor_daily",
+        "description": "Detection counts by day and sensor type. Kept after detection detail is pruned.",
+        "lineageTag": "4330d370-8d48-4162-8330-d3708d48d162",
+        "columns": [
+          {
+            "name": "tenant_id",
+            "dataType": "string",
+            "sourceColumn": "tenant_id",
+            "summarizeBy": "none",
+            "isHidden": false,
+            "description": "Sophos Central tenant ID (a UUID).",
+            "lineageTag": "5be8a36a-7022-4828-8be8-a36a70221828"
+          },
+          {
+            "name": "local_date",
+            "dataType": "dateTime",
+            "sourceColumn": "local_date",
+            "formatString": "yyyy-mm-dd",
+            "summarizeBy": "none",
+            "description": "Day in the report time zone.",
+            "lineageTag": "469bd16e-6763-4740-869b-d16e67630740"
+          },
+          {
+            "name": "date_key",
+            "dataType": "int64",
+            "sourceColumn": "date_key",
+            "summarizeBy": "none",
+            "description": "local_date as a number, YYYYMMDD, for tools that filter dates numerically.",
+            "lineageTag": "d5aa5caa-6d63-4a6c-85aa-5caa6d63fa6c"
+          },
+          {
+            "name": "sensor_type",
+            "dataType": "string",
+            "sourceColumn": "sensor_type",
+            "summarizeBy": "none",
+            "description": "Sensor type code (dim_sensor_type).",
+            "lineageTag": "b372ed31-4c2e-4323-8372-ed314c2ef323"
+          },
+          {
+            "name": "detections",
+            "dataType": "int64",
+            "sourceColumn": "detections",
+            "summarizeBy": "sum",
+            "description": "Detections created that day with this sensor type.",
+            "lineageTag": "fb500c82-a56e-4ab4-8b50-0c82a56edab4"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "fact_sensor_daily",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = FusionTable(\"fact_sensor_daily.csv\", {{\"tenant_id\", \"text\"}, {\"local_date\", \"date\"}, {\"date_key\", \"integer\"}, {\"sensor_type\", \"text\"}, {\"detections\", \"integer\"}})",
+                "in",
+                "    Source"
+              ]
+            }
+          }
+        ],
+        "measures": [
+          {
+            "name": "Sensor detections",
+            "expression": "SUM(fact_sensor_daily[detections]) + 0",
+            "formatString": "#,0",
+            "description": "Detections from the sensor type, in the selected dates.",
+            "lineageTag": "6fcd349a-845e-4960-8fcd-349a845e8960"
+          }
+        ]
+      },
+      {
+        "name": "fact_endpoint_snapshot",
+        "description": "Endpoint health and coverage, one snapshot a day per endpoint (Endpoint API).",
+        "lineageTag": "5e0797a6-3c4f-4350-8e07-97a63c4f6350",
+        "columns": [
+          {
+            "name": "tenant_id",
+            "dataType": "string",
+            "sourceColumn": "tenant_id",
+            "summarizeBy": "none",
+            "isHidden": false,
+            "description": "Sophos Central tenant ID (a UUID).",
+            "lineageTag": "1c74eaf8-b500-4dce-8c74-eaf8b500ddce"
+          },
+          {
+            "name": "snapshot_date",
+            "dataType": "dateTime",
+            "sourceColumn": "snapshot_date",
+            "formatString": "yyyy-mm-dd",
+            "summarizeBy": "none",
+            "description": "Day of the snapshot in the report time zone.",
+            "lineageTag": "d9144455-ac1c-473b-8914-4455ac1cc73b"
+          },
+          {
+            "name": "endpoint_id",
+            "dataType": "string",
+            "sourceColumn": "endpoint_id",
+            "summarizeBy": "none",
+            "description": "Endpoint ID. Equals host_id in the Sophos Data Lake.",
+            "lineageTag": "3767090f-a978-4a31-8767-090fa9785a31"
+          },
+          {
+            "name": "endpoint_type",
+            "dataType": "string",
+            "sourceColumn": "endpoint_type",
+            "summarizeBy": "none",
+            "description": "computer, server or securityVm.",
+            "lineageTag": "766bac52-3f88-4d6c-866b-ac523f889d6c"
+          },
+          {
+            "name": "hostname",
+            "dataType": "string",
+            "sourceColumn": "hostname",
+            "summarizeBy": "none",
+            "description": "Hostname.",
+            "lineageTag": "dcd51c51-031a-467b-8cd5-1c51031a567b"
+          },
+          {
+            "name": "os_platform",
+            "dataType": "string",
+            "sourceColumn": "os_platform",
+            "summarizeBy": "none",
+            "description": "windows, macOS or linux.",
+            "lineageTag": "b9d080e8-ed69-4866-89d0-80e8ed69b866"
+          },
+          {
+            "name": "os_name",
+            "dataType": "string",
+            "sourceColumn": "os_name",
+            "summarizeBy": "none",
+            "description": "Operating system name.",
+            "lineageTag": "44266ab4-c4d7-41ba-8426-6ab4c4d741ba"
+          },
+          {
+            "name": "os_build",
+            "dataType": "string",
+            "sourceColumn": "os_build",
+            "summarizeBy": "none",
+            "description": "major.minor.build.",
+            "lineageTag": "7267199d-3590-40c7-8267-199d359060c7"
+          },
+          {
+            "name": "health_overall",
+            "dataType": "string",
+            "sourceColumn": "health_overall",
+            "summarizeBy": "none",
+            "description": "good, suspicious, bad or unknown.",
+            "lineageTag": "87e5d358-c911-47aa-87e5-d358c91147aa"
+          },
+          {
+            "name": "health_threats",
+            "dataType": "string",
+            "sourceColumn": "health_threats",
+            "summarizeBy": "none",
+            "description": "Threat health.",
+            "lineageTag": "fc70a9d8-261e-4532-8c70-a9d8261e6532"
+          },
+          {
+            "name": "health_services",
+            "dataType": "string",
+            "sourceColumn": "health_services",
+            "summarizeBy": "none",
+            "description": "Service health.",
+            "lineageTag": "4a47c56f-bcf7-48c1-8a47-c56fbcf728c1"
+          },
+          {
+            "name": "last_seen_at",
+            "dataType": "dateTime",
+            "sourceColumn": "last_seen_at",
+            "formatString": "yyyy-mm-dd hh:nn:ss",
+            "summarizeBy": "none",
+            "description": "When the endpoint last checked in.",
+            "lineageTag": "c9726eba-8eab-4ed0-8972-6eba8eab5ed0"
+          },
+          {
+            "name": "days_since_seen",
+            "dataType": "double",
+            "sourceColumn": "days_since_seen",
+            "summarizeBy": "sum",
+            "description": "Days from last_seen_at to the snapshot time.",
+            "lineageTag": "e7412b98-86ce-40de-8741-2b9886ce80de"
+          },
+          {
+            "name": "online",
+            "dataType": "boolean",
+            "sourceColumn": "online",
+            "summarizeBy": "none",
+            "description": "Online at snapshot time, when Sophos says.",
+            "lineageTag": "1f7fc39b-5d38-4931-8f7f-c39b5d38d931"
+          },
+          {
+            "name": "tamper_protection_enabled",
+            "dataType": "boolean",
+            "sourceColumn": "tamper_protection_enabled",
+            "summarizeBy": "none",
+            "description": "Tamper protection on.",
+            "lineageTag": "37245943-04d9-4ded-8724-594304d91ded"
+          },
+          {
+            "name": "tamper_protection_supported",
+            "dataType": "boolean",
+            "sourceColumn": "tamper_protection_supported",
+            "summarizeBy": "none",
+            "description": "Tamper protection supported on this endpoint.",
+            "lineageTag": "08baa6ac-74f0-456a-88ba-a6ac74f0156a"
+          },
+          {
+            "name": "isolation_status",
+            "dataType": "string",
+            "sourceColumn": "isolation_status",
+            "summarizeBy": "none",
+            "description": "isolated or notIsolated.",
+            "lineageTag": "3b017cdf-e98f-4b15-8b01-7cdfe98f8b15"
+          },
+          {
+            "name": "lockdown_status",
+            "dataType": "string",
+            "sourceColumn": "lockdown_status",
+            "summarizeBy": "none",
+            "description": "Server lockdown status.",
+            "lineageTag": "244edcf6-731c-4cc8-844e-dcf6731c0cc8"
+          },
+          {
+            "name": "group_name",
+            "dataType": "string",
+            "sourceColumn": "group_name",
+            "summarizeBy": "none",
+            "description": "Endpoint group.",
+            "lineageTag": "2c934867-2def-40e5-8c93-48672def70e5"
+          },
+          {
+            "name": "mdr_managed",
+            "dataType": "boolean",
+            "sourceColumn": "mdr_managed",
+            "summarizeBy": "none",
+            "description": "Managed by Sophos MDR, when Sophos says.",
+            "lineageTag": "bc10f43f-d273-4739-8c10-f43fd2734739"
+          },
+          {
+            "name": "protection_package",
+            "dataType": "string",
+            "sourceColumn": "protection_package",
+            "summarizeBy": "none",
+            "description": "Assigned protection package, for example XDR or MDR.",
+            "lineageTag": "9d57e20c-decb-4b96-8d57-e20cdecb3b96"
+          },
+          {
+            "name": "core_agent_version",
+            "dataType": "string",
+            "sourceColumn": "core_agent_version",
+            "summarizeBy": "none",
+            "description": "Core agent version.",
+            "lineageTag": "98313abe-41e5-44bc-8831-3abe41e5d4bc"
+          },
+          {
+            "name": "products",
+            "dataType": "string",
+            "sourceColumn": "products",
+            "summarizeBy": "none",
+            "description": "Installed product codes joined with |.",
+            "lineageTag": "2afc98fc-f0a6-475e-8afc-98fcf0a6775e"
+          },
+          {
+            "name": "ipv4_addresses",
+            "dataType": "string",
+            "sourceColumn": "ipv4_addresses",
+            "summarizeBy": "none",
+            "description": "IPv4 addresses joined with |.",
+            "lineageTag": "32e929d8-e344-4702-82e9-29d8e3440702"
+          },
+          {
+            "name": "associated_person",
+            "dataType": "string",
+            "sourceColumn": "associated_person",
+            "summarizeBy": "none",
+            "description": "Associated person.",
+            "lineageTag": "e3a90a3a-392d-48d4-83a9-0a3a392dd8d4"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "fact_endpoint_snapshot",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = FusionTable(\"fact_endpoint_snapshot.csv\", {{\"tenant_id\", \"text\"}, {\"snapshot_date\", \"date\"}, {\"endpoint_id\", \"text\"}, {\"endpoint_type\", \"text\"}, {\"hostname\", \"text\"}, {\"os_platform\", \"text\"}, {\"os_name\", \"text\"}, {\"os_build\", \"text\"}, {\"health_overall\", \"text\"}, {\"health_threats\", \"text\"}, {\"health_services\", \"text\"}, {\"last_seen_at\", \"datetime\"}, {\"days_since_seen\", \"number\"}, {\"online\", \"boolean\"}, {\"tamper_protection_enabled\", \"boolean\"}, {\"tamper_protection_supported\", \"boolean\"}, {\"isolation_status\", \"text\"}, {\"lockdown_status\", \"text\"}, {\"group_name\", \"text\"}, {\"mdr_managed\", \"boolean\"}, {\"protection_package\", \"text\"}, {\"core_agent_version\", \"text\"}, {\"products\", \"text\"}, {\"ipv4_addresses\", \"text\"}, {\"associated_person\", \"text\"}})",
+                "in",
+                "    Source"
+              ]
+            }
+          }
+        ],
+        "measures": [
+          {
+            "name": "Endpoints",
+            "expression": "VAR LatestSnapshot = MAX(fact_endpoint_snapshot[snapshot_date])\nRETURN CALCULATE(COUNTROWS(fact_endpoint_snapshot), fact_endpoint_snapshot[snapshot_date] = LatestSnapshot) + 0",
+            "formatString": "0",
+            "description": "Endpoints in the latest snapshot of the selected dates.",
+            "lineageTag": "cc08888c-7816-491a-8c08-888c7816291a"
+          },
+          {
+            "name": "Endpoints not in good health",
+            "expression": "VAR LatestSnapshot = MAX(fact_endpoint_snapshot[snapshot_date])\nRETURN CALCULATE(COUNTROWS(fact_endpoint_snapshot), fact_endpoint_snapshot[snapshot_date] = LatestSnapshot, fact_endpoint_snapshot[health_overall] <> \"good\") + 0",
+            "formatString": "0",
+            "description": "Latest snapshot, overall health not good.",
+            "lineageTag": "80e701e5-aeff-40c7-80e7-01e5aeff10c7"
+          },
+          {
+            "name": "Endpoints not seen 7+ days",
+            "expression": "VAR LatestSnapshot = MAX(fact_endpoint_snapshot[snapshot_date])\nRETURN CALCULATE(COUNTROWS(fact_endpoint_snapshot), fact_endpoint_snapshot[snapshot_date] = LatestSnapshot, fact_endpoint_snapshot[days_since_seen] >= 7) + 0",
+            "formatString": "0",
+            "description": "Latest snapshot, last seen a week or more before it.",
+            "lineageTag": "0e89fab1-5219-423b-8e89-fab15219e23b"
+          },
+          {
+            "name": "Tamper protection off",
+            "expression": "VAR LatestSnapshot = MAX(fact_endpoint_snapshot[snapshot_date])\nRETURN CALCULATE(COUNTROWS(fact_endpoint_snapshot), fact_endpoint_snapshot[snapshot_date] = LatestSnapshot, fact_endpoint_snapshot[tamper_protection_enabled] == FALSE()) + 0",
+            "formatString": "0",
+            "description": "Latest snapshot, tamper protection off.",
+            "lineageTag": "041cb867-8dd8-49f1-841c-b8678dd809f1"
+          }
+        ]
+      },
+      {
+        "name": "fact_health_check_snapshot",
+        "description": "Account Health Check scores, one snapshot a day per check.",
+        "lineageTag": "b6ae33aa-04ea-49ac-86ae-33aa04eae9ac",
+        "columns": [
+          {
+            "name": "tenant_id",
+            "dataType": "string",
+            "sourceColumn": "tenant_id",
+            "summarizeBy": "none",
+            "isHidden": false,
+            "description": "Sophos Central tenant ID (a UUID).",
+            "lineageTag": "e204b41c-afb2-4aea-8204-b41cafb24aea"
+          },
+          {
+            "name": "snapshot_date",
+            "dataType": "dateTime",
+            "sourceColumn": "snapshot_date",
+            "formatString": "yyyy-mm-dd",
+            "summarizeBy": "none",
+            "description": "Day of the snapshot in the report time zone.",
+            "lineageTag": "c3ca79a9-a78b-4017-83ca-79a9a78b8017"
+          },
+          {
+            "name": "area",
+            "dataType": "string",
+            "sourceColumn": "area",
+            "summarizeBy": "none",
+            "description": "protection, policy, exclusions or tamperProtection.",
+            "lineageTag": "4eef4edd-baee-430f-8eef-4eddbaee030f"
+          },
+          {
+            "name": "scope",
+            "dataType": "string",
+            "sourceColumn": "scope",
+            "summarizeBy": "none",
+            "description": "What the score covers, for example computer, server, policy.computer.threat-protection or global.",
+            "lineageTag": "b0fd7628-89c0-4b0e-80fd-762889c0db0e"
+          },
+          {
+            "name": "score",
+            "dataType": "double",
+            "sourceColumn": "score",
+            "summarizeBy": "sum",
+            "description": "Score, 0 to 100.",
+            "lineageTag": "a4f8e616-121d-4870-84f8-e616121d0870"
+          },
+          {
+            "name": "total",
+            "dataType": "int64",
+            "sourceColumn": "total",
+            "summarizeBy": "sum",
+            "description": "Items checked, when Sophos says.",
+            "lineageTag": "5288bf3e-d5dd-43b8-8288-bf3ed5ddb3b8"
+          },
+          {
+            "name": "issue_count",
+            "dataType": "int64",
+            "sourceColumn": "issue_count",
+            "summarizeBy": "sum",
+            "description": "Items failing the check (not fully protected, not on recommended settings, risky exclusions, tamper protection off).",
+            "lineageTag": "0acbbcef-5f98-4b31-8acb-bcef5f98cb31"
+          },
+          {
+            "name": "snoozed",
+            "dataType": "boolean",
+            "sourceColumn": "snoozed",
+            "summarizeBy": "none",
+            "description": "The check is snoozed.",
+            "lineageTag": "9c78f076-6b24-4478-8c78-f0766b244478"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "fact_health_check_snapshot",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = FusionTable(\"fact_health_check_snapshot.csv\", {{\"tenant_id\", \"text\"}, {\"snapshot_date\", \"date\"}, {\"area\", \"text\"}, {\"scope\", \"text\"}, {\"score\", \"number\"}, {\"total\", \"integer\"}, {\"issue_count\", \"integer\"}, {\"snoozed\", \"boolean\"}})",
+                "in",
+                "    Source"
+              ]
+            }
+          }
+        ],
+        "measures": [
+          {
+            "name": "Mean health check score",
+            "expression": "VAR LatestSnapshot = MAX(fact_health_check_snapshot[snapshot_date])\nRETURN CALCULATE(AVERAGE(fact_health_check_snapshot[score]), fact_health_check_snapshot[snapshot_date] = LatestSnapshot)",
+            "formatString": "0",
+            "description": "Mean Account Health Check score, latest snapshot.",
+            "lineageTag": "75ecf371-5fae-4967-85ec-f3715fae0967"
+          }
+        ]
+      },
+      {
+        "name": "fact_alert",
+        "description": "Sophos Central product alerts (Common API), current state per alert. Useful for tenants without XDR or MDR. An alert leaves the API once acknowledged, but stays in this table.",
+        "lineageTag": "664c11de-41ee-4ea0-864c-11de41ee6ea0",
+        "columns": [
+          {
+            "name": "tenant_id",
+            "dataType": "string",
+            "sourceColumn": "tenant_id",
+            "summarizeBy": "none",
+            "isHidden": false,
+            "description": "Sophos Central tenant ID (a UUID).",
+            "lineageTag": "bab203c0-ec3b-427e-8ab2-03c0ec3b927e"
+          },
+          {
+            "name": "alert_id",
+            "dataType": "string",
+            "sourceColumn": "alert_id",
+            "summarizeBy": "none",
+            "description": "Alert ID.",
+            "lineageTag": "4a690b2e-09e2-4ab4-8a69-0b2e09e2eab4"
+          },
+          {
+            "name": "raised_at",
+            "dataType": "dateTime",
+            "sourceColumn": "raised_at",
+            "formatString": "yyyy-mm-dd hh:nn:ss",
+            "summarizeBy": "none",
+            "description": "When the alert was raised.",
+            "lineageTag": "17971354-cc97-46ca-8797-1354cc97c6ca"
+          },
+          {
+            "name": "raised_local_date",
+            "dataType": "dateTime",
+            "sourceColumn": "raised_local_date",
+            "formatString": "yyyy-mm-dd",
+            "summarizeBy": "none",
+            "description": "raised_at as a date in the report time zone.",
+            "lineageTag": "066edec5-c61d-4f9b-866e-dec5c61d6f9b"
+          },
+          {
+            "name": "raised_date_key",
+            "dataType": "int64",
+            "sourceColumn": "raised_date_key",
+            "summarizeBy": "none",
+            "description": "raised_local_date as a number, YYYYMMDD.",
+            "lineageTag": "0e5663a5-e4ea-4e6b-8e56-63a5e4eaae6b"
+          },
+          {
+            "name": "severity",
+            "dataType": "string",
+            "sourceColumn": "severity",
+            "summarizeBy": "none",
+            "description": "high, medium or low.",
+            "lineageTag": "7243d997-2ec8-448d-8243-d9972ec8e48d"
+          },
+          {
+            "name": "category",
+            "dataType": "string",
+            "sourceColumn": "category",
+            "summarizeBy": "none",
+            "description": "Alert category, for example malware or wireless.",
+            "lineageTag": "ee709388-5472-4c22-8e70-93885472cc22"
+          },
+          {
+            "name": "product",
+            "dataType": "string",
+            "sourceColumn": "product",
+            "summarizeBy": "none",
+            "description": "Product that raised the alert.",
+            "lineageTag": "48ff533f-d4bb-4731-88ff-533fd4bb0731"
+          },
+          {
+            "name": "alert_type",
+            "dataType": "string",
+            "sourceColumn": "alert_type",
+            "summarizeBy": "none",
+            "description": "Alert type code.",
+            "lineageTag": "93fa569b-46e7-49a9-83fa-569b46e789a9"
+          },
+          {
+            "name": "status",
+            "dataType": "string",
+            "sourceColumn": "status",
+            "summarizeBy": "none",
+            "description": "Alert status Sophos reports.",
+            "lineageTag": "293b7352-99f7-45d8-893b-735299f765d8"
+          },
+          {
+            "name": "managed_agent_id",
+            "dataType": "string",
+            "sourceColumn": "managed_agent_id",
+            "summarizeBy": "none",
+            "description": "Endpoint or device the alert is about, when any.",
+            "lineageTag": "e1b25c35-adb7-415f-81b2-5c35adb7015f"
+          },
+          {
+            "name": "managed_agent_type",
+            "dataType": "string",
+            "sourceColumn": "managed_agent_type",
+            "summarizeBy": "none",
+            "description": "Kind of that device.",
+            "lineageTag": "a32f07a0-004d-4f0a-832f-07a0004d2f0a"
+          },
+          {
+            "name": "event_count",
+            "dataType": "int64",
+            "sourceColumn": "event_count",
+            "summarizeBy": "sum",
+            "description": "Events correlated into the alert.",
+            "lineageTag": "c59df0d4-7155-4bb2-859d-f0d471557bb2"
+          },
+          {
+            "name": "description",
+            "dataType": "string",
+            "sourceColumn": "description",
+            "summarizeBy": "none",
+            "description": "Alert text. Often names hosts and users, so it is personal data.",
+            "lineageTag": "0c089f1a-c2a6-4e7c-8c08-9f1ac2a6ee7c"
+          },
+          {
+            "name": "last_seen_open_at",
+            "dataType": "dateTime",
+            "sourceColumn": "last_seen_open_at",
+            "formatString": "yyyy-mm-dd hh:nn:ss",
+            "summarizeBy": "none",
+            "description": "Last export run that still saw the alert in the API.",
+            "lineageTag": "0940e709-7e3b-4e3f-8940-e7097e3b2e3f"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "fact_alert",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = FusionTable(\"fact_alert.csv\", {{\"tenant_id\", \"text\"}, {\"alert_id\", \"text\"}, {\"raised_at\", \"datetime\"}, {\"raised_local_date\", \"date\"}, {\"raised_date_key\", \"integer\"}, {\"severity\", \"text\"}, {\"category\", \"text\"}, {\"product\", \"text\"}, {\"alert_type\", \"text\"}, {\"status\", \"text\"}, {\"managed_agent_id\", \"text\"}, {\"managed_agent_type\", \"text\"}, {\"event_count\", \"integer\"}, {\"description\", \"text\"}, {\"last_seen_open_at\", \"datetime\"}})",
+                "in",
+                "    Source"
+              ]
+            }
+          }
+        ],
+        "measures": [
+          {
+            "name": "Alerts",
+            "expression": "COUNTROWS(fact_alert) + 0",
+            "formatString": "0",
+            "description": "Product alerts raised in the selected dates.",
+            "lineageTag": "b8047591-bc63-49eb-8804-7591bc63c9eb"
+          },
+          {
+            "name": "High alerts",
+            "expression": "CALCULATE(COUNTROWS(fact_alert), fact_alert[severity] = \"high\") + 0",
+            "formatString": "0",
+            "description": "High severity product alerts raised in the selected dates.",
+            "lineageTag": "bef01875-7a8a-4dc3-8ef0-18757a8afdc3"
+          }
+        ]
+      },
+      {
+        "name": "Date",
+        "description": "Calendar from the first month with data to today, in the report time zone.",
+        "lineageTag": "3b527379-e4b6-497f-8b52-7379e4b6097f",
+        "dataCategory": "Time",
+        "columns": [
+          {
+            "name": "Date",
+            "dataType": "dateTime",
+            "sourceColumn": "Date",
+            "formatString": "yyyy-mm-dd",
+            "isKey": true,
+            "summarizeBy": "none",
+            "lineageTag": "cbea9049-f19e-463b-8bea-9049f19eb63b"
+          },
+          {
+            "name": "Year",
+            "dataType": "int64",
+            "sourceColumn": "Year",
+            "summarizeBy": "none",
+            "lineageTag": "0672ccac-3fe2-46ce-8672-ccac3fe2d6ce"
+          },
+          {
+            "name": "Month",
+            "dataType": "string",
+            "sourceColumn": "Month",
+            "summarizeBy": "none",
+            "sortByColumn": "Month start",
+            "lineageTag": "fca18f55-bbef-4d2b-8ca1-8f55bbef7d2b"
+          },
+          {
+            "name": "Month start",
+            "dataType": "dateTime",
+            "sourceColumn": "Month start",
+            "formatString": "yyyy-mm-dd",
+            "summarizeBy": "none",
+            "lineageTag": "dbf71c45-a46a-4f1b-8bf7-1c45a46a2f1b"
+          },
+          {
+            "name": "Week start",
+            "dataType": "dateTime",
+            "sourceColumn": "Week start",
+            "formatString": "yyyy-mm-dd",
+            "summarizeBy": "none",
+            "lineageTag": "eb2eba1d-f67f-4027-8b2e-ba1df67f1027"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Date",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Today = Date.From(DateTime.LocalNow()),",
+                "    Seen = List.RemoveNulls(List.Combine({fact_detection_daily[local_date], fact_case[created_local_date], fact_alert[raised_local_date], fact_endpoint_snapshot[snapshot_date]})),",
+                "    Start = Date.StartOfMonth(if List.IsEmpty(Seen) then Date.AddDays(Today, -90) else List.Min(Seen)),",
+                "    End = Today,",
+                "    Days = List.Dates(Start, Duration.Days(End - Start) + 1, #duration(1, 0, 0, 0)),",
+                "    Base = Table.FromList(Days, Splitter.SplitByNothing(), type table [Date = date]),",
+                "    WithYear = Table.AddColumn(Base, \"Year\", each Date.Year([Date]), Int64.Type),",
+                "    WithMonth = Table.AddColumn(WithYear, \"Month\", each Date.ToText([Date], [Format = \"yyyy-MM\", Culture = \"en-US\"]), type text),",
+                "    WithMonthStart = Table.AddColumn(WithMonth, \"Month start\", each Date.StartOfMonth([Date]), type date),",
+                "    WithWeekStart = Table.AddColumn(WithMonthStart, \"Week start\", each Date.StartOfWeek([Date], Day.Monday), type date)",
+                "in",
+                "    WithWeekStart"
+              ]
+            }
+          }
+        ],
+        "measures": []
+      }
+    ],
+    "relationships": [
+      {
+        "name": "5642e22f-be5b-4225-8642-e22fbe5b1225",
+        "fromTable": "fact_detection",
+        "fromColumn": "detector_id",
+        "toTable": "dim_detector",
+        "toColumn": "detector_id"
+      },
+      {
+        "name": "4a59fdad-d599-4fc7-8a59-fdadd5995fc7",
+        "fromTable": "fact_detection_daily",
+        "fromColumn": "detector_id",
+        "toTable": "dim_detector",
+        "toColumn": "detector_id"
+      },
+      {
+        "name": "e23177a2-5f8b-4880-8231-77a25f8b9880",
+        "fromTable": "bridge_detection_technique",
+        "fromColumn": "detection_id",
+        "toTable": "fact_detection",
+        "toColumn": "detection_id"
+      },
+      {
+        "name": "4e518c09-ddf3-4227-8e51-8c09ddf3f227",
+        "fromTable": "bridge_detection_technique",
+        "fromColumn": "technique_id",
+        "toTable": "dim_mitre_technique",
+        "toColumn": "technique_id"
+      },
+      {
+        "name": "d72cbbe2-7325-4444-872c-bbe273255444",
+        "fromTable": "bridge_detection_sensor",
+        "fromColumn": "detection_id",
+        "toTable": "fact_detection",
+        "toColumn": "detection_id"
+      },
+      {
+        "name": "d70e8976-2eab-4a04-870e-89762eab1a04",
+        "fromTable": "bridge_detection_sensor",
+        "fromColumn": "sensor_type",
+        "toTable": "dim_sensor_type",
+        "toColumn": "sensor_type"
+      },
+      {
+        "name": "8291fbe1-878c-4f57-8291-fbe1878c3f57",
+        "fromTable": "bridge_detection_entity",
+        "fromColumn": "detection_id",
+        "toTable": "fact_detection",
+        "toColumn": "detection_id"
+      },
+      {
+        "name": "5d3650cc-b2e6-489a-8d36-50ccb2e6289a",
+        "fromTable": "fact_technique_daily",
+        "fromColumn": "technique_id",
+        "toTable": "dim_mitre_technique",
+        "toColumn": "technique_id"
+      },
+      {
+        "name": "7e331a05-fe77-4edf-8e33-1a05fe77fedf",
+        "fromTable": "fact_sensor_daily",
+        "fromColumn": "sensor_type",
+        "toTable": "dim_sensor_type",
+        "toColumn": "sensor_type"
+      },
+      {
+        "name": "97262c09-bd9e-4b0b-8726-2c09bd9e2b0b",
+        "fromTable": "fact_case",
+        "fromColumn": "case_type_id",
+        "toTable": "dim_case_type",
+        "toColumn": "case_type_id"
+      },
+      {
+        "name": "da7fbb64-c0c9-4426-8a7f-bb64c0c9d426",
+        "fromTable": "fact_case",
+        "fromColumn": "primary_status_id",
+        "toTable": "dim_case_status",
+        "toColumn": "status_id"
+      },
+      {
+        "name": "712e74ac-05fb-47da-812e-74ac05fb37da",
+        "fromTable": "fact_case",
+        "fromColumn": "created_local_date",
+        "toTable": "Date",
+        "toColumn": "Date"
+      },
+      {
+        "name": "1416cb2a-7414-4dd8-8416-cb2a7414add8",
+        "fromTable": "fact_case",
+        "fromColumn": "closed_local_date",
+        "toTable": "Date",
+        "toColumn": "Date",
+        "isActive": false
+      },
+      {
+        "name": "feaf641b-fb89-45f9-8eaf-641bfb89c5f9",
+        "fromTable": "fact_detection",
+        "fromColumn": "created_local_date",
+        "toTable": "Date",
+        "toColumn": "Date"
+      },
+      {
+        "name": "aee794cc-7b23-4db6-8ee7-94cc7b231db6",
+        "fromTable": "fact_detection_daily",
+        "fromColumn": "local_date",
+        "toTable": "Date",
+        "toColumn": "Date"
+      },
+      {
+        "name": "1f163577-73d2-4455-8f16-357773d25455",
+        "fromTable": "fact_technique_daily",
+        "fromColumn": "local_date",
+        "toTable": "Date",
+        "toColumn": "Date"
+      },
+      {
+        "name": "af887f31-8707-41b7-8f88-7f31870731b7",
+        "fromTable": "fact_sensor_daily",
+        "fromColumn": "local_date",
+        "toTable": "Date",
+        "toColumn": "Date"
+      },
+      {
+        "name": "05a675ca-aa06-4a14-85a6-75caaa069a14",
+        "fromTable": "fact_alert",
+        "fromColumn": "raised_local_date",
+        "toTable": "Date",
+        "toColumn": "Date"
+      },
+      {
+        "name": "21fb31e2-e3e6-4b9c-81fb-31e2e3e68b9c",
+        "fromTable": "fact_endpoint_snapshot",
+        "fromColumn": "snapshot_date",
+        "toTable": "Date",
+        "toColumn": "Date"
+      },
+      {
+        "name": "1e54e567-6eeb-4d49-8e54-e5676eeb5d49",
+        "fromTable": "fact_license",
+        "fromColumn": "snapshot_date",
+        "toTable": "Date",
+        "toColumn": "Date"
+      },
+      {
+        "name": "73b457ce-c4f3-43a0-83b4-57cec4f333a0",
+        "fromTable": "fact_health_check_snapshot",
+        "fromColumn": "snapshot_date",
+        "toTable": "Date",
+        "toColumn": "Date"
+      }
+    ],
+    "annotations": [
+      {
+        "name": "PBI_QueryOrder",
+        "value": "[\"SharePointSiteUrl\",\"ExportFolder\",\"FusionFiles\",\"FusionTable\",\"dim_tenant\",\"fact_license\",\"fact_case\",\"dim_case_type\",\"dim_case_status\",\"dim_case_verdict\",\"fact_detection\",\"bridge_detection_technique\",\"bridge_detection_sensor\",\"bridge_detection_entity\",\"dim_detector\",\"dim_mitre_technique\",\"dim_sensor_type\",\"fact_detection_daily\",\"fact_technique_daily\",\"fact_sensor_daily\",\"fact_endpoint_snapshot\",\"fact_health_check_snapshot\",\"fact_alert\"]"
+      },
+      {
+        "name": "__PBI_TimeIntelligenceEnabled",
+        "value": "0"
+      }
+    ]
+  }
+}

@@ -20,7 +20,7 @@ are adapted from the SecOps Toolkit
 schemas/fusion/*.graphql are copies of the public Sophos Fusion GraphQL
 schemas (Cases v2 and Detections v2) from developer.sophos.com, used to
 validate the exporter's queries in tests. They describe Sophos's APIs and
-remain Sophos's material; this project's licence does not cover them.
+remain Sophos's material; this project's license does not cover them.
 
 Sophos, Sophos Central and Sophos Fusion are trademarks of Sophos Limited.
 Microsoft, Power BI, SharePoint and OneDrive are trademarks of Microsoft

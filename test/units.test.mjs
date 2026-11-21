@@ -118,5 +118,11 @@ test("the data dictionary covers every table and column", () => {
     assert.ok(md.includes(`## ${t.name}`), t.name);
     for (const c of t.columns) assert.ok(md.includes(`\`${c.name}\``), `${t.name}.${c.name}`);
   }
-  assert.ok(!/[–—]/.test(md), "no en or em dashes");
+  assert.ok(!/[\u2013\u2014]/.test(md), "no en or em dashes");
+});
+
+test("docs/data-dictionary.md matches the schema (run npm run docs after a schema change)", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const onDisk = await readFile(new URL("../docs/data-dictionary.md", import.meta.url), "utf8");
+  assert.equal(onDisk, `${dataDictionary()}\n`);
 });

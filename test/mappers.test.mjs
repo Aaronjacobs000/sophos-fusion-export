@@ -19,9 +19,9 @@ function matchesTable(row, name) {
   assert.deepEqual(Object.keys(row).sort(), table(name).columns.map((c) => c.name).sort(), `${name} columns`);
 }
 
-test("licences: codes, quantities, dates and the partner and organization", () => {
+test("licenses: codes, quantities, dates and the partner and organization", () => {
   const rows = mapLicenses(fixture("licenses.json"), T, "2026-11-21");
-  assert.equal(rows.length, 2, "a licence without a code is skipped");
+  assert.equal(rows.length, 2, "a license without a code is skipped");
   rows.forEach((r) => matchesTable(r, "fact_license"));
   const phish = rows.find((r) => r.license_code === "CPHISH");
   assert.equal(phish.generic_code, "PHT");

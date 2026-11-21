@@ -68,7 +68,7 @@
         "current": {},
         "options": [],
         "hide": 0,
-        "description": "The endpoint, licence and health check snapshot to show. The newest is picked on load."
+        "description": "The endpoint, license and health check snapshot to show. The newest is picked on load."
       }
     ]
   },

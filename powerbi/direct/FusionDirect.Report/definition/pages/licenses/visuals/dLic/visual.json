@@ -1,0 +1,152 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.0.0/schema.json",
+  "name": "dLic",
+  "position": {
+    "x": 16,
+    "y": 56,
+    "z": 1000,
+    "width": 1248,
+    "height": 320,
+    "tabOrder": 1000
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_license"
+                    }
+                  },
+                  "Property": "product_name"
+                }
+              },
+              "queryRef": "fact_license.product_name",
+              "nativeQueryRef": "product_name",
+              "displayName": "Product"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_license"
+                    }
+                  },
+                  "Property": "license_code"
+                }
+              },
+              "queryRef": "fact_license.license_code",
+              "nativeQueryRef": "license_code",
+              "displayName": "Code"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_license"
+                    }
+                  },
+                  "Property": "license_type"
+                }
+              },
+              "queryRef": "fact_license.license_type",
+              "nativeQueryRef": "license_type",
+              "displayName": "Type"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_license"
+                    }
+                  },
+                  "Property": "end_date"
+                }
+              },
+              "queryRef": "fact_license.end_date",
+              "nativeQueryRef": "end_date",
+              "displayName": "Ends"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_license"
+                    }
+                  },
+                  "Property": "Licensed quantity"
+                }
+              },
+              "queryRef": "fact_license.Licensed quantity",
+              "nativeQueryRef": "Licensed quantity"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_license"
+                    }
+                  },
+                  "Property": "Licenses used"
+                }
+              },
+              "queryRef": "fact_license.Licenses used",
+              "nativeQueryRef": "Licenses used"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "fact_license"
+                  }
+                },
+                "Property": "end_date"
+              }
+            },
+            "direction": "Ascending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Licenses'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

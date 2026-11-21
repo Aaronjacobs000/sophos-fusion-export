@@ -1,5 +1,5 @@
 /**
- * Licences (GET /licenses/v1/licenses on the global host, documented in the
+ * Licenses (GET /licenses/v1/licenses on the global host, documented in the
  * Sophos Licensing API): fact_license, one snapshot a day, plus the partner
  * and organization IDs dim_tenant reports.
  */
@@ -55,13 +55,13 @@ export function licenseOwners(body: unknown): { partnerId?: string; organization
 
 export const licensesDataset: Dataset = {
   name: "licenses",
-  description: "Licences held by the tenant (fact_license).",
+  description: "Licenses held by the tenant (fact_license).",
   async run(ctx: RunContext) {
     const snapshotDate = localDate(ctx.options.now, ctx.options.timeZone)!;
     const body = await ctx.session.global<unknown>("/licenses/v1/licenses");
     const rows = mapLicenses(body, ctx.tenantId, snapshotDate);
     store(ctx, "fact_license").replace((r) => r.tenant_id === ctx.tenantId && r.snapshot_date === snapshotDate, rows);
     Object.assign(ctx.facts, licenseOwners(body), { licenseCodes: [...new Set(rows.map((r) => String(r.license_code)))].sort() });
-    return { rows: { fact_license: rows.length }, notes: rows.length ? [] : ["The Licenses API listed no licences for this tenant."] };
+    return { rows: { fact_license: rows.length }, notes: rows.length ? [] : ["The Licenses API listed no licenses for this tenant."] };
   },
 };

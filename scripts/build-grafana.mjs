@@ -213,7 +213,7 @@ const snapshotVariable = {
   current: {},
   options: [],
   hide: 0,
-  description: "The endpoint, licence and health check snapshot to show. The newest is picked on load.",
+  description: "The endpoint, license and health check snapshot to show. The newest is picked on load.",
 };
 
 // ---------- Overview ----------
@@ -341,14 +341,14 @@ const detectionsBoard = dashboard(
   { time: "now-30d" }
 );
 
-// ---------- Endpoints, licences and alerts ----------
+// ---------- Endpoints, licenses and alerts ----------
 nextId = 1;
 const endpointsBoard = dashboard(
   "fusion-endpoints",
-  "Fusion Export: Endpoints, licences and alerts",
-  "Endpoint health and coverage, Account Health Check scores, licences and product alerts.",
+  "Fusion Export: Endpoints, licenses and alerts",
+  "Endpoint health and coverage, Account Health Check scores, licenses and product alerts.",
   [
-    text({ x: 0, y: 0, w: 24, h: 2 }, `${NOTE} Endpoints, licences and health check scores come from the snapshot picked above; the exporter takes one a day.`),
+    text({ x: 0, y: 0, w: 24, h: 2 }, `${NOTE} Endpoints, licenses and health check scores come from the snapshot picked above; the exporter takes one a day.`),
     stat("Endpoints", { x: 0, y: 2, w: 4, h: 4 }, csv("A", "fact_endpoint_snapshot.csv", [["snapshot_date", "string"], ["endpoint_id", "string"]], { filter: SNAPSHOT, summarize: "count(endpoint_id)" })),
     stat("Servers", { x: 4, y: 2, w: 4, h: 4 }, csv("A", "fact_endpoint_snapshot.csv", [["snapshot_date", "string"], ["endpoint_type", "string"]], { filter: SNAPSHOT, computed: [["endpoint_type == 'server' ? 1 : 0", "servers"]], summarize: "sum(servers)" })),
     stat("Not in good health", { x: 8, y: 2, w: 4, h: 4 }, csv("A", "fact_endpoint_snapshot.csv", [["snapshot_date", "string"], ["health_overall", "string"]], { filter: SNAPSHOT, computed: [["health_overall != 'good' ? 1 : 0", "unhealthy"]], summarize: "sum(unhealthy)" }), { color: "red" }),
@@ -382,7 +382,7 @@ const endpointsBoard = dashboard(
       ],
     }),
     table(
-      "Licences",
+      "Licenses",
       { x: 0, y: 23, w: 14, h: 9 },
       csv("A", "fact_license.csv", [["snapshot_date", "string"], ["product_name", "string"], ["license_code", "string"], ["license_type", "string"], ["quantity", "number"], ["used", "number"], ["end_date", "string"], ["days_to_end", "number"]], { filter: SNAPSHOT }),
       {

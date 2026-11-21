@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      full_matrix:
+        description: Also run on macOS and Windows while the repository is private
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Node ${{ matrix.node }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # ubuntu only while the repository is private; macOS and Windows join when it is public or a manual run sets full_matrix.
+        os: ${{ fromJSON((github.event.repository.visibility == 'public' || inputs.full_matrix) && '["ubuntu-latest", "macos-latest", "windows-latest"]' || '["ubuntu-latest"]') }}
+        node: ['22', '24']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Unit, golden, guard and template tests
+        run: npm test
+      - name: Generated templates and docs are current
+        shell: bash
+        run: |
+          node scripts/build-grafana.mjs
+          node scripts/build-powerbi.mjs
+          node scripts/gen-docs.mjs
+          git diff --exit-code -- grafana powerbi docs
+      - name: The command line answers --help
+        run: node dist/cli.js --help

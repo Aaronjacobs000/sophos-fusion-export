@@ -1,0 +1,1096 @@
+{
+  "compatibilityLevel": 1567,
+  "model": {
+    "name": "FusionDirect",
+    "description": "Unofficial direct path: Power Query reads the Sophos APIs itself. The client secret sits in this file. Not a Sophos product.",
+    "culture": "en-US",
+    "defaultPowerBIDataSourceVersion": "powerBI_V3",
+    "sourceQueryCulture": "en-US",
+    "dataAccessOptions": {
+      "legacyRedirects": true,
+      "returnErrorValuesAsNull": true
+    },
+    "queryGroups": [
+      {
+        "folder": "Parameters"
+      },
+      {
+        "folder": "Helpers"
+      }
+    ],
+    "expressions": [
+      {
+        "name": "SophosClientId",
+        "kind": "m",
+        "expression": "\"\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=true]",
+        "description": "Sophos API client ID (a tenant credential). Anyone who can open this file or edit the model can read it.",
+        "lineageTag": "07729e2a-1db9-4644-8772-9e2a1db95644",
+        "queryGroup": "Parameters",
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Text"
+          }
+        ]
+      },
+      {
+        "name": "SophosClientSecret",
+        "kind": "m",
+        "expression": "\"\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=true]",
+        "description": "Sophos API client secret. Stored in the file and the published model in plain text: see the README before using the direct path.",
+        "lineageTag": "f606a57f-1401-4e31-8606-a57f14019e31",
+        "queryGroup": "Parameters",
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Text"
+          }
+        ]
+      },
+      {
+        "name": "SophosRegionHost",
+        "kind": "m",
+        "expression": "\"https://api-eu01.central.sophos.com\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=true]",
+        "description": "The tenant's Sophos Central data region host, as fusion-export doctor or GET /whoami/v1 reports it, for example https://api-au01.central.sophos.com. A parameter, not looked up, so the Power BI service can refresh it.",
+        "lineageTag": "b2cb764e-07c7-4830-82cb-764e07c78830",
+        "queryGroup": "Parameters",
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Text"
+          }
+        ]
+      },
+      {
+        "name": "DetectionDays",
+        "kind": "m",
+        "expression": "\"7\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=true]",
+        "description": "Days of detections to read, 1 to 30. One search returns at most 10,000 detections.",
+        "lineageTag": "da274738-5dbf-4e02-8a27-47385dbf0e02",
+        "queryGroup": "Parameters",
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Text"
+          }
+        ]
+      },
+      {
+        "name": "SophosToken",
+        "kind": "m",
+        "description": "An access token from id.sophos.com. A POST, so the source must use Anonymous credentials.",
+        "lineageTag": "3d8f5cf6-e742-4c44-8d8f-5cf6e7428c44",
+        "queryGroup": "Helpers",
+        "expression": [
+          "let",
+          "    Body = Uri.BuildQueryString([grant_type = \"client_credentials\", client_id = SophosClientId, client_secret = SophosClientSecret, scope = \"token\"]),",
+          "    Response = Json.Document(Web.Contents(\"https://id.sophos.com\", [RelativePath = \"api/v2/oauth2/token\", Headers = [#\"Content-Type\" = \"application/x-www-form-urlencoded\"], Content = Text.ToBinary(Body)])),",
+          "    Token = Response[access_token]",
+          "in",
+          "    Token"
+        ]
+      },
+      {
+        "name": "SophosTenantId",
+        "kind": "m",
+        "description": "The tenant ID, from GET /whoami/v1.",
+        "lineageTag": "d46c9ddc-5ede-45d2-846c-9ddc5ede85d2",
+        "queryGroup": "Helpers",
+        "expression": [
+          "let",
+          "    Whoami = Json.Document(Web.Contents(\"https://api.central.sophos.com\", [RelativePath = \"whoami/v1\", Headers = [Authorization = \"Bearer \" & SophosToken]])),",
+          "    Id = if Whoami[idType] = \"tenant\" then Whoami[id] else error \"The direct path needs a tenant credential.\"",
+          "in",
+          "    Id"
+        ]
+      },
+      {
+        "name": "SophosGet",
+        "kind": "m",
+        "description": "A GET on the tenant's regional Sophos Central host.",
+        "lineageTag": "6dadbd53-8b30-4581-8dad-bd538b30b581",
+        "queryGroup": "Helpers",
+        "expression": [
+          "(path as text, query as record) as record =>",
+          "    Json.Document(Web.Contents(SophosRegionHost, [RelativePath = path, Query = query, Headers = [Authorization = \"Bearer \" & SophosToken, #\"X-Tenant-ID\" = SophosTenantId]]))"
+        ]
+      },
+      {
+        "name": "FusionQuery",
+        "kind": "m",
+        "description": "A Sophos Fusion GraphQL query. A POST, so the source must use Anonymous credentials.",
+        "lineageTag": "2013345b-1d5f-4151-8013-345b1d5f3151",
+        "queryGroup": "Helpers",
+        "expression": [
+          "(document as text, variables as record) as record =>",
+          "let",
+          "    Response = Json.Document(Web.Contents(\"https://api.taegis.sophos.com\", [RelativePath = \"graphql\", Headers = [Authorization = \"Bearer \" & SophosToken, #\"X-Tenant-ID\" = SophosTenantId, #\"Content-Type\" = \"application/json\"], Content = Json.FromValue([query = document, variables = variables])])),",
+          "    Data = if Record.HasFields(Response, \"errors\") and (not Record.HasFields(Response, \"data\") or Response[data] = null) then error Error.Record(\"Sophos Fusion\", Text.Combine(List.Transform(Response[errors], each _[message]), \"; \")) else Response[data]",
+          "in",
+          "    Data"
+        ]
+      },
+      {
+        "name": "DocCases",
+        "kind": "m",
+        "description": "A GraphQL document from the exporter's src/sophos/documents.ts, kept identical.",
+        "lineageTag": "35ed4d96-4a16-48b8-85ed-4d964a16e8b8",
+        "queryGroup": "Helpers",
+        "expression": "\"query ExportCasesPage($arguments: CasesArguments!) {\n  cases(arguments: $arguments) {\n    totalCount\n    pageInfo { endCursor hasNextPage }\n    cases {\n      id\n      shortId\n      title\n      severity\n      type { id name title }\n      primaryStatus { id name title isClosed }\n      secondaryStatus { id name title }\n      primaryVerdict { id name title }\n      secondaryVerdict { id name title }\n      closeReason\n      managedBy\n      isCreatedByMDRProvider\n      isCreatedByPartner\n      assigneeId\n      tenantId\n      createdAt\n      updatedAt\n      closedAt\n      archivedAt\n      riskScore\n      source { id name title }\n      tags\n      detectionsCount\n      eventsCount\n      assetsCount\n    }\n  }\n}\""
+      },
+      {
+        "name": "DocDetections",
+        "kind": "m",
+        "description": "A GraphQL document from the exporter's src/sophos/documents.ts, kept identical.",
+        "lineageTag": "e800b43d-c7c4-44c7-8800-b43dc7c414c7",
+        "queryGroup": "Helpers",
+        "expression": "\"query ExportDetectionSearch($in: SearchRequestInput!) {\n  detectionSearch(in: $in) {\n    status\n    reason\n    alerts {\n      total_results\n      next_offset\n      list {\n        id\n        status\n        resolution_reason\n        attack_technique_ids\n        sensor_types\n        threat_score\n        metadata {\n          title\n          description\n          severity\n          confidence\n          created_at { seconds }\n          first_seen_at { seconds }\n          creator { detector { detector_id detector_name } }\n        }\n        enrichment_details { mitre_attack_info { technique_id technique tactics } }\n        investigation_ids { id }\n        source_entities { display_name subtype }\n        target_entities { display_name subtype }\n      }\n    }\n  }\n}\""
+      }
+    ],
+    "tables": [
+      {
+        "name": "fact_case",
+        "description": "Cases, current state, one row per case (Sophos Fusion Cases v2, or cases v1 for a Classic tenant). Read live by Power Query (direct path).",
+        "lineageTag": "2c3b6efd-b5c9-4f4b-8c3b-6efdb5c9bf4b",
+        "columns": [
+          {
+            "name": "tenant_id",
+            "dataType": "string",
+            "sourceColumn": "tenant_id",
+            "summarizeBy": "none",
+            "isHidden": false,
+            "description": "Sophos Central tenant ID (a UUID).",
+            "lineageTag": "4aa36726-2f72-49c4-8aa3-67262f7269c4"
+          },
+          {
+            "name": "case_id",
+            "dataType": "string",
+            "sourceColumn": "case_id",
+            "summarizeBy": "none",
+            "description": "Case ID.",
+            "lineageTag": "282f4f42-32fb-4d78-882f-4f4232fbdd78"
+          },
+          {
+            "name": "short_id",
+            "dataType": "string",
+            "sourceColumn": "short_id",
+            "summarizeBy": "none",
+            "description": "Human readable case ID, for example G-01560.",
+            "lineageTag": "9893d2a8-416a-4c9e-8893-d2a8416a3c9e"
+          },
+          {
+            "name": "severity",
+            "dataType": "int64",
+            "sourceColumn": "severity",
+            "summarizeBy": "sum",
+            "description": "2 informational, 4 low, 6 medium, 8 high, 10 critical. 0 when not set.",
+            "lineageTag": "0a0fc491-5310-4057-8a0f-c4915310f057"
+          },
+          {
+            "name": "severity_label",
+            "dataType": "string",
+            "sourceColumn": "severity_label",
+            "summarizeBy": "none",
+            "description": "Informational, Low, Medium, High, Critical, or Not set.",
+            "lineageTag": "630b4cf0-ac5a-4c66-830b-4cf0ac5a0c66"
+          },
+          {
+            "name": "case_type",
+            "dataType": "string",
+            "sourceColumn": "case_type",
+            "summarizeBy": "none",
+            "description": "Case type title.",
+            "lineageTag": "3cd99cf7-1d1e-4a05-8cd9-9cf71d1e9a05"
+          },
+          {
+            "name": "primary_status",
+            "dataType": "string",
+            "sourceColumn": "primary_status",
+            "summarizeBy": "none",
+            "description": "Primary status title.",
+            "lineageTag": "f68906cf-ecdc-4999-8689-06cfecdcd999"
+          },
+          {
+            "name": "is_closed",
+            "dataType": "boolean",
+            "sourceColumn": "is_closed",
+            "summarizeBy": "none",
+            "description": "True when the primary status is a closed one.",
+            "lineageTag": "5dcbd5c3-66be-4429-8dcb-d5c366be2429"
+          },
+          {
+            "name": "primary_verdict",
+            "dataType": "string",
+            "sourceColumn": "primary_verdict",
+            "summarizeBy": "none",
+            "description": "Primary verdict title, when set.",
+            "lineageTag": "2060a6b6-75fa-4d9c-8060-a6b675facd9c"
+          },
+          {
+            "name": "managed_by",
+            "dataType": "string",
+            "sourceColumn": "managed_by",
+            "summarizeBy": "none",
+            "description": "PROVIDER (Sophos MDR or the partner), CUSTOMER, or empty when not yet claimed.",
+            "lineageTag": "5caef941-f4fd-47a7-8cae-f941f4fd27a7"
+          },
+          {
+            "name": "created_at",
+            "dataType": "dateTime",
+            "sourceColumn": "created_at",
+            "formatString": "yyyy-mm-dd hh:nn:ss",
+            "summarizeBy": "none",
+            "description": "When the case was created.",
+            "lineageTag": "65698402-6f9a-4214-8569-84026f9aa214"
+          },
+          {
+            "name": "created_local_date",
+            "dataType": "dateTime",
+            "sourceColumn": "created_local_date",
+            "formatString": "yyyy-mm-dd",
+            "summarizeBy": "none",
+            "description": "created_at as a date in the report time zone.",
+            "lineageTag": "075b181f-84e8-4919-875b-181f84e85919"
+          },
+          {
+            "name": "closed_at",
+            "dataType": "dateTime",
+            "sourceColumn": "closed_at",
+            "formatString": "yyyy-mm-dd hh:nn:ss",
+            "summarizeBy": "none",
+            "description": "When the case was closed. Empty while open.",
+            "lineageTag": "ac6ba5a2-ff3e-4338-8c6b-a5a2ff3e6338"
+          },
+          {
+            "name": "closed_local_date",
+            "dataType": "dateTime",
+            "sourceColumn": "closed_local_date",
+            "formatString": "yyyy-mm-dd",
+            "summarizeBy": "none",
+            "description": "closed_at as a date in the report time zone.",
+            "lineageTag": "82cc13ff-58d3-41bd-82cc-13ff58d3a1bd"
+          },
+          {
+            "name": "minutes_to_close",
+            "dataType": "int64",
+            "sourceColumn": "minutes_to_close",
+            "summarizeBy": "sum",
+            "description": "closed_at minus created_at in minutes. Empty while open.",
+            "lineageTag": "3e191072-8606-414c-8e19-10728606f14c"
+          },
+          {
+            "name": "age_days",
+            "dataType": "double",
+            "sourceColumn": "age_days",
+            "summarizeBy": "sum",
+            "description": "Days from created_at to closed_at, or to the export time while open.",
+            "lineageTag": "bf4761e9-80c3-4237-8f47-61e980c30237"
+          },
+          {
+            "name": "detections_count",
+            "dataType": "int64",
+            "sourceColumn": "detections_count",
+            "summarizeBy": "sum",
+            "description": "Detections attached to the case.",
+            "lineageTag": "f849b29a-1aba-45bc-8849-b29a1aba45bc"
+          },
+          {
+            "name": "api_version",
+            "dataType": "string",
+            "sourceColumn": "api_version",
+            "summarizeBy": "none",
+            "description": "v2 (Sophos Fusion) or v1 (cases v1, Classic).",
+            "lineageTag": "e0879cf9-cd05-4753-8087-9cf9cd057753"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "fact_case",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Get = (r, path as list) => List.Accumulate(path, r, (s, k) => if s = null then null else if Value.Is(s, type record) then Record.FieldOrDefault(s, k, null) else null),\n    Iso = (t) => if t = null then null else DateTimeZone.RemoveZone(DateTimeZone.SwitchZone(DateTimeZone.FromText(t), 0)),\n    Epoch = (s) => if s = null then null else #datetime(1970, 1, 1, 0, 0, 0) + #duration(0, 0, 0, s),",
+                "    Fetch = (cursor) => FusionQuery(DocCases, [arguments = [query = \"\", pagination = [cursor = if cursor = null then [first = 100] else [first = 100, after = cursor]]]])[cases],",
+                "    Pages = List.Generate(() => [page = Fetch(null), n = 1], each [page] <> null, each if [page][pageInfo][hasNextPage] and [n] < 200 then [page = Fetch([page][pageInfo][endCursor]), n = [n] + 1] else [page = null, n = [n]], each [page][cases]),",
+                "    Now = DateTimeZone.RemoveZone(DateTimeZone.UtcNow()),",
+                "    Rows = List.Transform(List.Combine(Pages), (c) => [",
+                "        tenant_id = SophosTenantId,",
+                "        case_id = c[id],",
+                "        short_id = Get(c, {\"shortId\"}),",
+                "        severity = Get(c, {\"severity\"}),",
+                "        severity_label = if severity = 10 then \"Critical\" else if severity = 8 then \"High\" else if severity = 6 then \"Medium\" else if severity = 4 then \"Low\" else if severity = 2 then \"Informational\" else \"Not set\",",
+                "        case_type = Get(c, {\"type\", \"title\"}),",
+                "        primary_status = Get(c, {\"primaryStatus\", \"title\"}),",
+                "        is_closed = Get(c, {\"primaryStatus\", \"isClosed\"}),",
+                "        primary_verdict = Get(c, {\"primaryVerdict\", \"title\"}),",
+                "        managed_by = Get(c, {\"managedBy\"}),",
+                "        created_at = Iso(Get(c, {\"createdAt\"})),",
+                "        created_local_date = if created_at = null then null else Date.From(created_at),",
+                "        closed_at = Iso(Get(c, {\"closedAt\"})),",
+                "        closed_local_date = if closed_at = null then null else Date.From(closed_at),",
+                "        minutes_to_close = if closed_at = null or created_at = null then null else Number.Round(Duration.TotalMinutes(closed_at - created_at)),",
+                "        age_days = if created_at = null then null else Number.Round(Duration.TotalDays((if closed_at = null then Now else closed_at) - created_at), 2),",
+                "        detections_count = Get(c, {\"detectionsCount\"}),",
+                "        api_version = \"v2\"",
+                "    ]),",
+                "    Table = Table.FromRecords(Rows, {\"tenant_id\", \"case_id\", \"short_id\", \"severity\", \"severity_label\", \"case_type\", \"primary_status\", \"is_closed\", \"primary_verdict\", \"managed_by\", \"created_at\", \"created_local_date\", \"closed_at\", \"closed_local_date\", \"minutes_to_close\", \"age_days\", \"detections_count\", \"api_version\"}, MissingField.UseNull),",
+                "    Typed = Table.TransformColumnTypes(Table, {{\"tenant_id\", type text}, {\"case_id\", type text}, {\"short_id\", type text}, {\"severity\", Int64.Type}, {\"severity_label\", type text}, {\"case_type\", type text}, {\"primary_status\", type text}, {\"is_closed\", type logical}, {\"primary_verdict\", type text}, {\"managed_by\", type text}, {\"created_at\", type datetime}, {\"created_local_date\", type date}, {\"closed_at\", type datetime}, {\"closed_local_date\", type date}, {\"minutes_to_close\", Int64.Type}, {\"age_days\", type number}, {\"detections_count\", Int64.Type}, {\"api_version\", type text}}, \"en-US\")",
+                "in",
+                "    Typed"
+              ]
+            }
+          }
+        ],
+        "measures": [
+          {
+            "name": "Cases",
+            "expression": "COUNTROWS(fact_case) + 0",
+            "formatString": "0",
+            "description": "Cases created in the selected dates.",
+            "lineageTag": "1c159bd9-a1d9-458b-8c15-9bd9a1d9b58b"
+          },
+          {
+            "name": "Open cases",
+            "expression": "CALCULATE(COUNTROWS(fact_case), fact_case[is_closed] == FALSE(), REMOVEFILTERS('Date')) + 0",
+            "formatString": "0",
+            "description": "Cases not closed, whatever dates are selected.",
+            "lineageTag": "86bb7201-f7ae-49cf-86bb-7201f7aee9cf"
+          },
+          {
+            "name": "Closed cases",
+            "expression": "CALCULATE(COUNTROWS(fact_case), USERELATIONSHIP(fact_case[closed_local_date], 'Date'[Date]), fact_case[is_closed] == TRUE()) + 0",
+            "formatString": "0",
+            "description": "Cases closed in the selected dates.",
+            "lineageTag": "cec04711-0aae-4ccf-8ec0-47110aaebccf"
+          },
+          {
+            "name": "Mean hours to close",
+            "expression": "CALCULATE(DIVIDE(AVERAGE(fact_case[minutes_to_close]), 60), USERELATIONSHIP(fact_case[closed_local_date], 'Date'[Date]))",
+            "formatString": "0.0",
+            "description": "Created to closed, for cases closed in the selected dates. Sophos sends no first response time.",
+            "lineageTag": "652c1d6b-4a29-4f09-852c-1d6b4a295f09"
+          },
+          {
+            "name": "Median hours to close",
+            "expression": "CALCULATE(DIVIDE(MEDIAN(fact_case[minutes_to_close]), 60), USERELATIONSHIP(fact_case[closed_local_date], 'Date'[Date]))",
+            "formatString": "0.0",
+            "description": "Median created to closed, for cases closed in the selected dates.",
+            "lineageTag": "9d6caec2-f70d-4098-8d6c-aec2f70df098"
+          },
+          {
+            "name": "Mean open case age (days)",
+            "expression": "CALCULATE(AVERAGE(fact_case[age_days]), fact_case[is_closed] == FALSE(), REMOVEFILTERS('Date'))",
+            "formatString": "0.0",
+            "description": "Days since creation of the cases still open, as of the last export.",
+            "lineageTag": "f0e15814-b641-44d6-80e1-5814b64194d6"
+          },
+          {
+            "name": "Provider managed share",
+            "expression": "DIVIDE(CALCULATE(COUNTROWS(fact_case), fact_case[managed_by] = \"PROVIDER\"), COUNTROWS(fact_case))",
+            "formatString": "0%",
+            "description": "Share of cases Sophos MDR or the partner manages.",
+            "lineageTag": "d6d10843-afc5-499d-86d1-0843afc5099d"
+          }
+        ]
+      },
+      {
+        "name": "fact_detection",
+        "description": "Detections (Sophos Fusion Detections v2), one row per detection. The last detectionTrailingDays are pulled again on every run because status changes after creation. Read live by Power Query (direct path).",
+        "lineageTag": "b2ae7a40-04d2-4b92-82ae-7a4004d2ab92",
+        "columns": [
+          {
+            "name": "tenant_id",
+            "dataType": "string",
+            "sourceColumn": "tenant_id",
+            "summarizeBy": "none",
+            "isHidden": false,
+            "description": "Sophos Central tenant ID (a UUID).",
+            "lineageTag": "ce64a3cd-fdfa-4ac3-8e64-a3cdfdfa9ac3"
+          },
+          {
+            "name": "detection_id",
+            "dataType": "string",
+            "sourceColumn": "detection_id",
+            "summarizeBy": "none",
+            "description": "Detection resource name (alert://...).",
+            "lineageTag": "d57816de-8204-440c-8578-16de8204440c"
+          },
+          {
+            "name": "created_at",
+            "dataType": "dateTime",
+            "sourceColumn": "created_at",
+            "formatString": "yyyy-mm-dd hh:nn:ss",
+            "summarizeBy": "none",
+            "description": "When the detection was created.",
+            "lineageTag": "85c1bc47-ef39-4ec5-85c1-bc47ef397ec5"
+          },
+          {
+            "name": "created_local_date",
+            "dataType": "dateTime",
+            "sourceColumn": "created_local_date",
+            "formatString": "yyyy-mm-dd",
+            "summarizeBy": "none",
+            "description": "created_at as a date in the report time zone.",
+            "lineageTag": "e91f80a6-5399-4374-891f-80a653991374"
+          },
+          {
+            "name": "severity",
+            "dataType": "double",
+            "sourceColumn": "severity",
+            "summarizeBy": "sum",
+            "description": "Severity score, 0 to 1.",
+            "lineageTag": "c0ebefd0-7c89-4b62-80eb-efd07c89fb62"
+          },
+          {
+            "name": "severity_band",
+            "dataType": "string",
+            "sourceColumn": "severity_band",
+            "summarizeBy": "none",
+            "description": "Critical (0.8 and up), High (0.6), Medium (0.4), Low (0.2) or Info.",
+            "lineageTag": "5e187b2e-ac93-4820-8e18-7b2eac932820"
+          },
+          {
+            "name": "severity_rank",
+            "dataType": "int64",
+            "sourceColumn": "severity_rank",
+            "summarizeBy": "sum",
+            "description": "5 Critical, 4 High, 3 Medium, 2 Low, 1 Info, for sorting.",
+            "lineageTag": "0a4c5d3f-70e7-4549-8a4c-5d3f70e7f549"
+          },
+          {
+            "name": "confidence",
+            "dataType": "double",
+            "sourceColumn": "confidence",
+            "summarizeBy": "sum",
+            "description": "Confidence, 0 to 1.",
+            "lineageTag": "3d15fa3b-6e39-4eb1-8d15-fa3b6e399eb1"
+          },
+          {
+            "name": "status",
+            "dataType": "string",
+            "sourceColumn": "status",
+            "summarizeBy": "none",
+            "description": "OPEN, TRUE_POSITIVE_BENIGN, TRUE_POSITIVE_MALICIOUS, FALSE_POSITIVE, NOT_ACTIONABLE, OTHER, SUPPRESSED, AUTO_CLOSE or DISMISSED.",
+            "lineageTag": "7744e0a9-a5b9-4afb-8744-e0a9a5b9cafb"
+          },
+          {
+            "name": "detector_id",
+            "dataType": "string",
+            "sourceColumn": "detector_id",
+            "summarizeBy": "none",
+            "description": "Detector ID (dim_detector).",
+            "lineageTag": "2aa530f3-479d-4ffd-8aa5-30f3479dfffd"
+          },
+          {
+            "name": "title",
+            "dataType": "string",
+            "sourceColumn": "title",
+            "summarizeBy": "none",
+            "description": "Detection title.",
+            "lineageTag": "401c0277-26a1-43f9-801c-027726a153f9"
+          },
+          {
+            "name": "technique_count",
+            "dataType": "int64",
+            "sourceColumn": "technique_count",
+            "summarizeBy": "sum",
+            "description": "MITRE ATT&CK techniques the detection names.",
+            "lineageTag": "64333527-3f97-49f1-8433-35273f9719f1"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "fact_detection",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Get = (r, path as list) => List.Accumulate(path, r, (s, k) => if s = null then null else if Value.Is(s, type record) then Record.FieldOrDefault(s, k, null) else null),\n    Iso = (t) => if t = null then null else DateTimeZone.RemoveZone(DateTimeZone.SwitchZone(DateTimeZone.FromText(t), 0)),\n    Epoch = (s) => if s = null then null else #datetime(1970, 1, 1, 0, 0, 0) + #duration(0, 0, 0, s),",
+                "    Days = List.Max({1, List.Min({30, Number.From(DetectionDays)})}),",
+                "    Ql = \"FROM alert WHERE severity >= 0 EARLIEST=-\" & Text.From(Days) & \"d\",",
+                "    Found = Get(FusionQuery(DocDetections, [in = [cql_query = Ql, limit = 10000, offset = 0]]), {\"detectionSearch\", \"alerts\", \"list\"}),",
+                "    Band = (s) => if s = null then \"Info\" else if s >= 0.8 then \"Critical\" else if s >= 0.6 then \"High\" else if s >= 0.4 then \"Medium\" else if s >= 0.2 then \"Low\" else \"Info\",",
+                "    Rank = [Critical = 5, High = 4, Medium = 3, Low = 2, Info = 1],",
+                "    Rows = List.Transform(if Found = null then {} else Found, (d) => [",
+                "        tenant_id = SophosTenantId,",
+                "        detection_id = d[id],",
+                "        created_at = Epoch(Get(d, {\"metadata\", \"created_at\", \"seconds\"})),",
+                "        created_local_date = if created_at = null then null else Date.From(created_at),",
+                "        severity = Get(d, {\"metadata\", \"severity\"}),",
+                "        severity_band = Band(severity),",
+                "        severity_rank = Record.Field(Rank, severity_band),",
+                "        confidence = Get(d, {\"metadata\", \"confidence\"}),",
+                "        status = Get(d, {\"status\"}),",
+                "        detector_id = Get(d, {\"metadata\", \"creator\", \"detector\", \"detector_id\"}),",
+                "        title = Get(d, {\"metadata\", \"title\"}),",
+                "        technique_count = List.Count(List.RemoveNulls(if Get(d, {\"attack_technique_ids\"}) = null then {} else d[attack_technique_ids]))",
+                "    ]),",
+                "    Table = Table.FromRecords(Rows, {\"tenant_id\", \"detection_id\", \"created_at\", \"created_local_date\", \"severity\", \"severity_band\", \"severity_rank\", \"confidence\", \"status\", \"detector_id\", \"title\", \"technique_count\"}, MissingField.UseNull),",
+                "    Typed = Table.TransformColumnTypes(Table, {{\"tenant_id\", type text}, {\"detection_id\", type text}, {\"created_at\", type datetime}, {\"created_local_date\", type date}, {\"severity\", type number}, {\"severity_band\", type text}, {\"severity_rank\", Int64.Type}, {\"confidence\", type number}, {\"status\", type text}, {\"detector_id\", type text}, {\"title\", type text}, {\"technique_count\", Int64.Type}}, \"en-US\")",
+                "in",
+                "    Typed"
+              ]
+            }
+          }
+        ],
+        "measures": [
+          {
+            "name": "Detection rows",
+            "expression": "COUNTROWS(fact_detection) + 0",
+            "formatString": "#,0",
+            "description": "Detection detail rows (kept for the retention period).",
+            "lineageTag": "868aded5-cc50-4f27-868a-ded5cc509f27"
+          }
+        ]
+      },
+      {
+        "name": "fact_endpoint_snapshot",
+        "description": "Endpoint health and coverage, one snapshot a day per endpoint (Endpoint API). Read live by Power Query (direct path).",
+        "lineageTag": "76721f35-a501-4df7-8672-1f35a501fdf7",
+        "columns": [
+          {
+            "name": "tenant_id",
+            "dataType": "string",
+            "sourceColumn": "tenant_id",
+            "summarizeBy": "none",
+            "isHidden": false,
+            "description": "Sophos Central tenant ID (a UUID).",
+            "lineageTag": "1c74eaf8-b500-4dce-8c74-eaf8b500ddce"
+          },
+          {
+            "name": "snapshot_date",
+            "dataType": "dateTime",
+            "sourceColumn": "snapshot_date",
+            "formatString": "yyyy-mm-dd",
+            "summarizeBy": "none",
+            "description": "Day of the snapshot in the report time zone.",
+            "lineageTag": "d9144455-ac1c-473b-8914-4455ac1cc73b"
+          },
+          {
+            "name": "endpoint_id",
+            "dataType": "string",
+            "sourceColumn": "endpoint_id",
+            "summarizeBy": "none",
+            "description": "Endpoint ID. Equals host_id in the Sophos Data Lake.",
+            "lineageTag": "3767090f-a978-4a31-8767-090fa9785a31"
+          },
+          {
+            "name": "endpoint_type",
+            "dataType": "string",
+            "sourceColumn": "endpoint_type",
+            "summarizeBy": "none",
+            "description": "computer, server or securityVm.",
+            "lineageTag": "766bac52-3f88-4d6c-866b-ac523f889d6c"
+          },
+          {
+            "name": "os_platform",
+            "dataType": "string",
+            "sourceColumn": "os_platform",
+            "summarizeBy": "none",
+            "description": "windows, macOS or linux.",
+            "lineageTag": "b9d080e8-ed69-4866-89d0-80e8ed69b866"
+          },
+          {
+            "name": "os_name",
+            "dataType": "string",
+            "sourceColumn": "os_name",
+            "summarizeBy": "none",
+            "description": "Operating system name.",
+            "lineageTag": "44266ab4-c4d7-41ba-8426-6ab4c4d741ba"
+          },
+          {
+            "name": "health_overall",
+            "dataType": "string",
+            "sourceColumn": "health_overall",
+            "summarizeBy": "none",
+            "description": "good, suspicious, bad or unknown.",
+            "lineageTag": "87e5d358-c911-47aa-87e5-d358c91147aa"
+          },
+          {
+            "name": "last_seen_at",
+            "dataType": "dateTime",
+            "sourceColumn": "last_seen_at",
+            "formatString": "yyyy-mm-dd hh:nn:ss",
+            "summarizeBy": "none",
+            "description": "When the endpoint last checked in.",
+            "lineageTag": "c9726eba-8eab-4ed0-8972-6eba8eab5ed0"
+          },
+          {
+            "name": "days_since_seen",
+            "dataType": "double",
+            "sourceColumn": "days_since_seen",
+            "summarizeBy": "sum",
+            "description": "Days from last_seen_at to the snapshot time.",
+            "lineageTag": "e7412b98-86ce-40de-8741-2b9886ce80de"
+          },
+          {
+            "name": "tamper_protection_enabled",
+            "dataType": "boolean",
+            "sourceColumn": "tamper_protection_enabled",
+            "summarizeBy": "none",
+            "description": "Tamper protection on.",
+            "lineageTag": "37245943-04d9-4ded-8724-594304d91ded"
+          },
+          {
+            "name": "isolation_status",
+            "dataType": "string",
+            "sourceColumn": "isolation_status",
+            "summarizeBy": "none",
+            "description": "isolated or notIsolated.",
+            "lineageTag": "3b017cdf-e98f-4b15-8b01-7cdfe98f8b15"
+          },
+          {
+            "name": "group_name",
+            "dataType": "string",
+            "sourceColumn": "group_name",
+            "summarizeBy": "none",
+            "description": "Endpoint group.",
+            "lineageTag": "2c934867-2def-40e5-8c93-48672def70e5"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "fact_endpoint_snapshot",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Get = (r, path as list) => List.Accumulate(path, r, (s, k) => if s = null then null else if Value.Is(s, type record) then Record.FieldOrDefault(s, k, null) else null),\n    Iso = (t) => if t = null then null else DateTimeZone.RemoveZone(DateTimeZone.SwitchZone(DateTimeZone.FromText(t), 0)),\n    Epoch = (s) => if s = null then null else #datetime(1970, 1, 1, 0, 0, 0) + #duration(0, 0, 0, s),",
+                "    Fetch = (key) => SophosGet(\"endpoint/v1/endpoints\", if key = null then [pageSize = \"500\"] else [pageSize = \"500\", pageFromKey = key]),",
+                "    Pages = List.Generate(() => [p = Fetch(null), n = 1], each [p] <> null, each let next = Get([p], {\"pages\", \"nextKey\"}) in if next <> null and [n] < 200 then [p = Fetch(next), n = [n] + 1] else [p = null, n = [n]], each Get([p], {\"items\"})),",
+                "    Now = DateTimeZone.RemoveZone(DateTimeZone.UtcNow()),",
+                "    Rows = List.Transform(List.Combine(List.RemoveNulls(Pages)), (e) => [",
+                "        tenant_id = SophosTenantId,",
+                "        snapshot_date = Date.From(Now),",
+                "        endpoint_id = e[id],",
+                "        endpoint_type = Get(e, {\"type\"}),",
+                "        os_platform = Get(e, {\"os\", \"platform\"}),",
+                "        os_name = let n = Get(e, {\"os\", \"name\"}) in if n = null then null else Text.Trim(n),",
+                "        health_overall = Get(e, {\"health\", \"overall\"}),",
+                "        last_seen_at = Iso(Get(e, {\"lastSeenAt\"})),",
+                "        days_since_seen = if last_seen_at = null then null else Number.Round(Duration.TotalDays(Now - last_seen_at), 2),",
+                "        tamper_protection_enabled = Get(e, {\"tamperProtectionEnabled\"}),",
+                "        isolation_status = Get(e, {\"isolation\", \"status\"}),",
+                "        group_name = Get(e, {\"group\", \"name\"})",
+                "    ]),",
+                "    Table = Table.FromRecords(Rows, {\"tenant_id\", \"snapshot_date\", \"endpoint_id\", \"endpoint_type\", \"os_platform\", \"os_name\", \"health_overall\", \"last_seen_at\", \"days_since_seen\", \"tamper_protection_enabled\", \"isolation_status\", \"group_name\"}, MissingField.UseNull),",
+                "    Typed = Table.TransformColumnTypes(Table, {{\"tenant_id\", type text}, {\"snapshot_date\", type date}, {\"endpoint_id\", type text}, {\"endpoint_type\", type text}, {\"os_platform\", type text}, {\"os_name\", type text}, {\"health_overall\", type text}, {\"last_seen_at\", type datetime}, {\"days_since_seen\", type number}, {\"tamper_protection_enabled\", type logical}, {\"isolation_status\", type text}, {\"group_name\", type text}}, \"en-US\")",
+                "in",
+                "    Typed"
+              ]
+            }
+          }
+        ],
+        "measures": [
+          {
+            "name": "Endpoints",
+            "expression": "VAR LatestSnapshot = MAX(fact_endpoint_snapshot[snapshot_date])\nRETURN CALCULATE(COUNTROWS(fact_endpoint_snapshot), fact_endpoint_snapshot[snapshot_date] = LatestSnapshot) + 0",
+            "formatString": "0",
+            "description": "Endpoints in the latest snapshot of the selected dates.",
+            "lineageTag": "cc08888c-7816-491a-8c08-888c7816291a"
+          },
+          {
+            "name": "Endpoints not in good health",
+            "expression": "VAR LatestSnapshot = MAX(fact_endpoint_snapshot[snapshot_date])\nRETURN CALCULATE(COUNTROWS(fact_endpoint_snapshot), fact_endpoint_snapshot[snapshot_date] = LatestSnapshot, fact_endpoint_snapshot[health_overall] <> \"good\") + 0",
+            "formatString": "0",
+            "description": "Latest snapshot, overall health not good.",
+            "lineageTag": "80e701e5-aeff-40c7-80e7-01e5aeff10c7"
+          },
+          {
+            "name": "Endpoints not seen 7+ days",
+            "expression": "VAR LatestSnapshot = MAX(fact_endpoint_snapshot[snapshot_date])\nRETURN CALCULATE(COUNTROWS(fact_endpoint_snapshot), fact_endpoint_snapshot[snapshot_date] = LatestSnapshot, fact_endpoint_snapshot[days_since_seen] >= 7) + 0",
+            "formatString": "0",
+            "description": "Latest snapshot, last seen a week or more before it.",
+            "lineageTag": "0e89fab1-5219-423b-8e89-fab15219e23b"
+          },
+          {
+            "name": "Tamper protection off",
+            "expression": "VAR LatestSnapshot = MAX(fact_endpoint_snapshot[snapshot_date])\nRETURN CALCULATE(COUNTROWS(fact_endpoint_snapshot), fact_endpoint_snapshot[snapshot_date] = LatestSnapshot, fact_endpoint_snapshot[tamper_protection_enabled] == FALSE()) + 0",
+            "formatString": "0",
+            "description": "Latest snapshot, tamper protection off.",
+            "lineageTag": "041cb867-8dd8-49f1-841c-b8678dd809f1"
+          }
+        ]
+      },
+      {
+        "name": "fact_alert",
+        "description": "Sophos Central product alerts (Common API), current state per alert. Useful for tenants without XDR or MDR. An alert leaves the API once acknowledged, but stays in this table. Read live by Power Query (direct path).",
+        "lineageTag": "83ab0d9d-0baf-473f-83ab-0d9d0baf073f",
+        "columns": [
+          {
+            "name": "tenant_id",
+            "dataType": "string",
+            "sourceColumn": "tenant_id",
+            "summarizeBy": "none",
+            "isHidden": false,
+            "description": "Sophos Central tenant ID (a UUID).",
+            "lineageTag": "bab203c0-ec3b-427e-8ab2-03c0ec3b927e"
+          },
+          {
+            "name": "alert_id",
+            "dataType": "string",
+            "sourceColumn": "alert_id",
+            "summarizeBy": "none",
+            "description": "Alert ID.",
+            "lineageTag": "4a690b2e-09e2-4ab4-8a69-0b2e09e2eab4"
+          },
+          {
+            "name": "raised_at",
+            "dataType": "dateTime",
+            "sourceColumn": "raised_at",
+            "formatString": "yyyy-mm-dd hh:nn:ss",
+            "summarizeBy": "none",
+            "description": "When the alert was raised.",
+            "lineageTag": "17971354-cc97-46ca-8797-1354cc97c6ca"
+          },
+          {
+            "name": "raised_local_date",
+            "dataType": "dateTime",
+            "sourceColumn": "raised_local_date",
+            "formatString": "yyyy-mm-dd",
+            "summarizeBy": "none",
+            "description": "raised_at as a date in the report time zone.",
+            "lineageTag": "066edec5-c61d-4f9b-866e-dec5c61d6f9b"
+          },
+          {
+            "name": "severity",
+            "dataType": "string",
+            "sourceColumn": "severity",
+            "summarizeBy": "none",
+            "description": "high, medium or low.",
+            "lineageTag": "7243d997-2ec8-448d-8243-d9972ec8e48d"
+          },
+          {
+            "name": "category",
+            "dataType": "string",
+            "sourceColumn": "category",
+            "summarizeBy": "none",
+            "description": "Alert category, for example malware or wireless.",
+            "lineageTag": "ee709388-5472-4c22-8e70-93885472cc22"
+          },
+          {
+            "name": "product",
+            "dataType": "string",
+            "sourceColumn": "product",
+            "summarizeBy": "none",
+            "description": "Product that raised the alert.",
+            "lineageTag": "48ff533f-d4bb-4731-88ff-533fd4bb0731"
+          },
+          {
+            "name": "alert_type",
+            "dataType": "string",
+            "sourceColumn": "alert_type",
+            "summarizeBy": "none",
+            "description": "Alert type code.",
+            "lineageTag": "93fa569b-46e7-49a9-83fa-569b46e789a9"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "fact_alert",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Get = (r, path as list) => List.Accumulate(path, r, (s, k) => if s = null then null else if Value.Is(s, type record) then Record.FieldOrDefault(s, k, null) else null),\n    Iso = (t) => if t = null then null else DateTimeZone.RemoveZone(DateTimeZone.SwitchZone(DateTimeZone.FromText(t), 0)),\n    Epoch = (s) => if s = null then null else #datetime(1970, 1, 1, 0, 0, 0) + #duration(0, 0, 0, s),",
+                "    Fetch = (key) => SophosGet(\"common/v1/alerts\", if key = null then [pageSize = \"1000\"] else [pageSize = \"1000\", pageFromKey = key]),",
+                "    Pages = List.Generate(() => [p = Fetch(null), n = 1], each [p] <> null, each let next = Get([p], {\"pages\", \"nextKey\"}) in if next <> null and [n] < 100 then [p = Fetch(next), n = [n] + 1] else [p = null, n = [n]], each Get([p], {\"items\"})),",
+                "    Rows = List.Transform(List.Combine(List.RemoveNulls(Pages)), (a) => [",
+                "        tenant_id = SophosTenantId,",
+                "        alert_id = a[id],",
+                "        raised_at = Iso(Get(a, {\"raisedAt\"})),",
+                "        raised_local_date = if raised_at = null then null else Date.From(raised_at),",
+                "        severity = Get(a, {\"severity\"}),",
+                "        category = Get(a, {\"category\"}),",
+                "        product = Get(a, {\"product\"}),",
+                "        alert_type = Get(a, {\"type\"})",
+                "    ]),",
+                "    Table = Table.FromRecords(Rows, {\"tenant_id\", \"alert_id\", \"raised_at\", \"raised_local_date\", \"severity\", \"category\", \"product\", \"alert_type\"}, MissingField.UseNull),",
+                "    Typed = Table.TransformColumnTypes(Table, {{\"tenant_id\", type text}, {\"alert_id\", type text}, {\"raised_at\", type datetime}, {\"raised_local_date\", type date}, {\"severity\", type text}, {\"category\", type text}, {\"product\", type text}, {\"alert_type\", type text}}, \"en-US\")",
+                "in",
+                "    Typed"
+              ]
+            }
+          }
+        ],
+        "measures": [
+          {
+            "name": "Alerts",
+            "expression": "COUNTROWS(fact_alert) + 0",
+            "formatString": "0",
+            "description": "Product alerts raised in the selected dates.",
+            "lineageTag": "b8047591-bc63-49eb-8804-7591bc63c9eb"
+          },
+          {
+            "name": "High alerts",
+            "expression": "CALCULATE(COUNTROWS(fact_alert), fact_alert[severity] = \"high\") + 0",
+            "formatString": "0",
+            "description": "High severity product alerts raised in the selected dates.",
+            "lineageTag": "bef01875-7a8a-4dc3-8ef0-18757a8afdc3"
+          }
+        ]
+      },
+      {
+        "name": "fact_license",
+        "description": "Licenses held by the tenant, one snapshot a day. Read live by Power Query (direct path).",
+        "lineageTag": "966ffbe0-49ac-455a-866f-fbe049ac055a",
+        "columns": [
+          {
+            "name": "tenant_id",
+            "dataType": "string",
+            "sourceColumn": "tenant_id",
+            "summarizeBy": "none",
+            "isHidden": false,
+            "description": "Sophos Central tenant ID (a UUID).",
+            "lineageTag": "6b0a99d5-d863-48b3-8b0a-99d5d86348b3"
+          },
+          {
+            "name": "snapshot_date",
+            "dataType": "dateTime",
+            "sourceColumn": "snapshot_date",
+            "formatString": "yyyy-mm-dd",
+            "summarizeBy": "none",
+            "description": "Day of the snapshot in the report time zone.",
+            "lineageTag": "3d193564-2018-486a-8d19-35642018786a"
+          },
+          {
+            "name": "license_id",
+            "dataType": "string",
+            "sourceColumn": "license_id",
+            "summarizeBy": "none",
+            "description": "Sophos license record ID.",
+            "lineageTag": "5218b9de-246b-4cb4-8218-b9de246b3cb4"
+          },
+          {
+            "name": "license_code",
+            "dataType": "string",
+            "sourceColumn": "license_code",
+            "summarizeBy": "none",
+            "description": "License code, for example XDR-MSP or CIXAXDR.",
+            "lineageTag": "bdc40b8a-9bf4-41c0-8dc4-0b8a9bf421c0"
+          },
+          {
+            "name": "product_name",
+            "dataType": "string",
+            "sourceColumn": "product_name",
+            "summarizeBy": "none",
+            "description": "Product name Sophos gives the license.",
+            "lineageTag": "10e51f00-24ca-46ba-80e5-1f0024caf6ba"
+          },
+          {
+            "name": "license_type",
+            "dataType": "string",
+            "sourceColumn": "license_type",
+            "summarizeBy": "none",
+            "description": "term, trial, usage (MSP monthly) or another value Sophos sends.",
+            "lineageTag": "ce5ca9eb-98ff-4ba9-8e5c-a9eb98ff7ba9"
+          },
+          {
+            "name": "quantity",
+            "dataType": "int64",
+            "sourceColumn": "quantity",
+            "summarizeBy": "sum",
+            "description": "Licensed quantity. Empty when unlimited.",
+            "lineageTag": "3aef8b06-1fc0-4e3c-8aef-8b061fc03e3c"
+          },
+          {
+            "name": "used",
+            "dataType": "int64",
+            "sourceColumn": "used",
+            "summarizeBy": "sum",
+            "description": "Current usage count Sophos reports. Empty when it sends none.",
+            "lineageTag": "ac442a8e-bffb-47fc-8c44-2a8ebffb07fc"
+          },
+          {
+            "name": "end_date",
+            "dataType": "dateTime",
+            "sourceColumn": "end_date",
+            "formatString": "yyyy-mm-dd",
+            "summarizeBy": "none",
+            "description": "License end date. Empty for a perpetual license.",
+            "lineageTag": "4d77dd1d-3209-44af-8d77-dd1d320924af"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "fact_license",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Get = (r, path as list) => List.Accumulate(path, r, (s, k) => if s = null then null else if Value.Is(s, type record) then Record.FieldOrDefault(s, k, null) else null),\n    Iso = (t) => if t = null then null else DateTimeZone.RemoveZone(DateTimeZone.SwitchZone(DateTimeZone.FromText(t), 0)),\n    Epoch = (s) => if s = null then null else #datetime(1970, 1, 1, 0, 0, 0) + #duration(0, 0, 0, s),",
+                "    Body = Json.Document(Web.Contents(\"https://api.central.sophos.com\", [RelativePath = \"licenses/v1/licenses\", Headers = [Authorization = \"Bearer \" & SophosToken, #\"X-Tenant-ID\" = SophosTenantId]])),",
+                "    Today = Date.From(DateTimeZone.UtcNow()),",
+                "    Rows = List.Transform(List.Select(if Get(Body, {\"licenses\"}) = null then {} else Body[licenses], each Get(_, {\"product\", \"code\"}) <> null), (l) => [",
+                "        tenant_id = SophosTenantId,",
+                "        snapshot_date = Today,",
+                "        license_id = Get(l, {\"id\"}),",
+                "        license_code = Get(l, {\"product\", \"code\"}),",
+                "        product_name = Get(l, {\"product\", \"name\"}),",
+                "        license_type = Get(l, {\"type\"}),",
+                "        quantity = if Get(l, {\"unlimited\"}) = true then null else Get(l, {\"quantity\"}),",
+                "        used = Get(l, {\"usage\", \"current\", \"count\"}),",
+                "        end_date = let d = Get(l, {\"endDate\"}) in if d = null or Get(l, {\"perpetual\"}) = true then null else Date.FromText(d, [Format = \"yyyy-MM-dd\"])",
+                "    ]),",
+                "    Table = Table.FromRecords(Rows, {\"tenant_id\", \"snapshot_date\", \"license_id\", \"license_code\", \"product_name\", \"license_type\", \"quantity\", \"used\", \"end_date\"}, MissingField.UseNull),",
+                "    Typed = Table.TransformColumnTypes(Table, {{\"tenant_id\", type text}, {\"snapshot_date\", type date}, {\"license_id\", type text}, {\"license_code\", type text}, {\"product_name\", type text}, {\"license_type\", type text}, {\"quantity\", Int64.Type}, {\"used\", Int64.Type}, {\"end_date\", type date}}, \"en-US\")",
+                "in",
+                "    Typed"
+              ]
+            }
+          }
+        ],
+        "measures": [
+          {
+            "name": "Licensed quantity",
+            "expression": "VAR LatestSnapshot = MAX(fact_license[snapshot_date])\nRETURN CALCULATE(SUM(fact_license[quantity]), fact_license[snapshot_date] = LatestSnapshot)",
+            "formatString": "#,0",
+            "description": "Licensed quantity in the latest snapshot. Unlimited licenses have none.",
+            "lineageTag": "3f32afa1-d73c-487f-8f32-afa1d73c187f"
+          },
+          {
+            "name": "Licenses used",
+            "expression": "VAR LatestSnapshot = MAX(fact_license[snapshot_date])\nRETURN CALCULATE(SUM(fact_license[used]), fact_license[snapshot_date] = LatestSnapshot)",
+            "formatString": "#,0",
+            "description": "Usage Sophos reports, latest snapshot.",
+            "lineageTag": "273d5562-86a2-43a4-873d-556286a2c3a4"
+          }
+        ]
+      },
+      {
+        "name": "Date",
+        "description": "Calendar from the first month with data to today, in the report time zone.",
+        "lineageTag": "3b527379-e4b6-497f-8b52-7379e4b6097f",
+        "dataCategory": "Time",
+        "columns": [
+          {
+            "name": "Date",
+            "dataType": "dateTime",
+            "sourceColumn": "Date",
+            "formatString": "yyyy-mm-dd",
+            "isKey": true,
+            "summarizeBy": "none",
+            "lineageTag": "cbea9049-f19e-463b-8bea-9049f19eb63b"
+          },
+          {
+            "name": "Year",
+            "dataType": "int64",
+            "sourceColumn": "Year",
+            "summarizeBy": "none",
+            "lineageTag": "0672ccac-3fe2-46ce-8672-ccac3fe2d6ce"
+          },
+          {
+            "name": "Month",
+            "dataType": "string",
+            "sourceColumn": "Month",
+            "summarizeBy": "none",
+            "sortByColumn": "Month start",
+            "lineageTag": "fca18f55-bbef-4d2b-8ca1-8f55bbef7d2b"
+          },
+          {
+            "name": "Month start",
+            "dataType": "dateTime",
+            "sourceColumn": "Month start",
+            "formatString": "yyyy-mm-dd",
+            "summarizeBy": "none",
+            "lineageTag": "dbf71c45-a46a-4f1b-8bf7-1c45a46a2f1b"
+          },
+          {
+            "name": "Week start",
+            "dataType": "dateTime",
+            "sourceColumn": "Week start",
+            "formatString": "yyyy-mm-dd",
+            "summarizeBy": "none",
+            "lineageTag": "eb2eba1d-f67f-4027-8b2e-ba1df67f1027"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Date",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Today = Date.From(DateTime.LocalNow()),",
+                "    Seen = {Date.AddYears(Today, -1)},",
+                "    Start = Date.StartOfMonth(if List.IsEmpty(Seen) then Date.AddDays(Today, -90) else List.Min(Seen)),",
+                "    End = Today,",
+                "    Days = List.Dates(Start, Duration.Days(End - Start) + 1, #duration(1, 0, 0, 0)),",
+                "    Base = Table.FromList(Days, Splitter.SplitByNothing(), type table [Date = date]),",
+                "    WithYear = Table.AddColumn(Base, \"Year\", each Date.Year([Date]), Int64.Type),",
+                "    WithMonth = Table.AddColumn(WithYear, \"Month\", each Date.ToText([Date], [Format = \"yyyy-MM\", Culture = \"en-US\"]), type text),",
+                "    WithMonthStart = Table.AddColumn(WithMonth, \"Month start\", each Date.StartOfMonth([Date]), type date),",
+                "    WithWeekStart = Table.AddColumn(WithMonthStart, \"Week start\", each Date.StartOfWeek([Date], Day.Monday), type date)",
+                "in",
+                "    WithWeekStart"
+              ]
+            }
+          }
+        ],
+        "measures": []
+      }
+    ],
+    "relationships": [
+      {
+        "name": "712e74ac-05fb-47da-812e-74ac05fb37da",
+        "fromTable": "fact_case",
+        "fromColumn": "created_local_date",
+        "toTable": "Date",
+        "toColumn": "Date"
+      },
+      {
+        "name": "1416cb2a-7414-4dd8-8416-cb2a7414add8",
+        "fromTable": "fact_case",
+        "fromColumn": "closed_local_date",
+        "toTable": "Date",
+        "toColumn": "Date",
+        "isActive": false
+      },
+      {
+        "name": "feaf641b-fb89-45f9-8eaf-641bfb89c5f9",
+        "fromTable": "fact_detection",
+        "fromColumn": "created_local_date",
+        "toTable": "Date",
+        "toColumn": "Date"
+      },
+      {
+        "name": "05a675ca-aa06-4a14-85a6-75caaa069a14",
+        "fromTable": "fact_alert",
+        "fromColumn": "raised_local_date",
+        "toTable": "Date",
+        "toColumn": "Date"
+      },
+      {
+        "name": "21fb31e2-e3e6-4b9c-81fb-31e2e3e68b9c",
+        "fromTable": "fact_endpoint_snapshot",
+        "fromColumn": "snapshot_date",
+        "toTable": "Date",
+        "toColumn": "Date"
+      },
+      {
+        "name": "1e54e567-6eeb-4d49-8e54-e5676eeb5d49",
+        "fromTable": "fact_license",
+        "fromColumn": "snapshot_date",
+        "toTable": "Date",
+        "toColumn": "Date"
+      }
+    ],
+    "annotations": [
+      {
+        "name": "PBI_QueryOrder",
+        "value": "[\"SophosClientId\",\"SophosClientSecret\",\"SophosRegionHost\",\"DetectionDays\",\"SophosToken\",\"SophosTenantId\",\"SophosGet\",\"FusionQuery\",\"DocCases\",\"DocDetections\",\"fact_case\",\"fact_detection\",\"fact_endpoint_snapshot\",\"fact_alert\",\"fact_license\"]"
+      },
+      {
+        "name": "__PBI_TimeIntelligenceEnabled",
+        "value": "0"
+      }
+    ]
+  }
+}

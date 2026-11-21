@@ -63,11 +63,11 @@ export async function runDoctor(options: {
     }
   };
 
-  await attempt("Licences", async () => {
+  await attempt("Licenses", async () => {
     const licenses = parseLicenses(await session!.global<unknown>("/licenses/v1/licenses"));
     estimate.licenses = 1;
     const codes = [...new Set(licenses.map((l) => l.code))];
-    return `${licenses.length} licence records; ${hasSecOpsLicense(codes) ? "XDR or MDR present, so cases and detections apply" : "no XDR or MDR licence, so expect alerts and endpoint health only"}`;
+    return `${licenses.length} license records; ${hasSecOpsLicense(codes) ? "XDR or MDR present, so cases and detections apply" : "no XDR or MDR license, so expect alerts and endpoint health only"}`;
   });
 
   await attempt("Cases", async () => {
@@ -82,7 +82,7 @@ export async function runDoctor(options: {
           estimate.cases = 1 + Math.ceil((body.pages?.items ?? 0) / 50);
           return `Not on Sophos Fusion yet: cases v1 holds ${body.pages?.items ?? "an unknown number of"} cases`;
         } catch (legacy) {
-          if (isForbidden(legacy)) return "No cases API for this tenant (no XDR or MDR licence). The cases tables stay empty.";
+          if (isForbidden(legacy)) return "No cases API for this tenant (no XDR or MDR license). The cases tables stay empty.";
           throw legacy;
         }
       }

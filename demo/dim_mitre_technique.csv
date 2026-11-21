@@ -1,0 +1,9 @@
+tenant_id,technique_id,technique_name,tactics
+00000000-0000-4000-8000-00000000d3e0,T1003.001,LSASS Memory,credential-access
+00000000-0000-4000-8000-00000000d3e0,T1021.002,SMB/Windows Admin Shares,lateral-movement
+00000000-0000-4000-8000-00000000d3e0,T1059.001,PowerShell,execution
+00000000-0000-4000-8000-00000000d3e0,T1071.001,Web Protocols,command-and-control
+00000000-0000-4000-8000-00000000d3e0,T1078.002,Domain Accounts,initial-access|persistence
+00000000-0000-4000-8000-00000000d3e0,T1082,System Information Discovery,discovery
+00000000-0000-4000-8000-00000000d3e0,T1486,Data Encrypted for Impact,impact
+00000000-0000-4000-8000-00000000d3e0,T1566.001,Spearphishing Attachment,initial-access

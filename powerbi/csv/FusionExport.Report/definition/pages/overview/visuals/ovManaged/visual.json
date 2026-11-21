@@ -1,0 +1,79 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.0.0/schema.json",
+  "name": "ovManaged",
+  "position": {
+    "x": 968,
+    "y": 448,
+    "z": 12000,
+    "width": 296,
+    "height": 256,
+    "tabOrder": 12000
+  },
+  "visual": {
+    "visualType": "donutChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_case"
+                    }
+                  },
+                  "Property": "managed_by"
+                }
+              },
+              "queryRef": "fact_case.managed_by",
+              "nativeQueryRef": "managed_by",
+              "displayName": "Managed by"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_case"
+                    }
+                  },
+                  "Property": "Cases"
+                }
+              },
+              "queryRef": "fact_case.Cases",
+              "nativeQueryRef": "Cases"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Cases by who manages them'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

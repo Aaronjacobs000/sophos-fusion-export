@@ -1,0 +1,169 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.0.0/schema.json",
+  "name": "dCases",
+  "position": {
+    "x": 16,
+    "y": 448,
+    "z": 8000,
+    "width": 824,
+    "height": 256,
+    "tabOrder": 8000
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_case"
+                    }
+                  },
+                  "Property": "short_id"
+                }
+              },
+              "queryRef": "fact_case.short_id",
+              "nativeQueryRef": "short_id",
+              "displayName": "Case"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_case"
+                    }
+                  },
+                  "Property": "severity_label"
+                }
+              },
+              "queryRef": "fact_case.severity_label",
+              "nativeQueryRef": "severity_label",
+              "displayName": "Severity"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_case"
+                    }
+                  },
+                  "Property": "case_type"
+                }
+              },
+              "queryRef": "fact_case.case_type",
+              "nativeQueryRef": "case_type",
+              "displayName": "Type"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_case"
+                    }
+                  },
+                  "Property": "primary_status"
+                }
+              },
+              "queryRef": "fact_case.primary_status",
+              "nativeQueryRef": "primary_status",
+              "displayName": "Status"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_case"
+                    }
+                  },
+                  "Property": "managed_by"
+                }
+              },
+              "queryRef": "fact_case.managed_by",
+              "nativeQueryRef": "managed_by",
+              "displayName": "Managed by"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_case"
+                    }
+                  },
+                  "Property": "created_local_date"
+                }
+              },
+              "queryRef": "fact_case.created_local_date",
+              "nativeQueryRef": "created_local_date",
+              "displayName": "Created"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_case"
+                    }
+                  },
+                  "Property": "age_days"
+                }
+              },
+              "queryRef": "fact_case.age_days",
+              "nativeQueryRef": "age_days",
+              "displayName": "Age (days)"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "fact_case"
+                  }
+                },
+                "Property": "created_local_date"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Cases'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

@@ -1,0 +1,5 @@
+tenant_id,verdict_id,level,name,title
+00000000-0000-4000-8000-00000000d3e0,v-fp,primary,false_positive,False Positive
+00000000-0000-4000-8000-00000000d3e0,v-inc,primary,inconclusive,Inconclusive
+00000000-0000-4000-8000-00000000d3e0,v-tpb,primary,true_positive_benign,True Positive - Benign
+00000000-0000-4000-8000-00000000d3e0,v-tpm,primary,true_positive_malicious,True Positive - Malicious

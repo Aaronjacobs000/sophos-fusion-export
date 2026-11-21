@@ -1,0 +1,97 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.0.0/schema.json",
+  "name": "epOs",
+  "position": {
+    "x": 16,
+    "y": 168,
+    "z": 7000,
+    "width": 408,
+    "height": 256,
+    "tabOrder": 7000
+  },
+  "visual": {
+    "visualType": "barChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_endpoint_snapshot"
+                    }
+                  },
+                  "Property": "os_name"
+                }
+              },
+              "queryRef": "fact_endpoint_snapshot.os_name",
+              "nativeQueryRef": "os_name",
+              "displayName": "Operating system"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_endpoint_snapshot"
+                    }
+                  },
+                  "Property": "Endpoints"
+                }
+              },
+              "queryRef": "fact_endpoint_snapshot.Endpoints",
+              "nativeQueryRef": "Endpoints"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "fact_endpoint_snapshot"
+                  }
+                },
+                "Property": "Endpoints"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Operating systems'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

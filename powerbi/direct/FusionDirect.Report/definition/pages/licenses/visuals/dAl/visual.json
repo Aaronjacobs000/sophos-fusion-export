@@ -1,0 +1,139 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.0.0/schema.json",
+  "name": "dAl",
+  "position": {
+    "x": 16,
+    "y": 392,
+    "z": 2000,
+    "width": 1248,
+    "height": 312,
+    "tabOrder": 2000
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_alert"
+                    }
+                  },
+                  "Property": "raised_at"
+                }
+              },
+              "queryRef": "fact_alert.raised_at",
+              "nativeQueryRef": "raised_at",
+              "displayName": "Raised (UTC)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_alert"
+                    }
+                  },
+                  "Property": "severity"
+                }
+              },
+              "queryRef": "fact_alert.severity",
+              "nativeQueryRef": "severity",
+              "displayName": "Severity"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_alert"
+                    }
+                  },
+                  "Property": "category"
+                }
+              },
+              "queryRef": "fact_alert.category",
+              "nativeQueryRef": "category",
+              "displayName": "Category"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_alert"
+                    }
+                  },
+                  "Property": "product"
+                }
+              },
+              "queryRef": "fact_alert.product",
+              "nativeQueryRef": "product",
+              "displayName": "Product"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_alert"
+                    }
+                  },
+                  "Property": "alert_type"
+                }
+              },
+              "queryRef": "fact_alert.alert_type",
+              "nativeQueryRef": "alert_type",
+              "displayName": "Type"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "fact_alert"
+                  }
+                },
+                "Property": "raised_at"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Alerts'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

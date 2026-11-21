@@ -1,0 +1,4 @@
+tenant_id,case_type_id,name,title,managed_by
+00000000-0000-4000-8000-00000000d3e0,t-inv,investigation,Investigation,
+00000000-0000-4000-8000-00000000d3e0,t-mr,managed_risk,Managed Risk,
+00000000-0000-4000-8000-00000000d3e0,t-sec,security_case,Security Case,

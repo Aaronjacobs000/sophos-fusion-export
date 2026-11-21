@@ -1,0 +1,2 @@
+tenant_id,tenant_name,fusion_tenant_id,partner_id,organization_id,data_region,platform,report_timezone,license_codes,exported_at
+00000000-0000-4000-8000-00000000d3e0,Example Corp (demo),100000,,,https://api-eu01.central.sophos.com,fusion,Australia/Sydney,CZTNA|MDR-COMPLETE|SVRMDR-COMPLETE,2026-11-20T22:00:00Z

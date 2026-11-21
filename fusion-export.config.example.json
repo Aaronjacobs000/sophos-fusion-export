@@ -1,0 +1,17 @@
+{
+  "outputDir": "./export",
+  "reportTimezone": "Australia/Sydney",
+  "tenantName": "Contoso",
+  "personalData": false,
+  "rate": { "perMinute": 60, "perHour": 900 },
+  "maxCallsPerRun": 2000,
+  "backfillDays": 90,
+  "detections": { "trailingDays": 7, "retentionDays": 90, "pageSize": 10000 },
+  "cases": { "overlapMinutes": 15 },
+  "datasets": ["licenses", "cases", "detections", "endpoints", "alerts"],
+  "sharepoint": {
+    "siteUrl": "https://contoso.sharepoint.com/sites/reporting",
+    "library": "Documents",
+    "folder": "FusionExport/contoso"
+  }
+}

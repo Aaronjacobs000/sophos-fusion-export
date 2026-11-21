@@ -306,7 +306,7 @@ export const casesDataset: Dataset = {
         if (!isForbidden(legacyError)) throw legacyError;
         rows = [];
         reference = { types: [], statuses: [], verdicts: [] };
-        notes.push("The tenant has no cases: Sophos refused both Cases v2 and cases v1 (no XDR or MDR licence).");
+        notes.push("The tenant has no cases: Sophos refused both Cases v2 and cases v1 (no XDR or MDR license).");
       }
     }
 

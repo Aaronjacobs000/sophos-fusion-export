@@ -1,0 +1,4 @@
+tenant_id,snapshot_date,license_id,license_code,generic_code,product_name,license_type,quantity,used,unlimited,perpetual,start_date,end_date,days_to_end
+00000000-0000-4000-8000-00000000d3e0,2026-11-21,DEMO-0001,MDR-COMPLETE,,Sophos MDR Complete - User,term,30,26,false,false,2026-01-01,2027-12-31,405
+00000000-0000-4000-8000-00000000d3e0,2026-11-21,DEMO-0002,SVRMDR-COMPLETE,,Sophos MDR Complete - Server,term,10,7,false,false,2026-01-01,2027-12-31,405
+00000000-0000-4000-8000-00000000d3e0,2026-11-21,DEMO-0003,CZTNA,,Sophos ZTNA,trial,25,3,false,false,2026-11-01,2026-12-01,10

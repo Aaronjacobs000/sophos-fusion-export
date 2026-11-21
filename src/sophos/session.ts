@@ -95,7 +95,7 @@ export class SophosSession {
     return this.core.rest.tenantRequest<T>(this.tenantId, path, { params });
   }
 
-  /** A GET on the global host scoped by X-Tenant-ID (licences). */
+  /** A GET on the global host scoped by X-Tenant-ID (licenses). */
   global<T>(path: string, params: Record<string, string> = {}): Promise<T> {
     return this.core.rest.tenantGlobalRequest<T>(this.tenantId, path, { params });
   }
