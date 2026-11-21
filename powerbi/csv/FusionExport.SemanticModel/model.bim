@@ -2252,6 +2252,1291 @@
         ]
       },
       {
+        "name": "fact_ai_defense_snapshot",
+        "description": "Sophos AI Defense status and Sophos's own inventory totals, one snapshot a day. The totals cover the inventory window (aiDefense.inventoryDays) ending at the export.",
+        "lineageTag": "2696efce-555f-4d70-8696-efce555f9d70",
+        "columns": [
+          {
+            "name": "tenant_id",
+            "dataType": "string",
+            "sourceColumn": "tenant_id",
+            "summarizeBy": "none",
+            "isHidden": false,
+            "description": "Sophos Central tenant ID (a UUID).",
+            "lineageTag": "5044d4d0-2757-44ae-8044-d4d0275794ae"
+          },
+          {
+            "name": "snapshot_date",
+            "dataType": "dateTime",
+            "sourceColumn": "snapshot_date",
+            "formatString": "yyyy-mm-dd",
+            "summarizeBy": "none",
+            "description": "Day of the snapshot in the report time zone.",
+            "lineageTag": "40bb228d-785b-439b-80bb-228d785b739b"
+          },
+          {
+            "name": "license_state",
+            "dataType": "string",
+            "sourceColumn": "license_state",
+            "summarizeBy": "none",
+            "description": "ACTIVE, GRACE_PERIOD or EXPIRED. Empty when the tenant has no AI Defense settings record (no AI Defense).",
+            "lineageTag": "21e464c9-793a-47cf-81e4-64c9793a97cf"
+          },
+          {
+            "name": "license_type",
+            "dataType": "string",
+            "sourceColumn": "license_type",
+            "summarizeBy": "none",
+            "description": "License type Sophos reports, for example TERM or TRIAL.",
+            "lineageTag": "b4e7bf1c-d7cb-4a7e-84e7-bf1cd7cb2a7e"
+          },
+          {
+            "name": "license_expiry_date",
+            "dataType": "dateTime",
+            "sourceColumn": "license_expiry_date",
+            "formatString": "yyyy-mm-dd",
+            "summarizeBy": "none",
+            "description": "When the AI Defense license ends.",
+            "lineageTag": "b4624e5c-f767-4e1a-8462-4e5cf7678e1a"
+          },
+          {
+            "name": "grace_period_ends_at",
+            "dataType": "dateTime",
+            "sourceColumn": "grace_period_ends_at",
+            "formatString": "yyyy-mm-dd hh:nn:ss",
+            "summarizeBy": "none",
+            "description": "When the grace period after expiry ends.",
+            "lineageTag": "77a22a55-824f-447f-87a2-2a55824f847f"
+          },
+          {
+            "name": "renewal_pending",
+            "dataType": "boolean",
+            "sourceColumn": "renewal_pending",
+            "summarizeBy": "none",
+            "description": "A renewal Sophos has detected and nobody has acknowledged yet.",
+            "lineageTag": "9dfff554-174f-416a-8dff-f554174fa16a"
+          },
+          {
+            "name": "onboarding_status",
+            "dataType": "string",
+            "sourceColumn": "onboarding_status",
+            "summarizeBy": "none",
+            "description": "NOT_STARTED, IN_PROGRESS or COMPLETED.",
+            "lineageTag": "39495bc4-8097-4c5a-8949-5bc48097bc5a"
+          },
+          {
+            "name": "license_refreshed_at",
+            "dataType": "dateTime",
+            "sourceColumn": "license_refreshed_at",
+            "formatString": "yyyy-mm-dd hh:nn:ss",
+            "summarizeBy": "none",
+            "description": "When Sophos last read the license.",
+            "lineageTag": "c8a2a506-c5d5-43b4-88a2-a506c5d5a3b4"
+          },
+          {
+            "name": "window_days",
+            "dataType": "int64",
+            "sourceColumn": "window_days",
+            "summarizeBy": "sum",
+            "description": "Days the inventory totals cover.",
+            "lineageTag": "0cb438a6-d77b-4138-8cb4-38a6d77bb138"
+          },
+          {
+            "name": "apps",
+            "dataType": "int64",
+            "sourceColumn": "apps",
+            "summarizeBy": "sum",
+            "description": "AI applications in the inventory window.",
+            "lineageTag": "54d87da8-1175-49ba-84d8-7da81175c9ba"
+          },
+          {
+            "name": "apps_critical",
+            "dataType": "int64",
+            "sourceColumn": "apps_critical",
+            "summarizeBy": "sum",
+            "description": "Of those, critical risk.",
+            "lineageTag": "fac13658-6eeb-471e-8ac1-36586eebc71e"
+          },
+          {
+            "name": "apps_high",
+            "dataType": "int64",
+            "sourceColumn": "apps_high",
+            "summarizeBy": "sum",
+            "description": "High risk.",
+            "lineageTag": "86fba90d-5e01-4cf3-86fb-a90d5e015cf3"
+          },
+          {
+            "name": "apps_medium",
+            "dataType": "int64",
+            "sourceColumn": "apps_medium",
+            "summarizeBy": "sum",
+            "description": "Medium risk.",
+            "lineageTag": "f970a0a6-07e0-44e8-8970-a0a607e064e8"
+          },
+          {
+            "name": "apps_low",
+            "dataType": "int64",
+            "sourceColumn": "apps_low",
+            "summarizeBy": "sum",
+            "description": "Low risk.",
+            "lineageTag": "a3d69611-c2f6-4cdb-83d6-9611c2f63cdb"
+          },
+          {
+            "name": "apps_info",
+            "dataType": "int64",
+            "sourceColumn": "apps_info",
+            "summarizeBy": "sum",
+            "description": "Informational risk.",
+            "lineageTag": "aa8f12d5-4316-498b-8a8f-12d54316798b"
+          },
+          {
+            "name": "apps_unknown",
+            "dataType": "int64",
+            "sourceColumn": "apps_unknown",
+            "summarizeBy": "sum",
+            "description": "Risk not classified.",
+            "lineageTag": "e65f27a9-7d1d-4423-865f-27a97d1d0423"
+          },
+          {
+            "name": "apps_error",
+            "dataType": "int64",
+            "sourceColumn": "apps_error",
+            "summarizeBy": "sum",
+            "description": "Risk lookup failed.",
+            "lineageTag": "467f5e61-0c68-427b-867f-5e610c68427b"
+          },
+          {
+            "name": "apps_train_on_data",
+            "dataType": "int64",
+            "sourceColumn": "apps_train_on_data",
+            "summarizeBy": "sum",
+            "description": "Apps known to train on user data, including those that do by default with an opt out. Empty when Sophos sends none.",
+            "lineageTag": "b29ab884-c49e-439e-829a-b884c49e739e"
+          },
+          {
+            "name": "apps_unsanctioned",
+            "dataType": "int64",
+            "sourceColumn": "apps_unsanctioned",
+            "summarizeBy": "sum",
+            "description": "Apps used with no policy covering them.",
+            "lineageTag": "366acc12-8d66-4164-866a-cc128d66e164"
+          },
+          {
+            "name": "users",
+            "dataType": "int64",
+            "sourceColumn": "users",
+            "summarizeBy": "sum",
+            "description": "Users seen using AI applications in the window.",
+            "lineageTag": "2a95f370-f026-4236-8a95-f370f026e236"
+          },
+          {
+            "name": "users_critical",
+            "dataType": "int64",
+            "sourceColumn": "users_critical",
+            "summarizeBy": "sum",
+            "description": "Users whose worst activity was critical risk.",
+            "lineageTag": "d6df0710-7d51-447a-86df-07107d51f47a"
+          },
+          {
+            "name": "users_high",
+            "dataType": "int64",
+            "sourceColumn": "users_high",
+            "summarizeBy": "sum",
+            "description": "High risk.",
+            "lineageTag": "1db611c5-51b9-47f7-8db6-11c551b937f7"
+          },
+          {
+            "name": "users_medium",
+            "dataType": "int64",
+            "sourceColumn": "users_medium",
+            "summarizeBy": "sum",
+            "description": "Medium risk.",
+            "lineageTag": "45a6539e-8780-4c2c-85a6-539e8780dc2c"
+          },
+          {
+            "name": "users_low",
+            "dataType": "int64",
+            "sourceColumn": "users_low",
+            "summarizeBy": "sum",
+            "description": "Low risk.",
+            "lineageTag": "3254f949-5524-4487-8254-f94955243487"
+          },
+          {
+            "name": "users_info",
+            "dataType": "int64",
+            "sourceColumn": "users_info",
+            "summarizeBy": "sum",
+            "description": "Informational risk.",
+            "lineageTag": "6149aded-3403-495f-8149-aded3403995f"
+          },
+          {
+            "name": "users_unknown",
+            "dataType": "int64",
+            "sourceColumn": "users_unknown",
+            "summarizeBy": "sum",
+            "description": "Risk not classified.",
+            "lineageTag": "6a589bb1-4f2a-4d77-8a58-9bb14f2a7d77"
+          },
+          {
+            "name": "users_with_violations",
+            "dataType": "int64",
+            "sourceColumn": "users_with_violations",
+            "summarizeBy": "sum",
+            "description": "Users with at least one blocked, warned or modified activity.",
+            "lineageTag": "55b762fe-adc4-4938-85b7-62feadc47938"
+          },
+          {
+            "name": "users_unsanctioned",
+            "dataType": "int64",
+            "sourceColumn": "users_unsanctioned",
+            "summarizeBy": "sum",
+            "description": "Users of apps no policy covers.",
+            "lineageTag": "c83a2e0a-b40f-4c00-883a-2e0ab40fbc00"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "fact_ai_defense_snapshot",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = FusionTable(\"fact_ai_defense_snapshot.csv\", {{\"tenant_id\", \"text\"}, {\"snapshot_date\", \"date\"}, {\"license_state\", \"text\"}, {\"license_type\", \"text\"}, {\"license_expiry_date\", \"date\"}, {\"grace_period_ends_at\", \"datetime\"}, {\"renewal_pending\", \"boolean\"}, {\"onboarding_status\", \"text\"}, {\"license_refreshed_at\", \"datetime\"}, {\"window_days\", \"integer\"}, {\"apps\", \"integer\"}, {\"apps_critical\", \"integer\"}, {\"apps_high\", \"integer\"}, {\"apps_medium\", \"integer\"}, {\"apps_low\", \"integer\"}, {\"apps_info\", \"integer\"}, {\"apps_unknown\", \"integer\"}, {\"apps_error\", \"integer\"}, {\"apps_train_on_data\", \"integer\"}, {\"apps_unsanctioned\", \"integer\"}, {\"users\", \"integer\"}, {\"users_critical\", \"integer\"}, {\"users_high\", \"integer\"}, {\"users_medium\", \"integer\"}, {\"users_low\", \"integer\"}, {\"users_info\", \"integer\"}, {\"users_unknown\", \"integer\"}, {\"users_with_violations\", \"integer\"}, {\"users_unsanctioned\", \"integer\"}})",
+                "in",
+                "    Source"
+              ]
+            }
+          }
+        ],
+        "measures": [
+          {
+            "name": "AI apps",
+            "expression": "VAR LatestSnapshot = CALCULATE(MAX(fact_ai_defense_snapshot[snapshot_date]), ALLSELECTED(fact_ai_defense_snapshot))\nRETURN CALCULATE(SUM(fact_ai_defense_snapshot[apps]), fact_ai_defense_snapshot[snapshot_date] = LatestSnapshot) + 0",
+            "formatString": "0",
+            "description": "AI applications in the inventory window, latest snapshot, as Sophos counts them.",
+            "lineageTag": "9ed5a810-cf0e-4d76-8ed5-a810cf0e0d76"
+          },
+          {
+            "name": "AI users",
+            "expression": "VAR LatestSnapshot = CALCULATE(MAX(fact_ai_defense_snapshot[snapshot_date]), ALLSELECTED(fact_ai_defense_snapshot))\nRETURN CALCULATE(SUM(fact_ai_defense_snapshot[users]), fact_ai_defense_snapshot[snapshot_date] = LatestSnapshot) + 0",
+            "formatString": "0",
+            "description": "Users of AI applications in the inventory window, latest snapshot, as Sophos counts them.",
+            "lineageTag": "50c33848-1e80-403a-80c3-38481e80403a"
+          }
+        ]
+      },
+      {
+        "name": "fact_ai_activity",
+        "description": "Sophos AI Defense activity, one row per activity (Sophos folds related telemetry into one activity). The last aiDefense.trailingDays are read again on every run.",
+        "lineageTag": "1c0c0cfa-3eff-46d4-8c0c-0cfa3eff96d4",
+        "columns": [
+          {
+            "name": "tenant_id",
+            "dataType": "string",
+            "sourceColumn": "tenant_id",
+            "summarizeBy": "none",
+            "isHidden": false,
+            "description": "Sophos Central tenant ID (a UUID).",
+            "lineageTag": "2a4e8b0c-c05b-4cc2-8a4e-8b0cc05bacc2"
+          },
+          {
+            "name": "activity_id",
+            "dataType": "string",
+            "sourceColumn": "activity_id",
+            "summarizeBy": "none",
+            "description": "Activity ID.",
+            "lineageTag": "ce45dcb7-4576-4409-8e45-dcb745767409"
+          },
+          {
+            "name": "start_time",
+            "dataType": "dateTime",
+            "sourceColumn": "start_time",
+            "formatString": "yyyy-mm-dd hh:nn:ss",
+            "summarizeBy": "none",
+            "description": "When the activity started.",
+            "lineageTag": "803cf33c-610a-411e-803c-f33c610af11e"
+          },
+          {
+            "name": "end_time",
+            "dataType": "dateTime",
+            "sourceColumn": "end_time",
+            "formatString": "yyyy-mm-dd hh:nn:ss",
+            "summarizeBy": "none",
+            "description": "When the activity ended.",
+            "lineageTag": "3dff24ab-75c2-4401-8dff-24ab75c2f401"
+          },
+          {
+            "name": "start_local_date",
+            "dataType": "dateTime",
+            "sourceColumn": "start_local_date",
+            "formatString": "yyyy-mm-dd",
+            "summarizeBy": "none",
+            "description": "start_time as a date in the report time zone.",
+            "lineageTag": "2e019821-1112-4e5b-8e01-982111127e5b"
+          },
+          {
+            "name": "start_date_key",
+            "dataType": "int64",
+            "sourceColumn": "start_date_key",
+            "summarizeBy": "none",
+            "description": "start_local_date as a number, YYYYMMDD.",
+            "lineageTag": "3b3fcf41-61e0-432b-8b3f-cf4161e0b32b"
+          },
+          {
+            "name": "action",
+            "dataType": "string",
+            "sourceColumn": "action",
+            "summarizeBy": "none",
+            "description": "ALLOWED, BLOCKED, WARNED, MODIFIED or UNKNOWN. Empty when the sensor reported none.",
+            "lineageTag": "780e026e-5281-4fac-880e-026e5281ffac"
+          },
+          {
+            "name": "risk",
+            "dataType": "string",
+            "sourceColumn": "risk",
+            "summarizeBy": "none",
+            "description": "CRITICAL, HIGH, MEDIUM, LOW, INFO, UNKNOWN or ERROR.",
+            "lineageTag": "f6c82aef-80be-4a0d-86c8-2aef80beda0d"
+          },
+          {
+            "name": "risk_rank",
+            "dataType": "int64",
+            "sourceColumn": "risk_rank",
+            "summarizeBy": "sum",
+            "description": "5 CRITICAL, 4 HIGH, 3 MEDIUM, 2 LOW, 1 INFO, 0 otherwise, for sorting.",
+            "lineageTag": "137ca44e-35c0-4cc0-837c-a44e35c00cc0"
+          },
+          {
+            "name": "application_id",
+            "dataType": "string",
+            "sourceColumn": "application_id",
+            "summarizeBy": "none",
+            "description": "AI application ID (dim_ai_app), for example chatgpt.",
+            "lineageTag": "4205582a-216b-4be8-8205-582a216bfbe8"
+          },
+          {
+            "name": "application_name",
+            "dataType": "string",
+            "sourceColumn": "application_name",
+            "summarizeBy": "none",
+            "description": "AI application name.",
+            "lineageTag": "c773e264-b744-412e-8773-e264b744412e"
+          },
+          {
+            "name": "provider",
+            "dataType": "string",
+            "sourceColumn": "provider",
+            "summarizeBy": "none",
+            "description": "Company behind the application, when Sophos knows it.",
+            "lineageTag": "aa297669-a988-4d23-8a29-7669a9880d23"
+          },
+          {
+            "name": "model_provider",
+            "dataType": "string",
+            "sourceColumn": "model_provider",
+            "summarizeBy": "none",
+            "description": "Company providing the model used, when Sophos knows it.",
+            "lineageTag": "4ac2305f-97e1-4a1d-8ac2-305f97e14a1d"
+          },
+          {
+            "name": "model",
+            "dataType": "string",
+            "sourceColumn": "model",
+            "summarizeBy": "none",
+            "description": "Model used, when Sophos knows it.",
+            "lineageTag": "f5a06b89-253b-4ccf-85a0-6b89253b8ccf"
+          },
+          {
+            "name": "user_key",
+            "dataType": "string",
+            "sourceColumn": "user_key",
+            "summarizeBy": "none",
+            "description": "A one-way hash of the tenant and Sophos's actor ID, always written, so activity joins to users without naming them. Pseudonymous, not anonymous.",
+            "lineageTag": "d7a0b97f-01ed-4035-87a0-b97f01ed9035"
+          },
+          {
+            "name": "actor_type",
+            "dataType": "string",
+            "sourceColumn": "actor_type",
+            "summarizeBy": "none",
+            "description": "USER, SYSTEM, SERVICE, PROCESS, NETWORK_ENTITY or UNKNOWN.",
+            "lineageTag": "e3cdab3e-83f0-435c-83cd-ab3e83f0d35c"
+          },
+          {
+            "name": "actor_id",
+            "dataType": "string",
+            "sourceColumn": "actor_id",
+            "summarizeBy": "none",
+            "description": "Sophos's actor ID: a user SID, or an ID made from the actor's name. Can be an IP address, so it is personal data.",
+            "lineageTag": "b11c6403-cf5e-4301-811c-6403cf5e8301"
+          },
+          {
+            "name": "actor_name",
+            "dataType": "string",
+            "sourceColumn": "actor_name",
+            "summarizeBy": "none",
+            "description": "User or actor name.",
+            "lineageTag": "77a99e5d-35c3-403f-87a9-9e5d35c3003f"
+          },
+          {
+            "name": "device_id",
+            "dataType": "string",
+            "sourceColumn": "device_id",
+            "summarizeBy": "none",
+            "description": "Device ID: the Sophos endpoint ID, or the firewall's ID for firewall traffic.",
+            "lineageTag": "b4c785e6-d321-40b8-84c7-85e6d32100b8"
+          },
+          {
+            "name": "device_name",
+            "dataType": "string",
+            "sourceColumn": "device_name",
+            "summarizeBy": "none",
+            "description": "Device name.",
+            "lineageTag": "08e3c990-b862-4ebe-88e3-c990b862eebe"
+          },
+          {
+            "name": "device_type",
+            "dataType": "string",
+            "sourceColumn": "device_type",
+            "summarizeBy": "none",
+            "description": "COMPUTER, SERVER, SECURITY_VM or UNKNOWN.",
+            "lineageTag": "373a62f3-c3e4-4e45-873a-62f3c3e4ee45"
+          },
+          {
+            "name": "device_platform",
+            "dataType": "string",
+            "sourceColumn": "device_platform",
+            "summarizeBy": "none",
+            "description": "WINDOWS, MACOS, LINUX, IOS, ANDROID or UNKNOWN.",
+            "lineageTag": "fe5d0634-e540-4a5a-8e5d-0634e540ca5a"
+          },
+          {
+            "name": "sensor_types",
+            "dataType": "string",
+            "sourceColumn": "sensor_types",
+            "summarizeBy": "none",
+            "description": "Sensor types that saw the activity, joined with |, for example ENDPOINT|FIREWALL.",
+            "lineageTag": "292b27b4-ec40-4cb6-892b-27b4ec40ecb6"
+          },
+          {
+            "name": "sensors",
+            "dataType": "string",
+            "sourceColumn": "sensors",
+            "summarizeBy": "none",
+            "description": "Sensor names joined with |, for example SFOS|SOPHOS_ENDPOINT.",
+            "lineageTag": "edf41713-c141-41ed-8df4-1713c141b1ed"
+          },
+          {
+            "name": "policy_id",
+            "dataType": "string",
+            "sourceColumn": "policy_id",
+            "summarizeBy": "none",
+            "description": "AI Defense policy that set the action (dim_ai_policy). Empty when none was recorded.",
+            "lineageTag": "d410dee6-a070-43c8-8410-dee6a07033c8"
+          },
+          {
+            "name": "policy_name",
+            "dataType": "string",
+            "sourceColumn": "policy_name",
+            "summarizeBy": "none",
+            "description": "That policy's name when the activity was recorded.",
+            "lineageTag": "84634a90-b275-410e-8463-4a90b275010e"
+          },
+          {
+            "name": "unsanctioned",
+            "dataType": "boolean",
+            "sourceColumn": "unsanctioned",
+            "summarizeBy": "none",
+            "description": "Allowed, for an app no policy covers.",
+            "lineageTag": "e778281b-c440-44e9-8778-281bc44014e9"
+          },
+          {
+            "name": "records",
+            "dataType": "int64",
+            "sourceColumn": "records",
+            "summarizeBy": "sum",
+            "description": "Telemetry records folded into the activity. At least 1.",
+            "lineageTag": "51d5d39e-080a-49b8-81d5-d39e080ae9b8"
+          },
+          {
+            "name": "exported_at",
+            "dataType": "dateTime",
+            "sourceColumn": "exported_at",
+            "formatString": "yyyy-mm-dd hh:nn:ss",
+            "summarizeBy": "none",
+            "description": "When this row was last written.",
+            "lineageTag": "765dd419-70f2-4077-865d-d41970f22077"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "fact_ai_activity",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = FusionTable(\"fact_ai_activity.csv\", {{\"tenant_id\", \"text\"}, {\"activity_id\", \"text\"}, {\"start_time\", \"datetime\"}, {\"end_time\", \"datetime\"}, {\"start_local_date\", \"date\"}, {\"start_date_key\", \"integer\"}, {\"action\", \"text\"}, {\"risk\", \"text\"}, {\"risk_rank\", \"integer\"}, {\"application_id\", \"text\"}, {\"application_name\", \"text\"}, {\"provider\", \"text\"}, {\"model_provider\", \"text\"}, {\"model\", \"text\"}, {\"user_key\", \"text\"}, {\"actor_type\", \"text\"}, {\"actor_id\", \"text\"}, {\"actor_name\", \"text\"}, {\"device_id\", \"text\"}, {\"device_name\", \"text\"}, {\"device_type\", \"text\"}, {\"device_platform\", \"text\"}, {\"sensor_types\", \"text\"}, {\"sensors\", \"text\"}, {\"policy_id\", \"text\"}, {\"policy_name\", \"text\"}, {\"unsanctioned\", \"boolean\"}, {\"records\", \"integer\"}, {\"exported_at\", \"datetime\"}})",
+                "in",
+                "    Source"
+              ]
+            }
+          }
+        ],
+        "measures": []
+      },
+      {
+        "name": "fact_ai_activity_daily",
+        "description": "AI Defense activity counts by day, application, action and risk. Kept after activity detail is pruned.",
+        "lineageTag": "aa2a9e74-2e23-4262-8a2a-9e742e238262",
+        "columns": [
+          {
+            "name": "tenant_id",
+            "dataType": "string",
+            "sourceColumn": "tenant_id",
+            "summarizeBy": "none",
+            "isHidden": false,
+            "description": "Sophos Central tenant ID (a UUID).",
+            "lineageTag": "c706e53e-5dca-4928-8706-e53e5dca5928"
+          },
+          {
+            "name": "local_date",
+            "dataType": "dateTime",
+            "sourceColumn": "local_date",
+            "formatString": "yyyy-mm-dd",
+            "summarizeBy": "none",
+            "description": "Day in the report time zone.",
+            "lineageTag": "8b1bac0a-4ee3-4e40-8b1b-ac0a4ee33e40"
+          },
+          {
+            "name": "date_key",
+            "dataType": "int64",
+            "sourceColumn": "date_key",
+            "summarizeBy": "none",
+            "description": "local_date as a number, YYYYMMDD.",
+            "lineageTag": "7d2c3846-43fd-416c-8d2c-384643fd016c"
+          },
+          {
+            "name": "application_id",
+            "dataType": "string",
+            "sourceColumn": "application_id",
+            "summarizeBy": "none",
+            "description": "AI application ID (dim_ai_app).",
+            "lineageTag": "57ac2574-457a-48fe-87ac-2574457a78fe"
+          },
+          {
+            "name": "action",
+            "dataType": "string",
+            "sourceColumn": "action",
+            "summarizeBy": "none",
+            "description": "ALLOWED, BLOCKED, WARNED, MODIFIED, UNKNOWN, or empty when none was reported.",
+            "lineageTag": "e77e0024-9899-42e6-877e-00249899b2e6"
+          },
+          {
+            "name": "risk",
+            "dataType": "string",
+            "sourceColumn": "risk",
+            "summarizeBy": "none",
+            "description": "Activity risk.",
+            "lineageTag": "a45f7bd5-8abc-46e7-845f-7bd58abc16e7"
+          },
+          {
+            "name": "risk_rank",
+            "dataType": "int64",
+            "sourceColumn": "risk_rank",
+            "summarizeBy": "sum",
+            "description": "5 CRITICAL down to 1 INFO, 0 otherwise.",
+            "lineageTag": "52f79618-994d-45ee-82f7-9618994d45ee"
+          },
+          {
+            "name": "activities",
+            "dataType": "int64",
+            "sourceColumn": "activities",
+            "summarizeBy": "sum",
+            "description": "Activities that started that day.",
+            "lineageTag": "2044c233-55fe-43d9-8044-c23355fe83d9"
+          },
+          {
+            "name": "records",
+            "dataType": "int64",
+            "sourceColumn": "records",
+            "summarizeBy": "sum",
+            "description": "Telemetry records in those activities.",
+            "lineageTag": "36b6cd18-87f7-4746-86b6-cd1887f74746"
+          },
+          {
+            "name": "unsanctioned_activities",
+            "dataType": "int64",
+            "sourceColumn": "unsanctioned_activities",
+            "summarizeBy": "sum",
+            "description": "Of the activities, those allowed for an app no policy covers.",
+            "lineageTag": "27152573-7566-4155-8715-257375664155"
+          },
+          {
+            "name": "application_name",
+            "dataType": "string",
+            "sourceColumn": "application_name",
+            "summarizeBy": "none",
+            "description": "Application name, repeated for tools that can't join to dim_ai_app.",
+            "lineageTag": "d92f2c9a-b06f-4b78-892f-2c9ab06fcb78"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "fact_ai_activity_daily",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = FusionTable(\"fact_ai_activity_daily.csv\", {{\"tenant_id\", \"text\"}, {\"local_date\", \"date\"}, {\"date_key\", \"integer\"}, {\"application_id\", \"text\"}, {\"action\", \"text\"}, {\"risk\", \"text\"}, {\"risk_rank\", \"integer\"}, {\"activities\", \"integer\"}, {\"records\", \"integer\"}, {\"unsanctioned_activities\", \"integer\"}, {\"application_name\", \"text\"}})",
+                "in",
+                "    Source"
+              ]
+            }
+          }
+        ],
+        "measures": [
+          {
+            "name": "AI activities",
+            "expression": "SUM(fact_ai_activity_daily[activities]) + 0",
+            "formatString": "#,0",
+            "description": "AI Defense activities that started in the selected dates (daily counts, kept past detail retention).",
+            "lineageTag": "56757f7b-1dde-477d-8675-7f7b1dde277d"
+          },
+          {
+            "name": "Blocked AI activities",
+            "expression": "CALCULATE(SUM(fact_ai_activity_daily[activities]), fact_ai_activity_daily[action] = \"BLOCKED\") + 0",
+            "formatString": "#,0",
+            "description": "Activities an AI Defense policy blocked.",
+            "lineageTag": "c1fc87b3-438c-499d-81fc-87b3438c099d"
+          },
+          {
+            "name": "Warned AI activities",
+            "expression": "CALCULATE(SUM(fact_ai_activity_daily[activities]), fact_ai_activity_daily[action] = \"WARNED\") + 0",
+            "formatString": "#,0",
+            "description": "Activities an AI Defense policy warned on.",
+            "lineageTag": "05b2547e-d0b6-4884-85b2-547ed0b63884"
+          },
+          {
+            "name": "Unsanctioned AI activities",
+            "expression": "SUM(fact_ai_activity_daily[unsanctioned_activities]) + 0",
+            "formatString": "#,0",
+            "description": "Activities allowed for AI apps no policy covers.",
+            "lineageTag": "af96293c-5a33-42f6-8f96-293c5a3362f6"
+          }
+        ]
+      },
+      {
+        "name": "dim_ai_app",
+        "description": "AI applications seen in activity or the inventory, with the sanctioning status the tenant's policies give each one now.",
+        "lineageTag": "9fdf3964-3ba8-4cd2-8fdf-39643ba81cd2",
+        "columns": [
+          {
+            "name": "tenant_id",
+            "dataType": "string",
+            "sourceColumn": "tenant_id",
+            "summarizeBy": "none",
+            "isHidden": false,
+            "description": "Sophos Central tenant ID (a UUID).",
+            "lineageTag": "ac2e954e-5afb-42b8-8c2e-954e5afb22b8"
+          },
+          {
+            "name": "application_id",
+            "dataType": "string",
+            "sourceColumn": "application_id",
+            "summarizeBy": "none",
+            "description": "AI application ID.",
+            "lineageTag": "17c4e144-694e-404e-87c4-e144694ef04e"
+          },
+          {
+            "name": "application_name",
+            "dataType": "string",
+            "sourceColumn": "application_name",
+            "summarizeBy": "none",
+            "description": "Application name.",
+            "lineageTag": "c514b8aa-a214-43c8-8514-b8aaa21443c8"
+          },
+          {
+            "name": "provider",
+            "dataType": "string",
+            "sourceColumn": "provider",
+            "summarizeBy": "none",
+            "description": "Company behind the application.",
+            "lineageTag": "086e183b-0b43-4231-886e-183b0b435231"
+          },
+          {
+            "name": "risk",
+            "dataType": "string",
+            "sourceColumn": "risk",
+            "summarizeBy": "none",
+            "description": "Application risk Sophos assigns.",
+            "lineageTag": "fef9ede5-3fad-46b7-8ef9-ede53fad76b7"
+          },
+          {
+            "name": "risk_rank",
+            "dataType": "int64",
+            "sourceColumn": "risk_rank",
+            "summarizeBy": "sum",
+            "description": "5 CRITICAL down to 1 INFO, 0 otherwise.",
+            "lineageTag": "d0b72288-6e4b-435e-80b7-22886e4be35e"
+          },
+          {
+            "name": "sanctioning_status",
+            "dataType": "string",
+            "sourceColumn": "sanctioning_status",
+            "summarizeBy": "none",
+            "description": "APPROVED, BLOCKED, WARNED or NOT_COVERED, from the tenant's policies at the last export. Empty when not read.",
+            "lineageTag": "a32fb304-64cf-4ea6-832f-b30464cf4ea6"
+          },
+          {
+            "name": "sanctioning_policies",
+            "dataType": "string",
+            "sourceColumn": "sanctioning_policies",
+            "summarizeBy": "none",
+            "description": "Policies that set the status, joined with |.",
+            "lineageTag": "3884ed68-61b4-4292-8884-ed6861b41292"
+          },
+          {
+            "name": "last_seen_at",
+            "dataType": "dateTime",
+            "sourceColumn": "last_seen_at",
+            "formatString": "yyyy-mm-dd hh:nn:ss",
+            "summarizeBy": "none",
+            "description": "Latest activity the exporter has seen for the application.",
+            "lineageTag": "b3b4e784-f510-4f9e-83b4-e784f5109f9e"
+          },
+          {
+            "name": "updated_at",
+            "dataType": "dateTime",
+            "sourceColumn": "updated_at",
+            "formatString": "yyyy-mm-dd hh:nn:ss",
+            "summarizeBy": "none",
+            "description": "When this row was last written.",
+            "lineageTag": "f734ee27-b8ce-450d-8734-ee27b8cee50d"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "dim_ai_app",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = FusionTable(\"dim_ai_app.csv\", {{\"tenant_id\", \"text\"}, {\"application_id\", \"text\"}, {\"application_name\", \"text\"}, {\"provider\", \"text\"}, {\"risk\", \"text\"}, {\"risk_rank\", \"integer\"}, {\"sanctioning_status\", \"text\"}, {\"sanctioning_policies\", \"text\"}, {\"last_seen_at\", \"datetime\"}, {\"updated_at\", \"datetime\"}})",
+                "in",
+                "    Source"
+              ]
+            }
+          }
+        ],
+        "measures": [
+          {
+            "name": "AI applications",
+            "expression": "COUNTROWS(dim_ai_app) + 0",
+            "formatString": "0",
+            "description": "AI applications the exporter has seen.",
+            "lineageTag": "1167ba0d-0b22-4f63-8167-ba0d0b226f63"
+          }
+        ]
+      },
+      {
+        "name": "fact_ai_app_snapshot",
+        "description": "The AI application inventory, one snapshot a day: use, users and sanctioning per application over the inventory window.",
+        "lineageTag": "f119ddbb-7a8e-425d-8119-ddbb7a8e825d",
+        "columns": [
+          {
+            "name": "tenant_id",
+            "dataType": "string",
+            "sourceColumn": "tenant_id",
+            "summarizeBy": "none",
+            "isHidden": false,
+            "description": "Sophos Central tenant ID (a UUID).",
+            "lineageTag": "57dcdd1d-8ef1-4a03-87dc-dd1d8ef17a03"
+          },
+          {
+            "name": "snapshot_date",
+            "dataType": "dateTime",
+            "sourceColumn": "snapshot_date",
+            "formatString": "yyyy-mm-dd",
+            "summarizeBy": "none",
+            "description": "Day of the snapshot in the report time zone.",
+            "lineageTag": "1ee042cc-e09a-4b9a-8ee0-42cce09aeb9a"
+          },
+          {
+            "name": "application_id",
+            "dataType": "string",
+            "sourceColumn": "application_id",
+            "summarizeBy": "none",
+            "description": "AI application ID (dim_ai_app).",
+            "lineageTag": "4889bf55-ceb9-4397-8889-bf55ceb92397"
+          },
+          {
+            "name": "application_name",
+            "dataType": "string",
+            "sourceColumn": "application_name",
+            "summarizeBy": "none",
+            "description": "Application name.",
+            "lineageTag": "0780228b-391f-45a9-8780-228b391fc5a9"
+          },
+          {
+            "name": "provider",
+            "dataType": "string",
+            "sourceColumn": "provider",
+            "summarizeBy": "none",
+            "description": "Company behind the application.",
+            "lineageTag": "c96899fe-72e6-498c-8968-99fe72e6d98c"
+          },
+          {
+            "name": "risk",
+            "dataType": "string",
+            "sourceColumn": "risk",
+            "summarizeBy": "none",
+            "description": "Application risk.",
+            "lineageTag": "3a0db390-c1ad-42fa-8a0d-b390c1ad72fa"
+          },
+          {
+            "name": "risk_rank",
+            "dataType": "int64",
+            "sourceColumn": "risk_rank",
+            "summarizeBy": "sum",
+            "description": "5 CRITICAL down to 1 INFO, 0 otherwise.",
+            "lineageTag": "29f769ff-3d4a-4f21-89f7-69ff3d4a3f21"
+          },
+          {
+            "name": "sanctioning_status",
+            "dataType": "string",
+            "sourceColumn": "sanctioning_status",
+            "summarizeBy": "none",
+            "description": "APPROVED, BLOCKED, WARNED or NOT_COVERED, at the snapshot.",
+            "lineageTag": "585b0eed-c824-4a17-885b-0eedc8248a17"
+          },
+          {
+            "name": "window_days",
+            "dataType": "int64",
+            "sourceColumn": "window_days",
+            "summarizeBy": "sum",
+            "description": "Days the counts cover, ending at the export.",
+            "lineageTag": "08dbdacb-cbbf-4c1d-88db-dacbcbbfac1d"
+          },
+          {
+            "name": "activities",
+            "dataType": "int64",
+            "sourceColumn": "activities",
+            "summarizeBy": "sum",
+            "description": "Activities for the application in the window.",
+            "lineageTag": "af6f86f6-71f2-442c-8f6f-86f671f2b42c"
+          },
+          {
+            "name": "unique_users",
+            "dataType": "int64",
+            "sourceColumn": "unique_users",
+            "summarizeBy": "sum",
+            "description": "Distinct users of the application in the window.",
+            "lineageTag": "419ff8ff-b687-41f5-819f-f8ffb687e1f5"
+          },
+          {
+            "name": "unsanctioned_activities",
+            "dataType": "int64",
+            "sourceColumn": "unsanctioned_activities",
+            "summarizeBy": "sum",
+            "description": "Activities allowed with no policy covering the application.",
+            "lineageTag": "6a525144-302d-4e22-8a52-5144302d6e22"
+          },
+          {
+            "name": "last_seen_at",
+            "dataType": "dateTime",
+            "sourceColumn": "last_seen_at",
+            "formatString": "yyyy-mm-dd hh:nn:ss",
+            "summarizeBy": "none",
+            "description": "Latest activity in the window. Empty for a catalog entry with no activity.",
+            "lineageTag": "a9331c1d-ab4c-4857-8933-1c1dab4c9857"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "fact_ai_app_snapshot",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = FusionTable(\"fact_ai_app_snapshot.csv\", {{\"tenant_id\", \"text\"}, {\"snapshot_date\", \"date\"}, {\"application_id\", \"text\"}, {\"application_name\", \"text\"}, {\"provider\", \"text\"}, {\"risk\", \"text\"}, {\"risk_rank\", \"integer\"}, {\"sanctioning_status\", \"text\"}, {\"window_days\", \"integer\"}, {\"activities\", \"integer\"}, {\"unique_users\", \"integer\"}, {\"unsanctioned_activities\", \"integer\"}, {\"last_seen_at\", \"datetime\"}})",
+                "in",
+                "    Source"
+              ]
+            }
+          }
+        ],
+        "measures": []
+      },
+      {
+        "name": "fact_ai_user_snapshot",
+        "description": "The AI user inventory, one snapshot a day: each user's AI use and risk over the inventory window. Names and Sophos's actor IDs are written only with the personal data switch on.",
+        "lineageTag": "508d7905-5535-426f-808d-79055535426f",
+        "columns": [
+          {
+            "name": "tenant_id",
+            "dataType": "string",
+            "sourceColumn": "tenant_id",
+            "summarizeBy": "none",
+            "isHidden": false,
+            "description": "Sophos Central tenant ID (a UUID).",
+            "lineageTag": "83dffd6f-1f19-48ad-83df-fd6f1f19b8ad"
+          },
+          {
+            "name": "snapshot_date",
+            "dataType": "dateTime",
+            "sourceColumn": "snapshot_date",
+            "formatString": "yyyy-mm-dd",
+            "summarizeBy": "none",
+            "description": "Day of the snapshot in the report time zone.",
+            "lineageTag": "ca7e564e-c4e6-4234-8a7e-564ec4e61234"
+          },
+          {
+            "name": "user_key",
+            "dataType": "string",
+            "sourceColumn": "user_key",
+            "summarizeBy": "none",
+            "description": "A one-way hash of the tenant and Sophos's actor ID (as in fact_ai_activity). Pseudonymous, not anonymous.",
+            "lineageTag": "798eea0a-51f9-427c-898e-ea0a51f9227c"
+          },
+          {
+            "name": "user_id",
+            "dataType": "string",
+            "sourceColumn": "user_id",
+            "summarizeBy": "none",
+            "description": "Sophos's actor ID.",
+            "lineageTag": "42d0715e-d5df-4ffc-82d0-715ed5dfaffc"
+          },
+          {
+            "name": "user_name",
+            "dataType": "string",
+            "sourceColumn": "user_name",
+            "summarizeBy": "none",
+            "description": "User name.",
+            "lineageTag": "16f191d8-ae1b-4e22-86f1-91d8ae1b3e22"
+          },
+          {
+            "name": "risk",
+            "dataType": "string",
+            "sourceColumn": "risk",
+            "summarizeBy": "none",
+            "description": "Worst activity risk for the user in the window.",
+            "lineageTag": "a71691d6-a592-4e48-8716-91d6a592be48"
+          },
+          {
+            "name": "risk_rank",
+            "dataType": "int64",
+            "sourceColumn": "risk_rank",
+            "summarizeBy": "sum",
+            "description": "5 CRITICAL down to 1 INFO, 0 otherwise.",
+            "lineageTag": "06483191-2002-4c43-8648-31912002ac43"
+          },
+          {
+            "name": "apps_used",
+            "dataType": "int64",
+            "sourceColumn": "apps_used",
+            "summarizeBy": "sum",
+            "description": "Distinct AI applications the user used.",
+            "lineageTag": "eb4157d3-745f-4a31-8b41-57d3745f0a31"
+          },
+          {
+            "name": "activities",
+            "dataType": "int64",
+            "sourceColumn": "activities",
+            "summarizeBy": "sum",
+            "description": "The user's activities in the window.",
+            "lineageTag": "77c17ca4-e0ee-46b2-87c1-7ca4e0eef6b2"
+          },
+          {
+            "name": "policy_violations",
+            "dataType": "int64",
+            "sourceColumn": "policy_violations",
+            "summarizeBy": "sum",
+            "description": "Activities blocked, warned or modified.",
+            "lineageTag": "01b44d0c-ace6-44de-81b4-4d0cace6b4de"
+          },
+          {
+            "name": "unsanctioned_activities",
+            "dataType": "int64",
+            "sourceColumn": "unsanctioned_activities",
+            "summarizeBy": "sum",
+            "description": "Activities allowed for apps no policy covers.",
+            "lineageTag": "8abda87a-a875-4e58-8abd-a87aa875ae58"
+          },
+          {
+            "name": "top_app_id",
+            "dataType": "string",
+            "sourceColumn": "top_app_id",
+            "summarizeBy": "none",
+            "description": "The application the user used most (dim_ai_app).",
+            "lineageTag": "fdd05cf4-0272-4d3a-8dd0-5cf402720d3a"
+          },
+          {
+            "name": "top_app_name",
+            "dataType": "string",
+            "sourceColumn": "top_app_name",
+            "summarizeBy": "none",
+            "description": "Its name.",
+            "lineageTag": "af7cf01a-c4ee-4ab4-8f7c-f01ac4eecab4"
+          },
+          {
+            "name": "first_seen_at",
+            "dataType": "dateTime",
+            "sourceColumn": "first_seen_at",
+            "formatString": "yyyy-mm-dd hh:nn:ss",
+            "summarizeBy": "none",
+            "description": "First activity in the window.",
+            "lineageTag": "0ea7f4db-a1b8-4421-8ea7-f4dba1b83421"
+          },
+          {
+            "name": "last_seen_at",
+            "dataType": "dateTime",
+            "sourceColumn": "last_seen_at",
+            "formatString": "yyyy-mm-dd hh:nn:ss",
+            "summarizeBy": "none",
+            "description": "Latest activity in the window.",
+            "lineageTag": "5bb62f3b-9c04-403d-8bb6-2f3b9c04b03d"
+          },
+          {
+            "name": "window_days",
+            "dataType": "int64",
+            "sourceColumn": "window_days",
+            "summarizeBy": "sum",
+            "description": "Days the counts cover, ending at the export.",
+            "lineageTag": "c39df7b1-3bd3-4103-839d-f7b13bd36103"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "fact_ai_user_snapshot",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = FusionTable(\"fact_ai_user_snapshot.csv\", {{\"tenant_id\", \"text\"}, {\"snapshot_date\", \"date\"}, {\"user_key\", \"text\"}, {\"user_id\", \"text\"}, {\"user_name\", \"text\"}, {\"risk\", \"text\"}, {\"risk_rank\", \"integer\"}, {\"apps_used\", \"integer\"}, {\"activities\", \"integer\"}, {\"policy_violations\", \"integer\"}, {\"unsanctioned_activities\", \"integer\"}, {\"top_app_id\", \"text\"}, {\"top_app_name\", \"text\"}, {\"first_seen_at\", \"datetime\"}, {\"last_seen_at\", \"datetime\"}, {\"window_days\", \"integer\"}})",
+                "in",
+                "    Source"
+              ]
+            }
+          }
+        ],
+        "measures": [
+          {
+            "name": "User AI activities",
+            "expression": "VAR LatestSnapshot = CALCULATE(MAX(fact_ai_user_snapshot[snapshot_date]), ALLSELECTED(fact_ai_user_snapshot))\nRETURN CALCULATE(SUM(fact_ai_user_snapshot[activities]), fact_ai_user_snapshot[snapshot_date] = LatestSnapshot)",
+            "formatString": "#,0",
+            "description": "The user's activities in the inventory window, latest snapshot.",
+            "lineageTag": "cf72eeb3-b93b-4dad-8f72-eeb3b93b5dad"
+          },
+          {
+            "name": "User policy violations",
+            "expression": "VAR LatestSnapshot = CALCULATE(MAX(fact_ai_user_snapshot[snapshot_date]), ALLSELECTED(fact_ai_user_snapshot))\nRETURN CALCULATE(SUM(fact_ai_user_snapshot[policy_violations]), fact_ai_user_snapshot[snapshot_date] = LatestSnapshot)",
+            "formatString": "#,0",
+            "description": "The user's blocked, warned or modified activities in the inventory window, latest snapshot.",
+            "lineageTag": "6465c156-6d21-4d98-8465-c1566d210d98"
+          }
+        ]
+      },
+      {
+        "name": "dim_ai_policy",
+        "description": "AI Defense policies, in the order Sophos checks them. The current list, replaced on every run.",
+        "lineageTag": "e2f28327-ef2a-4165-82f2-8327ef2a1165",
+        "columns": [
+          {
+            "name": "tenant_id",
+            "dataType": "string",
+            "sourceColumn": "tenant_id",
+            "summarizeBy": "none",
+            "isHidden": false,
+            "description": "Sophos Central tenant ID (a UUID).",
+            "lineageTag": "3c9737a9-f75f-48fb-8c97-37a9f75fc8fb"
+          },
+          {
+            "name": "policy_id",
+            "dataType": "string",
+            "sourceColumn": "policy_id",
+            "summarizeBy": "none",
+            "description": "Policy ID.",
+            "lineageTag": "39254c8b-7881-4141-8925-4c8b7881d141"
+          },
+          {
+            "name": "policy_name",
+            "dataType": "string",
+            "sourceColumn": "policy_name",
+            "summarizeBy": "none",
+            "description": "Policy name.",
+            "lineageTag": "630a8c55-f372-4e7f-830a-8c55f3729e7f"
+          },
+          {
+            "name": "rank",
+            "dataType": "int64",
+            "sourceColumn": "rank",
+            "summarizeBy": "sum",
+            "description": "1 is checked first.",
+            "lineageTag": "294ba611-5980-4977-894b-a61159807977"
+          },
+          {
+            "name": "state",
+            "dataType": "string",
+            "sourceColumn": "state",
+            "summarizeBy": "none",
+            "description": "ENABLED or DISABLED.",
+            "lineageTag": "9e4b4dcc-0c9f-4b96-8e4b-4dcc0c9ffb96"
+          },
+          {
+            "name": "enforcement_status",
+            "dataType": "string",
+            "sourceColumn": "enforcement_status",
+            "summarizeBy": "none",
+            "description": "INACTIVE, PENDING, ENFORCED or FAILED.",
+            "lineageTag": "a40ce6fe-0f10-4e58-840c-e6fe0f106e58"
+          },
+          {
+            "name": "origin",
+            "dataType": "string",
+            "sourceColumn": "origin",
+            "summarizeBy": "none",
+            "description": "CUSTOM, BUILT_IN or PARTNER.",
+            "lineageTag": "15ac4c75-df25-4df3-85ac-4c75df25cdf3"
+          },
+          {
+            "name": "kind",
+            "dataType": "string",
+            "sourceColumn": "kind",
+            "summarizeBy": "none",
+            "description": "TENANT or TENANT_BASE.",
+            "lineageTag": "f7b5cb01-e891-49cf-87b5-cb01e89179cf"
+          },
+          {
+            "name": "built_in_key",
+            "dataType": "string",
+            "sourceColumn": "built_in_key",
+            "summarizeBy": "none",
+            "description": "Template a built-in policy came from.",
+            "lineageTag": "d3f2c885-296e-408b-83f2-c885296ee08b"
+          },
+          {
+            "name": "rules",
+            "dataType": "int64",
+            "sourceColumn": "rules",
+            "summarizeBy": "sum",
+            "description": "Rules in the policy.",
+            "lineageTag": "b94a18f2-7bd2-4f88-894a-18f27bd26f88"
+          },
+          {
+            "name": "block_rules",
+            "dataType": "int64",
+            "sourceColumn": "block_rules",
+            "summarizeBy": "sum",
+            "description": "Rules that block.",
+            "lineageTag": "d0dbf1ac-c3ba-4bce-80db-f1acc3baebce"
+          },
+          {
+            "name": "warn_rules",
+            "dataType": "int64",
+            "sourceColumn": "warn_rules",
+            "summarizeBy": "sum",
+            "description": "Rules that warn.",
+            "lineageTag": "30d05703-2986-495d-80d0-57032986195d"
+          },
+          {
+            "name": "allow_rules",
+            "dataType": "int64",
+            "sourceColumn": "allow_rules",
+            "summarizeBy": "sum",
+            "description": "Rules that allow.",
+            "lineageTag": "10f16c14-5a14-40a6-80f1-6c145a1410a6"
+          },
+          {
+            "name": "generative_ai_category_action",
+            "dataType": "string",
+            "sourceColumn": "generative_ai_category_action",
+            "summarizeBy": "none",
+            "description": "BLOCK, WARN or ALLOW for Generative AI web traffic no rule matched.",
+            "lineageTag": "593ea714-ee4d-48ae-893e-a714ee4d18ae"
+          },
+          {
+            "name": "app_control_category_action",
+            "dataType": "string",
+            "sourceColumn": "app_control_category_action",
+            "summarizeBy": "none",
+            "description": "The same for application control, when set.",
+            "lineageTag": "8ac6192c-a390-4d2e-8ac6-192ca3903d2e"
+          },
+          {
+            "name": "endpoint_enabled",
+            "dataType": "boolean",
+            "sourceColumn": "endpoint_enabled",
+            "summarizeBy": "none",
+            "description": "The policy applies through Sophos Endpoint.",
+            "lineageTag": "b8d7d3b8-b733-4c7e-88d7-d3b8b733ac7e"
+          },
+          {
+            "name": "firewall_enabled",
+            "dataType": "boolean",
+            "sourceColumn": "firewall_enabled",
+            "summarizeBy": "none",
+            "description": "Through Sophos Firewall.",
+            "lineageTag": "a7405195-cf61-4a63-8740-5195cf61ea63"
+          },
+          {
+            "name": "dns_enabled",
+            "dataType": "boolean",
+            "sourceColumn": "dns_enabled",
+            "summarizeBy": "none",
+            "description": "Through Sophos DNS Protection.",
+            "lineageTag": "1062cab8-2b5d-4a3a-8062-cab82b5d6a3a"
+          },
+          {
+            "name": "browser_enabled",
+            "dataType": "boolean",
+            "sourceColumn": "browser_enabled",
+            "summarizeBy": "none",
+            "description": "Through the browser extension.",
+            "lineageTag": "8aa4f947-97bc-43f5-8aa4-f94797bc23f5"
+          },
+          {
+            "name": "created_at",
+            "dataType": "dateTime",
+            "sourceColumn": "created_at",
+            "formatString": "yyyy-mm-dd hh:nn:ss",
+            "summarizeBy": "none",
+            "description": "When the policy was created.",
+            "lineageTag": "50fd8d73-de26-40dd-80fd-8d73de26c0dd"
+          },
+          {
+            "name": "updated_at",
+            "dataType": "dateTime",
+            "sourceColumn": "updated_at",
+            "formatString": "yyyy-mm-dd hh:nn:ss",
+            "summarizeBy": "none",
+            "description": "When the policy last changed.",
+            "lineageTag": "bb02cf7a-d0ff-4c9c-8b02-cf7ad0ff0c9c"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "dim_ai_policy",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = FusionTable(\"dim_ai_policy.csv\", {{\"tenant_id\", \"text\"}, {\"policy_id\", \"text\"}, {\"policy_name\", \"text\"}, {\"rank\", \"integer\"}, {\"state\", \"text\"}, {\"enforcement_status\", \"text\"}, {\"origin\", \"text\"}, {\"kind\", \"text\"}, {\"built_in_key\", \"text\"}, {\"rules\", \"integer\"}, {\"block_rules\", \"integer\"}, {\"warn_rules\", \"integer\"}, {\"allow_rules\", \"integer\"}, {\"generative_ai_category_action\", \"text\"}, {\"app_control_category_action\", \"text\"}, {\"endpoint_enabled\", \"boolean\"}, {\"firewall_enabled\", \"boolean\"}, {\"dns_enabled\", \"boolean\"}, {\"browser_enabled\", \"boolean\"}, {\"created_at\", \"datetime\"}, {\"updated_at\", \"datetime\"}})",
+                "in",
+                "    Source"
+              ]
+            }
+          }
+        ],
+        "measures": []
+      },
+      {
         "name": "Date",
         "description": "Calendar from the first month with data to today, in the report time zone.",
         "lineageTag": "3b527379-e4b6-497f-8b52-7379e4b6097f",
@@ -2307,7 +3592,7 @@
               "expression": [
                 "let",
                 "    Today = Date.From(DateTime.LocalNow()),",
-                "    Seen = List.RemoveNulls(List.Combine({fact_detection_daily[local_date], fact_case[created_local_date], fact_alert[raised_local_date], fact_endpoint_snapshot[snapshot_date]})),",
+                "    Seen = List.RemoveNulls(List.Combine({fact_detection_daily[local_date], fact_case[created_local_date], fact_alert[raised_local_date], fact_endpoint_snapshot[snapshot_date], fact_ai_activity_daily[local_date]})),",
                 "    Start = Date.StartOfMonth(if List.IsEmpty(Seen) then Date.AddDays(Today, -90) else List.Min(Seen)),",
                 "    End = Today,",
                 "    Days = List.Dates(Start, Duration.Days(End - Start) + 1, #duration(1, 0, 0, 0)),",
@@ -2473,12 +3758,75 @@
         "fromColumn": "snapshot_date",
         "toTable": "Date",
         "toColumn": "Date"
+      },
+      {
+        "name": "50cfa556-87de-446c-80cf-a55687de246c",
+        "fromTable": "fact_ai_activity",
+        "fromColumn": "application_id",
+        "toTable": "dim_ai_app",
+        "toColumn": "application_id"
+      },
+      {
+        "name": "ae271757-30b4-4361-8e27-175730b4a361",
+        "fromTable": "fact_ai_activity",
+        "fromColumn": "policy_id",
+        "toTable": "dim_ai_policy",
+        "toColumn": "policy_id"
+      },
+      {
+        "name": "53700b24-b5c5-44f6-8370-0b24b5c534f6",
+        "fromTable": "fact_ai_activity_daily",
+        "fromColumn": "application_id",
+        "toTable": "dim_ai_app",
+        "toColumn": "application_id"
+      },
+      {
+        "name": "5dbcc085-93ad-436f-8dbc-c08593adf36f",
+        "fromTable": "fact_ai_app_snapshot",
+        "fromColumn": "application_id",
+        "toTable": "dim_ai_app",
+        "toColumn": "application_id"
+      },
+      {
+        "name": "3bed13b4-a438-4046-8bed-13b4a4380046",
+        "fromTable": "fact_ai_activity",
+        "fromColumn": "start_local_date",
+        "toTable": "Date",
+        "toColumn": "Date"
+      },
+      {
+        "name": "4d2a68a3-e76b-4271-8d2a-68a3e76b8271",
+        "fromTable": "fact_ai_activity_daily",
+        "fromColumn": "local_date",
+        "toTable": "Date",
+        "toColumn": "Date"
+      },
+      {
+        "name": "ad7f174a-287b-49a4-8d7f-174a287b39a4",
+        "fromTable": "fact_ai_defense_snapshot",
+        "fromColumn": "snapshot_date",
+        "toTable": "Date",
+        "toColumn": "Date"
+      },
+      {
+        "name": "85666ac3-41ab-4135-8566-6ac341ab3135",
+        "fromTable": "fact_ai_app_snapshot",
+        "fromColumn": "snapshot_date",
+        "toTable": "Date",
+        "toColumn": "Date"
+      },
+      {
+        "name": "3b56d9e3-3931-45c1-8b56-d9e3393165c1",
+        "fromTable": "fact_ai_user_snapshot",
+        "fromColumn": "snapshot_date",
+        "toTable": "Date",
+        "toColumn": "Date"
       }
     ],
     "annotations": [
       {
         "name": "PBI_QueryOrder",
-        "value": "[\"SharePointSiteUrl\",\"ExportFolder\",\"FusionFiles\",\"FusionTable\",\"dim_tenant\",\"fact_license\",\"fact_case\",\"dim_case_type\",\"dim_case_status\",\"dim_case_verdict\",\"fact_detection\",\"bridge_detection_technique\",\"bridge_detection_sensor\",\"bridge_detection_entity\",\"dim_detector\",\"dim_mitre_technique\",\"dim_sensor_type\",\"fact_detection_daily\",\"fact_technique_daily\",\"fact_sensor_daily\",\"fact_endpoint_snapshot\",\"fact_health_check_snapshot\",\"fact_alert\"]"
+        "value": "[\"SharePointSiteUrl\",\"ExportFolder\",\"FusionFiles\",\"FusionTable\",\"dim_tenant\",\"fact_license\",\"fact_case\",\"dim_case_type\",\"dim_case_status\",\"dim_case_verdict\",\"fact_detection\",\"bridge_detection_technique\",\"bridge_detection_sensor\",\"bridge_detection_entity\",\"dim_detector\",\"dim_mitre_technique\",\"dim_sensor_type\",\"fact_detection_daily\",\"fact_technique_daily\",\"fact_sensor_daily\",\"fact_endpoint_snapshot\",\"fact_health_check_snapshot\",\"fact_alert\",\"fact_ai_defense_snapshot\",\"fact_ai_activity\",\"fact_ai_activity_daily\",\"dim_ai_app\",\"fact_ai_app_snapshot\",\"fact_ai_user_snapshot\",\"dim_ai_policy\"]"
       },
       {
         "name": "__PBI_TimeIntelligenceEnabled",

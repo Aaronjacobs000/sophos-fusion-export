@@ -5,7 +5,8 @@
     "cases",
     "detections",
     "endpoints",
-    "alerts"
+    "alerts",
+    "aidefense"
   ],
   "activePageName": "overview"
 }

@@ -1,0 +1,152 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.0.0/schema.json",
+  "name": "aiUserTable",
+  "position": {
+    "x": 672,
+    "y": 432,
+    "z": 12000,
+    "width": 592,
+    "height": 272,
+    "tabOrder": 12000
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_ai_user_snapshot"
+                    }
+                  },
+                  "Property": "user_name"
+                }
+              },
+              "queryRef": "fact_ai_user_snapshot.user_name",
+              "nativeQueryRef": "user_name",
+              "displayName": "User"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_ai_user_snapshot"
+                    }
+                  },
+                  "Property": "user_key"
+                }
+              },
+              "queryRef": "fact_ai_user_snapshot.user_key",
+              "nativeQueryRef": "user_key",
+              "displayName": "User key"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_ai_user_snapshot"
+                    }
+                  },
+                  "Property": "risk"
+                }
+              },
+              "queryRef": "fact_ai_user_snapshot.risk",
+              "nativeQueryRef": "risk",
+              "displayName": "Risk"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_ai_user_snapshot"
+                    }
+                  },
+                  "Property": "top_app_name"
+                }
+              },
+              "queryRef": "fact_ai_user_snapshot.top_app_name",
+              "nativeQueryRef": "top_app_name",
+              "displayName": "Top app"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_ai_user_snapshot"
+                    }
+                  },
+                  "Property": "User AI activities"
+                }
+              },
+              "queryRef": "fact_ai_user_snapshot.User AI activities",
+              "nativeQueryRef": "User AI activities"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_ai_user_snapshot"
+                    }
+                  },
+                  "Property": "User policy violations"
+                }
+              },
+              "queryRef": "fact_ai_user_snapshot.User policy violations",
+              "nativeQueryRef": "User policy violations"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "fact_ai_user_snapshot"
+                  }
+                },
+                "Property": "User policy violations"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Users, latest snapshot'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

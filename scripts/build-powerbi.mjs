@@ -422,7 +422,7 @@ project(
   PAGES_CSV,
   "Unofficial, built on the Unofficial Sophos Fusion Data Exporter's CSV files. Not a Sophos product.",
   // The calendar starts at the first month with data: these small tables are read again for it.
-  "List.RemoveNulls(List.Combine({fact_detection_daily[local_date], fact_case[created_local_date], fact_alert[raised_local_date], fact_endpoint_snapshot[snapshot_date]}))"
+  "List.RemoveNulls(List.Combine({fact_detection_daily[local_date], fact_case[created_local_date], fact_alert[raised_local_date], fact_endpoint_snapshot[snapshot_date], fact_ai_activity_daily[local_date]}))"
 );
 project(
   "direct",

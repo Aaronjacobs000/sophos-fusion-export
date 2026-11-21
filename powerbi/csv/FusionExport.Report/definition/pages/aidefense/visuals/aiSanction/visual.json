@@ -1,0 +1,79 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.0.0/schema.json",
+  "name": "aiSanction",
+  "position": {
+    "x": 968,
+    "y": 168,
+    "z": 10000,
+    "width": 296,
+    "height": 248,
+    "tabOrder": 10000
+  },
+  "visual": {
+    "visualType": "donutChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_ai_app"
+                    }
+                  },
+                  "Property": "sanctioning_status"
+                }
+              },
+              "queryRef": "dim_ai_app.sanctioning_status",
+              "nativeQueryRef": "sanctioning_status",
+              "displayName": "Sanctioning"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_ai_app"
+                    }
+                  },
+                  "Property": "AI applications"
+                }
+              },
+              "queryRef": "dim_ai_app.AI applications",
+              "nativeQueryRef": "AI applications"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Applications by sanctioning status'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

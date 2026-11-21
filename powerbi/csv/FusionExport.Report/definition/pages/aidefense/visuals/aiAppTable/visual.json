@@ -1,0 +1,166 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.0.0/schema.json",
+  "name": "aiAppTable",
+  "position": {
+    "x": 16,
+    "y": 432,
+    "z": 11000,
+    "width": 640,
+    "height": 272,
+    "tabOrder": 11000
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_ai_app"
+                    }
+                  },
+                  "Property": "application_name"
+                }
+              },
+              "queryRef": "dim_ai_app.application_name",
+              "nativeQueryRef": "application_name",
+              "displayName": "Application"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_ai_app"
+                    }
+                  },
+                  "Property": "provider"
+                }
+              },
+              "queryRef": "dim_ai_app.provider",
+              "nativeQueryRef": "provider",
+              "displayName": "Provider"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_ai_app"
+                    }
+                  },
+                  "Property": "risk"
+                }
+              },
+              "queryRef": "dim_ai_app.risk",
+              "nativeQueryRef": "risk",
+              "displayName": "Risk"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_ai_app"
+                    }
+                  },
+                  "Property": "sanctioning_status"
+                }
+              },
+              "queryRef": "dim_ai_app.sanctioning_status",
+              "nativeQueryRef": "sanctioning_status",
+              "displayName": "Sanctioning"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_ai_activity_daily"
+                    }
+                  },
+                  "Property": "AI activities"
+                }
+              },
+              "queryRef": "fact_ai_activity_daily.AI activities",
+              "nativeQueryRef": "AI activities"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_ai_activity_daily"
+                    }
+                  },
+                  "Property": "Blocked AI activities"
+                }
+              },
+              "queryRef": "fact_ai_activity_daily.Blocked AI activities",
+              "nativeQueryRef": "Blocked AI activities"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_ai_activity_daily"
+                    }
+                  },
+                  "Property": "Warned AI activities"
+                }
+              },
+              "queryRef": "fact_ai_activity_daily.Warned AI activities",
+              "nativeQueryRef": "Warned AI activities"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "fact_ai_activity_daily"
+                  }
+                },
+                "Property": "AI activities"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'AI applications and sanctioning'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

@@ -26,6 +26,13 @@ export const CSV_TABLES = [
   "fact_endpoint_snapshot",
   "fact_health_check_snapshot",
   "fact_alert",
+  "fact_ai_defense_snapshot",
+  "fact_ai_activity",
+  "fact_ai_activity_daily",
+  "dim_ai_app",
+  "fact_ai_app_snapshot",
+  "fact_ai_user_snapshot",
+  "dim_ai_policy",
 ];
 
 // ---------- relationships (many side first) ----------
@@ -52,6 +59,15 @@ export const RELATIONSHIPS = [
   { from: ["fact_endpoint_snapshot", "snapshot_date"], to: ["Date", "Date"] },
   { from: ["fact_license", "snapshot_date"], to: ["Date", "Date"] },
   { from: ["fact_health_check_snapshot", "snapshot_date"], to: ["Date", "Date"] },
+  { from: ["fact_ai_activity", "application_id"], to: ["dim_ai_app", "application_id"] },
+  { from: ["fact_ai_activity", "policy_id"], to: ["dim_ai_policy", "policy_id"] },
+  { from: ["fact_ai_activity_daily", "application_id"], to: ["dim_ai_app", "application_id"] },
+  { from: ["fact_ai_app_snapshot", "application_id"], to: ["dim_ai_app", "application_id"] },
+  { from: ["fact_ai_activity", "start_local_date"], to: ["Date", "Date"] },
+  { from: ["fact_ai_activity_daily", "local_date"], to: ["Date", "Date"] },
+  { from: ["fact_ai_defense_snapshot", "snapshot_date"], to: ["Date", "Date"] },
+  { from: ["fact_ai_app_snapshot", "snapshot_date"], to: ["Date", "Date"] },
+  { from: ["fact_ai_user_snapshot", "snapshot_date"], to: ["Date", "Date"] },
 ];
 
 // ---------- measures ----------
@@ -95,6 +111,28 @@ export const MEASURES = {
     { name: "High alerts", dax: "CALCULATE(COUNTROWS(fact_alert), fact_alert[severity] = \"high\") + 0", format: "0", description: "High severity product alerts raised in the selected dates." },
   ],
 };
+
+// The latest snapshot in the slicer selection, not per visual row, so a table of users or apps shows one snapshot.
+const latestSelected = (table, expression) =>
+  `VAR LatestSnapshot = CALCULATE(MAX(${table}[snapshot_date]), ALLSELECTED(${table}))\nRETURN CALCULATE(${expression}, ${table}[snapshot_date] = LatestSnapshot)`;
+
+Object.assign(MEASURES, {
+  fact_ai_activity_daily: [
+    { name: "AI activities", dax: "SUM(fact_ai_activity_daily[activities]) + 0", format: "#,0", description: "AI Defense activities that started in the selected dates (daily counts, kept past detail retention)." },
+    { name: "Blocked AI activities", dax: 'CALCULATE(SUM(fact_ai_activity_daily[activities]), fact_ai_activity_daily[action] = "BLOCKED") + 0', format: "#,0", description: "Activities an AI Defense policy blocked." },
+    { name: "Warned AI activities", dax: 'CALCULATE(SUM(fact_ai_activity_daily[activities]), fact_ai_activity_daily[action] = "WARNED") + 0', format: "#,0", description: "Activities an AI Defense policy warned on." },
+    { name: "Unsanctioned AI activities", dax: "SUM(fact_ai_activity_daily[unsanctioned_activities]) + 0", format: "#,0", description: "Activities allowed for AI apps no policy covers." },
+  ],
+  fact_ai_defense_snapshot: [
+    { name: "AI apps", dax: latestSelected("fact_ai_defense_snapshot", "SUM(fact_ai_defense_snapshot[apps])") + " + 0", format: "0", description: "AI applications in the inventory window, latest snapshot, as Sophos counts them." },
+    { name: "AI users", dax: latestSelected("fact_ai_defense_snapshot", "SUM(fact_ai_defense_snapshot[users])") + " + 0", format: "0", description: "Users of AI applications in the inventory window, latest snapshot, as Sophos counts them." },
+  ],
+  dim_ai_app: [{ name: "AI applications", dax: "COUNTROWS(dim_ai_app) + 0", format: "0", description: "AI applications the exporter has seen." }],
+  fact_ai_user_snapshot: [
+    { name: "User AI activities", dax: latestSelected("fact_ai_user_snapshot", "SUM(fact_ai_user_snapshot[activities])"), format: "#,0", description: "The user's activities in the inventory window, latest snapshot." },
+    { name: "User policy violations", dax: latestSelected("fact_ai_user_snapshot", "SUM(fact_ai_user_snapshot[policy_violations])"), format: "#,0", description: "The user's blocked, warned or modified activities in the inventory window, latest snapshot." },
+  ],
+});
 
 // ---------- the direct path: Power Query reading the Sophos APIs ----------
 
@@ -405,6 +443,25 @@ export const PAGES_CSV = [
     ],
   },
 ];
+
+PAGES_CSV.push({
+  id: "aidefense",
+  name: "AI Defense",
+  visuals: [
+    card("aiTotal", 16, 56, "fact_ai_activity_daily.[AI activities]", "AI activities"),
+    card("aiBlocked", 176, 56, "fact_ai_activity_daily.[Blocked AI activities]", "Blocked"),
+    card("aiWarned", 336, 56, "fact_ai_activity_daily.[Warned AI activities]", "Warned"),
+    card("aiUnsanctioned", 496, 56, "fact_ai_activity_daily.[Unsanctioned AI activities]", "Unsanctioned"),
+    card("aiApps", 656, 56, "fact_ai_defense_snapshot.[AI apps]", "AI apps in use"),
+    card("aiUsers", 816, 56, "fact_ai_defense_snapshot.[AI users]", "AI users"),
+    slicer("aiDates", 976, 56, 288),
+    { id: "aiPerDay", type: "columnChart", x: 16, y: 168, w: 624, h: 248, title: "AI activity per day by action", roles: { Category: ["Date.Date"], Series: ["fact_ai_activity_daily.action as Action"], Y: ["fact_ai_activity_daily.[AI activities]"] } },
+    { id: "aiByApp", type: "barChart", x: 656, y: 168, w: 296, h: 248, title: "Activity by AI application", roles: { Category: ["dim_ai_app.application_name as Application"], Y: ["fact_ai_activity_daily.[AI activities]"] }, sort: { field: "fact_ai_activity_daily.[AI activities]", desc: true } },
+    { id: "aiSanction", type: "donutChart", x: 968, y: 168, w: 296, h: 248, title: "Applications by sanctioning status", roles: { Category: ["dim_ai_app.sanctioning_status as Sanctioning"], Y: ["dim_ai_app.[AI applications]"] } },
+    { id: "aiAppTable", type: "tableEx", x: 16, y: 432, w: 640, h: 272, title: "AI applications and sanctioning", roles: { Values: ["dim_ai_app.application_name as Application", "dim_ai_app.provider as Provider", "dim_ai_app.risk as Risk", "dim_ai_app.sanctioning_status as Sanctioning", "fact_ai_activity_daily.[AI activities]", "fact_ai_activity_daily.[Blocked AI activities]", "fact_ai_activity_daily.[Warned AI activities]"] }, sort: { field: "fact_ai_activity_daily.[AI activities]", desc: true } },
+    { id: "aiUserTable", type: "tableEx", x: 672, y: 432, w: 592, h: 272, title: "Users, latest snapshot", roles: { Values: ["fact_ai_user_snapshot.user_name as User", "fact_ai_user_snapshot.user_key as User key", "fact_ai_user_snapshot.risk as Risk", "fact_ai_user_snapshot.top_app_name as Top app", "fact_ai_user_snapshot.[User AI activities]", "fact_ai_user_snapshot.[User policy violations]"] }, sort: { field: "fact_ai_user_snapshot.[User policy violations]", desc: true } },
+  ],
+});
 
 export const PAGES_DIRECT = [
   {
