@@ -49,6 +49,7 @@ Sophos APIs --> exporter (scheduled, read only) --> CSV folder --> SharePoint or
 - The client secret sits in the file. It is a Power Query parameter, so anyone who can open the file, or edit the semantic model once it is published, can read it. A copy of the file is a copy of the credential.
 - The data source must be Anonymous. Power Query only sends a POST anonymously, and both the Sophos token request and Sophos Fusion GraphQL are POSTs. Power BI can't protect the credential with its own credential store.
 - Scheduled refresh in the service needs static addresses. Every request uses a fixed base URL with `RelativePath` and `Query`, and the tenant's regional host is a parameter you set (`SophosRegionHost`), not something the file looks up. Change those patterns and the service refuses to refresh.
+- Privacy levels are switched off for the file. The token from `id.sophos.com` has to travel to the other Sophos hosts, which Power Query's privacy firewall otherwise blocks, so the file is saved with "Ignore the privacy levels" on.
 - One tenant per file.
 - No history past what Sophos keeps. Each refresh replaces the tables, so there is nothing older than Sophos's retention and no daily snapshots.
 - Each refresh spends the shared rate limit. Sophos allows 100 calls a minute per credential, shared with every integration that uses it. Power BI Pro allows 8 scheduled refreshes a day, and each one reads everything again.

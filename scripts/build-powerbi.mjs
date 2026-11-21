@@ -138,7 +138,9 @@ function model(name, description, tables, expressions, variant, seen) {
       culture: "en-US",
       defaultPowerBIDataSourceVersion: "powerBI_V3",
       sourceQueryCulture: "en-US",
-      dataAccessOptions: { legacyRedirects: true, returnErrorValuesAsNull: true },
+      // The direct path sends the token from id.sophos.com to the other Sophos hosts, which Power Query's
+      // privacy firewall blocks unless privacy levels are ignored for the file ("fastCombine").
+      dataAccessOptions: { legacyRedirects: true, returnErrorValuesAsNull: true, ...(variant === "direct" ? { fastCombine: true } : {}) },
       queryGroups: [...new Set(expressions.map((e) => e.queryGroup).filter(Boolean))].map((folder) => ({ folder })),
       expressions,
       tables: [...tables, dateTable(seen)].map((t) => ({ ...t, measures: [...(t.measures ?? []), ...measuresFor(t.name, variant)] })),
