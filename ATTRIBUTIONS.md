@@ -15,6 +15,7 @@ Local modifications, each marked "Exporter local modification" in the source:
 | `client/fusion-client.ts` | `putPresigned` (the case file upload, a write) is removed. |
 | `index.ts` | Replaced: exports only the copied files, and `createSophosCore` takes the fetch every client uses. |
 | `client/sophos-client.ts` | Bug fix: a 4xx whose body is not JSON is no longer retried. The old check matched the message `Sophos API error 404:`, but a non-JSON body gives `Sophos API error (404):`, so it was sent twice more. |
+| `client/fusion-client.ts` | Bug fix ported from NotFusion main `5e335a4`: the 503 Sophos Fusion returns for a tenant it does not hold (`isTenantNotOnFusion`) is no longer retried, since it is the same answer every time. Any other 503 is still retried. |
 
 ## SecOps Toolkit (adapted)
 

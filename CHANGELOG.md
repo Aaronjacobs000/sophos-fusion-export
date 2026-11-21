@@ -14,3 +14,4 @@ First version, private while the live checks run.
 - Power BI projects for the CSV path and the direct path, and a script that publishes them through the Fabric REST API.
 - Grafana dashboards, provisioning, a read-only CSV server and a Docker Compose file.
 - Synthetic demo data.
+- The Sophos Fusion 503 for a tenant Sophos Fusion does not hold is sent once, not retried twice (NotFusion fix `5e335a4`).

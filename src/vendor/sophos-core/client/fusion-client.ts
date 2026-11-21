@@ -16,7 +16,9 @@
  * 200 with an `errors` array beside `data`. A 200 is not success until the
  * body has been read. Transport failures (expired token, 429, 5xx) use the
  * usual non-2xx status and the standard Sophos error object, and those are
- * retried the same way SophosClient retries them. GraphQL-layer errors are
+ * retried the same way SophosClient retries them. The one 5xx never retried
+ * is the 503 Sophos Fusion returns for a tenant it does not hold
+ * (isTenantNotOnFusion). GraphQL-layer errors are
  * not retried, with one measured exception: the intermittent
  * partnerPreferences fault on the case write path, which is keyed on the
  * error path and bounded (see FusionGraphQLError.isTransientPartnerPreferences).
@@ -145,6 +147,23 @@ export class FusionGraphQLError extends Error {
   get isTransientPartnerPreferences(): boolean {
     return this.errors[0]?.path?.[0] === "partnerPreferences";
   }
+}
+
+/**
+ * True for the 503 Fusion returns for a tenant it can't find for this
+ * credential: "error invoking downstream api ... tenant <id> not found or not
+ * accessible" (a tenant under the test partner, 27/09/2026, while its REST
+ * APIs answered normally). It is the same answer on every attempt (3 of 3 on
+ * two tenants, 29/10/2026), so the client never retries it. Exporter local
+ * modification: ported from NotFusion main 5e335a4, where it moved here from
+ * fusion/case-reference-data.ts, a file the exporter does not copy.
+ */
+export function isTenantNotOnFusion(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  return (
+    /^Sophos Fusion API error 503:/.test(error.message) &&
+    /\btenant \S+ not found or not accessible\b/i.test(error.message)
+  );
 }
 
 export class FusionClient {
@@ -321,6 +340,11 @@ export class FusionClient {
 
         // Don't retry on 4xx client errors
         if (/Sophos Fusion API error 4\d\d:/.test(lastError.message)) {
+          throw lastError;
+        }
+
+        // Not on Sophos Fusion: the same answer every attempt, so a retry only spends calls.
+        if (isTenantNotOnFusion(lastError)) {
           throw lastError;
         }
 
