@@ -2,7 +2,7 @@
 
 > **Unofficial project, not from Sophos.** This is a personal project by an individual. It is not an official Sophos product and it is not built, endorsed, supported, or warranted by Sophos. It calls the documented Sophos APIs with a credential you supply. Use it at your own risk, and raise problems as issues on this repository rather than with Sophos support.
 
-The exporter reads one Sophos Fusion tenant through the documented Sophos APIs and writes a star schema of CSV files: cases, detections with MITRE ATT&CK, endpoint health, the Account Health Check, licenses and product alerts. Power BI, Grafana, Excel and most other BI tools can read the files. It only reads from Sophos. It sends no telemetry and there is no hosted service.
+The exporter reads one Sophos Fusion tenant through the documented Sophos APIs and writes a star schema of CSV files: cases, detections with MITRE ATT&CK, endpoint health, the Account Health Check, licenses, product alerts and Sophos AI Defense. Power BI, Grafana, Excel and most other BI tools can read the files. It only reads from Sophos. It sends no telemetry and there is no hosted service.
 
 The repository also holds report templates for Power BI and Grafana, and a second, simpler way into Power BI that calls the Sophos APIs from Power Query. Read [the two paths](#two-paths-into-power-bi) before you pick one.
 
@@ -39,7 +39,7 @@ Sophos APIs --> exporter (scheduled, read only) --> CSV folder --> SharePoint or
 - The Sophos client secret stays on the machine that runs the exporter. Nothing in Power BI holds it.
 - The Power BI service refreshes from a SharePoint or OneDrive folder on a schedule, with no gateway.
 - The files keep history: detection counts, endpoint snapshots and case outcomes stay after Sophos's 90 day window ends.
-- Each run makes a few calls (about 10 for a typical tenant) under its own budget of 60 a minute, well below Sophos's limit.
+- Each run makes a few calls (under 20 for a typical tenant) under its own budget of 60 a minute, well below Sophos's limit.
 - Every row carries `tenant_id`, so a partner model can roll tenants up later.
 
 ### Alternative: a Power BI file that calls the Sophos APIs itself
@@ -68,6 +68,7 @@ Only operations Sophos documents on [developer.sophos.com](https://developer.sop
 | Detections | Sophos Fusion Detections GraphQL v2 (`detectionSearch`, `detectionCountByTenant`) | `fact_detection`, `fact_detection_daily`, `fact_technique_daily`, `fact_sensor_daily`, the bridges, `dim_detector`, `dim_mitre_technique`, `dim_sensor_type` |
 | Endpoint health | Endpoint API, `GET /endpoint/v1/endpoints`; Account Health Check, `GET /account-health-check/v1/health-check` | `fact_endpoint_snapshot`, `fact_health_check_snapshot` |
 | Product alerts | Common API, `GET /common/v1/alerts` | `fact_alert` |
+| Sophos AI Defense | AI Defense Activity GraphQL v1 (`secureAITenantSettings`, `inventorySummary`, `activities`, `appInventory`, `userInventory`) and AI Defense Policy GraphQL v1 (`appSanctioning`, `policies`) | `fact_ai_defense_snapshot`, `fact_ai_activity`, `fact_ai_activity_daily`, `dim_ai_app`, `fact_ai_app_snapshot`, `fact_ai_user_snapshot`, `dim_ai_policy` |
 
 Ingestion volume, data source health, ITDR, Exposure Management and playbook runs are left out until Sophos documents them.
 
@@ -118,7 +119,11 @@ Copy `fusion-export.config.example.json` and edit it. Every field is optional ex
 | `detections.retentionDays` | 90 | Detection detail older than this is pruned. The daily counts stay. |
 | `detections.pageSize` | 10000 | Most detections one search reads. |
 | `cases.overlapMinutes` | 15 | How far before the last run's newest change a run starts reading cases. |
-| `datasets` | all | Any of `licenses`, `cases`, `detections`, `endpoints`, `alerts`. |
+| `aiDefense.trailingDays` | 3 | Days of AI Defense activity each run reads again, because Sophos adds telemetry to recent activities. A run after a gap reads from the last full read. |
+| `aiDefense.backfillDays` | 30 | Most days of AI Defense activity a backfill reads. Sophos serves 100 activities a call. |
+| `aiDefense.retentionDays` | 90 | AI Defense activity older than this is pruned. The daily counts stay. |
+| `aiDefense.inventoryDays` | 30 | Window the AI application and user inventories and Sophos's AI Defense totals cover, ending at the run. |
+| `datasets` | all | Any of `licenses`, `cases`, `detections`, `endpoints`, `alerts`, `aiDefense`. |
 | `sharepoint` | none | See [Upload to SharePoint or OneDrive](#upload-to-sharepoint-or-onedrive). |
 
 The exporter refuses a config file that holds anything that looks like a secret. Credentials go in the environment or an env file.
@@ -132,12 +137,12 @@ node dist/cli.js run      --config fusion-export.config.json --env-file ~/.confi
 node dist/cli.js schema   > data-dictionary.md
 ```
 
-- `doctor` checks the credential, each API, the output folder and SharePoint, and estimates the calls a daily run makes. It uses about ten calls.
-- `backfill` is the first load: every case, detections for `--days`, and today's snapshots.
+- `doctor` checks the credential, each API, the output folder and SharePoint, and estimates the calls a daily run makes. It uses about a dozen calls.
+- `backfill` is the first load: every case, detections for `--days`, AI Defense activity for `--days` or `aiDefense.backfillDays`, whichever is shorter, and today's snapshots.
 - `run` is the incremental load: cases changed since the last run, the last 7 days of detections, and today's snapshots. Rerunning is safe; the same data gives the same files.
 - `schema` prints the data dictionary, or `_schema.json` with `--json`.
 
-Each run appends a line to `_state/runs.jsonl` with the call count by operation, the busiest minute, any rate limiting and the rows per table. A 90 day backfill of a tenant with 100,000 detections took 54 calls and under 4 minutes; a daily run of the same tenant takes 9 calls.
+Each run appends a line to `_state/runs.jsonl` with the call count by operation, the busiest minute, any rate limiting and the rows per table. A 90 day backfill of a tenant with 100,000 detections took 54 calls and under 4 minutes; a daily run of the same tenant takes 9 calls. AI Defense activity is slower to read: a 30 day backfill of 23,000 activities took 237 calls and under 4 minutes.
 
 ## Schedule
 
@@ -191,7 +196,7 @@ For a OneDrive for Business folder, use the OneDrive URL (`https://contoso-my.sh
 
 ## Power BI, recommended path
 
-`powerbi/csv` is a Power BI project (PBIP): the semantic model `FusionExport.SemanticModel` and the report `FusionExport.Report`, with five pages (overview, cases, detections and ATT&CK, endpoints and licenses, alerts). It reads the CSV folder through the SharePoint folder connector.
+`powerbi/csv` is a Power BI project (PBIP): the semantic model `FusionExport.SemanticModel` and the report `FusionExport.Report`, with six pages (overview, cases, detections and ATT&CK, endpoints and licenses, alerts, AI Defense). It reads the CSV folder through the SharePoint folder connector.
 
 Publish it one of two ways:
 
@@ -228,7 +233,7 @@ The tables here are a subset of the exporter's: `fact_case`, `fact_detection`, `
 
 ## Grafana
 
-`grafana/` holds four dashboards (overview, cases, detections and ATT&CK, endpoints with licenses and alerts), provisioning for the data source and dashboards, a small read-only file server for the CSV folder, and a Docker Compose file. The dashboards use the [Infinity data source](https://grafana.com/grafana/plugins/yesoreyeram-infinity-datasource/) and run every query on the Grafana server.
+`grafana/` holds five dashboards (overview, cases, detections and ATT&CK, endpoints with licenses and alerts, AI Defense), provisioning for the data source and dashboards, a small read-only file server for the CSV folder, and a Docker Compose file. The dashboards use the [Infinity data source](https://grafana.com/grafana/plugins/yesoreyeram-infinity-datasource/) and run every query on the Grafana server.
 
 With Docker:
 
@@ -246,22 +251,23 @@ Into an existing Grafana (12.2.5 or later):
 2. Serve the export folder to Grafana: `node grafana/csv-server.mjs --dir /path/to/export --host 127.0.0.1 --port 3301`. It serves the table files and `_schema.json` only, with no listing.
 3. Copy `grafana/provisioning` into Grafana's provisioning folder and set `FUSION_EXPORT_CSV_URL=http://127.0.0.1:3301` and `FUSION_EXPORT_DASHBOARDS` (a folder holding `grafana/dashboards`) in Grafana's environment.
 
-The endpoint, license and health check panels show one snapshot, picked at the top of the dashboard; the newest is picked on load.
+The endpoint, license and health check panels show one snapshot, picked at the top of the dashboard; the newest is picked on load. The AI Defense dashboard does the same for its application, user and license panels.
 
 ## The data
 
 The full data dictionary is in [docs/data-dictionary.md](docs/data-dictionary.md), generated from the schema; `_schema.json` in the output folder has the same information for tools.
 
-- Facts: `fact_case`, `fact_detection`, `fact_detection_daily`, `fact_technique_daily`, `fact_sensor_daily`, `fact_endpoint_snapshot`, `fact_health_check_snapshot`, `fact_license`, `fact_alert`. Dimensions: `dim_tenant`, `dim_case_type`, `dim_case_status`, `dim_case_verdict`, `dim_detector`, `dim_mitre_technique`, `dim_sensor_type`. Bridges: `bridge_detection_technique`, `bridge_detection_sensor`, `bridge_detection_entity`.
+- Facts: `fact_case`, `fact_detection`, `fact_detection_daily`, `fact_technique_daily`, `fact_sensor_daily`, `fact_endpoint_snapshot`, `fact_health_check_snapshot`, `fact_license`, `fact_alert`, `fact_ai_defense_snapshot`, `fact_ai_activity`, `fact_ai_activity_daily`, `fact_ai_app_snapshot`, `fact_ai_user_snapshot`. Dimensions: `dim_tenant`, `dim_case_type`, `dim_case_status`, `dim_case_verdict`, `dim_detector`, `dim_mitre_technique`, `dim_sensor_type`, `dim_ai_app`, `dim_ai_policy`. Bridges: `bridge_detection_technique`, `bridge_detection_sensor`, `bridge_detection_entity`.
 - Every row starts with `tenant_id`, the Sophos Central tenant ID. Keys are Sophos IDs paired with `tenant_id`.
 - Timestamps are UTC ISO 8601 with `Z`. `*_local_date` columns are dates in `reportTimezone`, and `*_date_key` the same date as a number (YYYYMMDD).
-- Load modes: cases and alerts are upserted on their ID; detections are replaced inside the window each run reads; endpoints, licenses and health check scores are daily snapshots; reference lists are replaced each run.
+- Load modes: cases, alerts and AI applications are upserted on their ID; detections and AI Defense activity are replaced inside the window each run reads; endpoints, licenses, health check scores and the AI Defense inventories are daily snapshots; reference lists, AI Defense policies among them, are replaced each run.
+- AI Defense sanctioning status (APPROVED, WARNED, BLOCKED or NOT_COVERED) is what the tenant's policies give each application at the run.
 - Severity bands for detections: Critical 0.8 and up, High 0.6, Medium 0.4, Low 0.2, otherwise Info.
 - Case response time is created to closed. Sophos sends no acknowledged or first response time.
 
 ## Personal data
 
-Off by default. With it off, these columns are written empty and `bridge_detection_entity` holds only its header: case titles and close reasons, detection descriptions, endpoint hostnames, IP addresses and associated users, and alert descriptions. Turning the switch off later also empties what earlier runs wrote. IDs (case, detection, endpoint, assignee) are always exported.
+Off by default. With it off, these columns are written empty and `bridge_detection_entity` holds only its header: case titles and close reasons, detection descriptions, endpoint hostnames, IP addresses and associated users, alert descriptions, and AI Defense user names, device names and Sophos's actor IDs (a user SID, an ID made from the user's name, or an IP address). Turning the switch off later also empties what earlier runs wrote. IDs (case, detection, endpoint, assignee) are always exported. AI Defense rows always carry `user_key`, a SHA-256 hash of the tenant and the actor ID, so activity joins to users without naming them. It is pseudonymous: someone holding a list of candidate IDs can test them against it.
 
 Turn it on with `"personalData": true` or `--personal-data` only where the files are protected to the same standard as the Sophos console. In SharePoint, apply a sensitivity label to the library. Case comments, key findings and playbook data are never exported.
 
@@ -280,6 +286,7 @@ Turn it on with `"personalData": true` or `--personal-data` only where the files
 - One search returns at most 10,000 detections, so the exporter splits a busy window into time slices. A single second with more than 10,000 detections would be cut short, with a warning.
 - Endpoint health, licenses and health check scores are snapshots from the exporter's runs. There is no history before the first run.
 - Product alerts leave the Common API once acknowledged. The table keeps every alert the exporter has seen.
+- Sophos serves AI Defense activity 100 to a call, so a backfill reads 30 days by default. The application inventory leaves out training policy, compliance and category fields: the live API refused them on 07/11/2026 although the published schema lists them.
 - The Sophos Fusion GraphQL host may move to a Fusion-branded name; the exporter will need an update when it does.
 - No `.pbit` template yet: see [Power BI, recommended path](#power-bi-recommended-path).
 

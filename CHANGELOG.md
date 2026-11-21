@@ -16,3 +16,5 @@ First version, private while the live checks run.
 - Synthetic demo data.
 - The Sophos Fusion 503 for a tenant Sophos Fusion does not hold is sent once, not retried twice (NotFusion fix `5e335a4`).
 - A 429 whose Retry-After is an HTTP date pauses the credential until that date, not for the 30 s default.
+- Sophos AI Defense, from the documented AI Defense Activity and Policy GraphQL APIs: license and inventory totals, activity with daily counts, applications with their sanctioning status, users and policies, in seven new tables (schema 1.1). User and device names are personal columns; a hashed `user_key` joins activity to users.
+- An AI Defense dashboard in Grafana and an AI Defense page in the Power BI CSV path report.
