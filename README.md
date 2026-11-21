@@ -220,7 +220,9 @@ Read the warnings in [Two paths into Power BI](#alternative-a-power-bi-file-that
 1. Open `powerbi/direct/FusionDirect.pbip` in Power BI Desktop.
 2. Set the parameters: `SophosClientId`, `SophosClientSecret`, `SophosRegionHost` (the tenant's data region host from `doctor` or `GET /whoami/v1`, for example `https://api-au01.central.sophos.com`) and `DetectionDays` (1 to 30).
 3. When Power BI asks how to connect to `https://id.sophos.com`, `https://api.central.sophos.com`, the region host and `https://api.taegis.sophos.com`, choose **Anonymous** for each. The Authorization header carries the token.
-4. Publish, then in the semantic model's settings set the same four data sources to Anonymous and turn on scheduled refresh.
+4. Publish, then in the semantic model's settings set the same four data sources to Anonymous and tick **Skip test connection** for each: the service tests a source by reading its root address, which the Sophos API hosts answer with 404. Then turn on scheduled refresh.
+
+On-demand and scheduled refresh of this path in the Power BI service were verified on 21/11/2026.
 
 The tables here are a subset of the exporter's: `fact_case`, `fact_detection`, `fact_endpoint_snapshot`, `fact_alert` and `fact_license`, with the same column names. Dates are UTC dates.
 
