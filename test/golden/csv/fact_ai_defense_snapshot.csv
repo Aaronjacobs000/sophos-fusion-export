@@ -1,0 +1,2 @@
+tenant_id,snapshot_date,license_state,license_type,license_expiry_date,grace_period_ends_at,renewal_pending,onboarding_status,license_refreshed_at,window_days,apps,apps_critical,apps_high,apps_medium,apps_low,apps_info,apps_unknown,apps_error,apps_train_on_data,apps_unsanctioned,users,users_critical,users_high,users_medium,users_low,users_info,users_unknown,users_with_violations,users_unsanctioned
+11111111-2222-4333-8444-555555555555,2026-11-21,ACTIVE,TERM,2027-06-30,2027-07-30T23:59:59Z,false,COMPLETED,2026-11-21T01:00:41Z,30,3,1,0,0,2,0,0,0,1,1,3,1,0,0,2,0,0,1,1

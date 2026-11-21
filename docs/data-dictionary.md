@@ -1,6 +1,6 @@
 # Data dictionary
 
-Schema version 1.0. Generated from `src/schema/tables.ts` by `fusion-export schema`; do not edit by hand.
+Schema version 1.1. Generated from `src/schema/tables.ts` by `fusion-export schema`; do not edit by hand.
 
 Every file is UTF-8 CSV with a header row. Every row starts with `tenant_id`. Timestamps are UTC ISO 8601 with `Z`; `*_local_date` and `snapshot_date` are dates in the configured report time zone. Empty means no value. Columns marked personal are empty unless the personal data switch is on.
 
@@ -364,4 +364,196 @@ Key: `tenant_id`, `alert_id`. Upsert on the key. Rows are replaced, never remove
 | `event_count` | integer | Events correlated into the alert. |
 | `description` | string | Alert text. Often names hosts and users, so it is personal data. Personal. |
 | `last_seen_open_at` | datetime | Last export run that still saw the alert in the API. |
+
+## fact_ai_defense_snapshot
+
+Sophos AI Defense status and Sophos's own inventory totals, one snapshot a day. The totals cover the inventory window (aiDefense.inventoryDays) ending at the export.
+
+Key: `tenant_id`, `snapshot_date`. One snapshot a day. A rerun the same day replaces that day's rows.
+
+| Column | Type | Description |
+| --- | --- | --- |
+| `tenant_id` | string | Sophos Central tenant ID (a UUID). |
+| `snapshot_date` | date | Day of the snapshot in the report time zone. |
+| `license_state` | string | ACTIVE, GRACE_PERIOD or EXPIRED. Empty when the tenant has no AI Defense settings record (no AI Defense). |
+| `license_type` | string | License type Sophos reports, for example TERM or TRIAL. |
+| `license_expiry_date` | date | When the AI Defense license ends. |
+| `grace_period_ends_at` | datetime | When the grace period after expiry ends. |
+| `renewal_pending` | boolean | A renewal Sophos has detected and nobody has acknowledged yet. |
+| `onboarding_status` | string | NOT_STARTED, IN_PROGRESS or COMPLETED. |
+| `license_refreshed_at` | datetime | When Sophos last read the license. |
+| `window_days` | integer | Days the inventory totals cover. |
+| `apps` | integer | AI applications in the inventory window. |
+| `apps_critical` | integer | Of those, critical risk. |
+| `apps_high` | integer | High risk. |
+| `apps_medium` | integer | Medium risk. |
+| `apps_low` | integer | Low risk. |
+| `apps_info` | integer | Informational risk. |
+| `apps_unknown` | integer | Risk not classified. |
+| `apps_error` | integer | Risk lookup failed. |
+| `apps_train_on_data` | integer | Apps known to train on user data, including those that do by default with an opt out. Empty when Sophos sends none. |
+| `apps_unsanctioned` | integer | Apps used with no policy covering them. |
+| `users` | integer | Users seen using AI applications in the window. |
+| `users_critical` | integer | Users whose worst activity was critical risk. |
+| `users_high` | integer | High risk. |
+| `users_medium` | integer | Medium risk. |
+| `users_low` | integer | Low risk. |
+| `users_info` | integer | Informational risk. |
+| `users_unknown` | integer | Risk not classified. |
+| `users_with_violations` | integer | Users with at least one blocked, warned or modified activity. |
+| `users_unsanctioned` | integer | Users of apps no policy covers. |
+
+## fact_ai_activity
+
+Sophos AI Defense activity, one row per activity (Sophos folds related telemetry into one activity). The last aiDefense.trailingDays are read again on every run.
+
+Key: `tenant_id`, `activity_id`. The re-read window is replaced on every run. Rows before it are settled.
+
+| Column | Type | Description |
+| --- | --- | --- |
+| `tenant_id` | string | Sophos Central tenant ID (a UUID). |
+| `activity_id` | string | Activity ID. |
+| `start_time` | datetime | When the activity started. |
+| `end_time` | datetime | When the activity ended. |
+| `start_local_date` | date | start_time as a date in the report time zone. |
+| `start_date_key` | integer | start_local_date as a number, YYYYMMDD. |
+| `action` | string | ALLOWED, BLOCKED, WARNED, MODIFIED or UNKNOWN. Empty when the sensor reported none. |
+| `risk` | string | CRITICAL, HIGH, MEDIUM, LOW, INFO, UNKNOWN or ERROR. |
+| `risk_rank` | integer | 5 CRITICAL, 4 HIGH, 3 MEDIUM, 2 LOW, 1 INFO, 0 otherwise, for sorting. |
+| `application_id` | string | AI application ID (dim_ai_app), for example chatgpt. |
+| `application_name` | string | AI application name. |
+| `provider` | string | Company behind the application, when Sophos knows it. |
+| `model_provider` | string | Company providing the model used, when Sophos knows it. |
+| `model` | string | Model used, when Sophos knows it. |
+| `user_key` | string | A one-way hash of the tenant and Sophos's actor ID, always written, so activity joins to users without naming them. Pseudonymous, not anonymous. |
+| `actor_type` | string | USER, SYSTEM, SERVICE, PROCESS, NETWORK_ENTITY or UNKNOWN. |
+| `actor_id` | string | Sophos's actor ID: a user SID, or an ID made from the actor's name. Can be an IP address, so it is personal data. Personal. |
+| `actor_name` | string | User or actor name. Personal. |
+| `device_id` | string | Device ID: the Sophos endpoint ID, or the firewall's ID for firewall traffic. |
+| `device_name` | string | Device name. Personal. |
+| `device_type` | string | COMPUTER, SERVER, SECURITY_VM or UNKNOWN. |
+| `device_platform` | string | WINDOWS, MACOS, LINUX, IOS, ANDROID or UNKNOWN. |
+| `sensor_types` | string | Sensor types that saw the activity, joined with \|, for example ENDPOINT\|FIREWALL. |
+| `sensors` | string | Sensor names joined with \|, for example SFOS\|SOPHOS_ENDPOINT. |
+| `policy_id` | string | AI Defense policy that set the action (dim_ai_policy). Empty when none was recorded. |
+| `policy_name` | string | That policy's name when the activity was recorded. |
+| `unsanctioned` | boolean | Allowed, for an app no policy covers. |
+| `records` | integer | Telemetry records folded into the activity. At least 1. |
+| `exported_at` | datetime | When this row was last written. |
+
+## fact_ai_activity_daily
+
+AI Defense activity counts by day, application, action and risk. Kept after activity detail is pruned.
+
+Key: `tenant_id`, `local_date`, `application_id`, `action`, `risk`. The re-read window is replaced on every run. Rows before it are settled.
+
+| Column | Type | Description |
+| --- | --- | --- |
+| `tenant_id` | string | Sophos Central tenant ID (a UUID). |
+| `local_date` | date | Day in the report time zone. |
+| `date_key` | integer | local_date as a number, YYYYMMDD. |
+| `application_id` | string | AI application ID (dim_ai_app). |
+| `action` | string | ALLOWED, BLOCKED, WARNED, MODIFIED, UNKNOWN, or empty when none was reported. |
+| `risk` | string | Activity risk. |
+| `risk_rank` | integer | 5 CRITICAL down to 1 INFO, 0 otherwise. |
+| `activities` | integer | Activities that started that day. |
+| `records` | integer | Telemetry records in those activities. |
+| `unsanctioned_activities` | integer | Of the activities, those allowed for an app no policy covers. |
+| `application_name` | string | Application name, repeated for tools that can't join to dim_ai_app. |
+
+## dim_ai_app
+
+AI applications seen in activity or the inventory, with the sanctioning status the tenant's policies give each one now.
+
+Key: `tenant_id`, `application_id`. Upsert on the key. Rows are replaced, never removed.
+
+| Column | Type | Description |
+| --- | --- | --- |
+| `tenant_id` | string | Sophos Central tenant ID (a UUID). |
+| `application_id` | string | AI application ID. |
+| `application_name` | string | Application name. |
+| `provider` | string | Company behind the application. |
+| `risk` | string | Application risk Sophos assigns. |
+| `risk_rank` | integer | 5 CRITICAL down to 1 INFO, 0 otherwise. |
+| `sanctioning_status` | string | APPROVED, BLOCKED, WARNED or NOT_COVERED, from the tenant's policies at the last export. Empty when not read. |
+| `sanctioning_policies` | string | Policies that set the status, joined with \|. |
+| `last_seen_at` | datetime | Latest activity the exporter has seen for the application. |
+| `updated_at` | datetime | When this row was last written. |
+
+## fact_ai_app_snapshot
+
+The AI application inventory, one snapshot a day: use, users and sanctioning per application over the inventory window.
+
+Key: `tenant_id`, `snapshot_date`, `application_id`. One snapshot a day. A rerun the same day replaces that day's rows.
+
+| Column | Type | Description |
+| --- | --- | --- |
+| `tenant_id` | string | Sophos Central tenant ID (a UUID). |
+| `snapshot_date` | date | Day of the snapshot in the report time zone. |
+| `application_id` | string | AI application ID (dim_ai_app). |
+| `application_name` | string | Application name. |
+| `provider` | string | Company behind the application. |
+| `risk` | string | Application risk. |
+| `risk_rank` | integer | 5 CRITICAL down to 1 INFO, 0 otherwise. |
+| `sanctioning_status` | string | APPROVED, BLOCKED, WARNED or NOT_COVERED, at the snapshot. |
+| `window_days` | integer | Days the counts cover, ending at the export. |
+| `activities` | integer | Activities for the application in the window. |
+| `unique_users` | integer | Distinct users of the application in the window. |
+| `unsanctioned_activities` | integer | Activities allowed with no policy covering the application. |
+| `last_seen_at` | datetime | Latest activity in the window. Empty for a catalog entry with no activity. |
+
+## fact_ai_user_snapshot
+
+The AI user inventory, one snapshot a day: each user's AI use and risk over the inventory window. Names and Sophos's actor IDs are written only with the personal data switch on.
+
+Key: `tenant_id`, `snapshot_date`, `user_key`. One snapshot a day. A rerun the same day replaces that day's rows.
+
+| Column | Type | Description |
+| --- | --- | --- |
+| `tenant_id` | string | Sophos Central tenant ID (a UUID). |
+| `snapshot_date` | date | Day of the snapshot in the report time zone. |
+| `user_key` | string | A one-way hash of the tenant and Sophos's actor ID (as in fact_ai_activity). Pseudonymous, not anonymous. |
+| `user_id` | string | Sophos's actor ID. Personal. |
+| `user_name` | string | User name. Personal. |
+| `risk` | string | Worst activity risk for the user in the window. |
+| `risk_rank` | integer | 5 CRITICAL down to 1 INFO, 0 otherwise. |
+| `apps_used` | integer | Distinct AI applications the user used. |
+| `activities` | integer | The user's activities in the window. |
+| `policy_violations` | integer | Activities blocked, warned or modified. |
+| `unsanctioned_activities` | integer | Activities allowed for apps no policy covers. |
+| `top_app_id` | string | The application the user used most (dim_ai_app). |
+| `top_app_name` | string | Its name. |
+| `first_seen_at` | datetime | First activity in the window. |
+| `last_seen_at` | datetime | Latest activity in the window. |
+| `window_days` | integer | Days the counts cover, ending at the export. |
+
+## dim_ai_policy
+
+AI Defense policies, in the order Sophos checks them. The current list, replaced on every run.
+
+Key: `tenant_id`, `policy_id`. The current list, replaced on every run.
+
+| Column | Type | Description |
+| --- | --- | --- |
+| `tenant_id` | string | Sophos Central tenant ID (a UUID). |
+| `policy_id` | string | Policy ID. |
+| `policy_name` | string | Policy name. |
+| `rank` | integer | 1 is checked first. |
+| `state` | string | ENABLED or DISABLED. |
+| `enforcement_status` | string | INACTIVE, PENDING, ENFORCED or FAILED. |
+| `origin` | string | CUSTOM, BUILT_IN or PARTNER. |
+| `kind` | string | TENANT or TENANT_BASE. |
+| `built_in_key` | string | Template a built-in policy came from. |
+| `rules` | integer | Rules in the policy. |
+| `block_rules` | integer | Rules that block. |
+| `warn_rules` | integer | Rules that warn. |
+| `allow_rules` | integer | Rules that allow. |
+| `generative_ai_category_action` | string | BLOCK, WARN or ALLOW for Generative AI web traffic no rule matched. |
+| `app_control_category_action` | string | The same for application control, when set. |
+| `endpoint_enabled` | boolean | The policy applies through Sophos Endpoint. |
+| `firewall_enabled` | boolean | Through Sophos Firewall. |
+| `dns_enabled` | boolean | Through Sophos DNS Protection. |
+| `browser_enabled` | boolean | Through the browser extension. |
+| `created_at` | datetime | When the policy was created. |
+| `updated_at` | datetime | When the policy last changed. |
 

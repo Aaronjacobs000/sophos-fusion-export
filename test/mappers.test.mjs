@@ -8,6 +8,7 @@ import { mapDetection, dailyCounts, breakdownCounts, severityBand, detectionQuer
 import { mapEndpoint, flattenHealthCheck } from "../dist/datasets/endpoints.js";
 import { mapAlert } from "../dist/datasets/alerts.js";
 import { sensorLabel } from "../dist/datasets/sensor-labels.js";
+import { mapAiActivity, aiActivityDaily, mapAiApp, mapAiUser, mapAiPolicy, mapAiDefenseSnapshot, sanctioningByApp, uniqueActivities, riskRank, userKey } from "../dist/datasets/ai-defense.js";
 import { TABLES, table } from "../dist/schema/tables.js";
 
 const T = "11111111-2222-4333-8444-555555555555";
@@ -186,6 +187,88 @@ test("alerts: raised time, local date and the device", () => {
   assert.equal(wifi.managed_agent_id, null);
   assert.equal(malware.managed_agent_type, "computer");
   assert.equal(malware.last_seen_open_at, "2026-11-21T08:00:00Z");
+});
+
+test("AI Defense activity: times, risk, the hashed user key and empty policy fields", () => {
+  const list = [...fixture("ai-activities-page.json").data.activities.activities, ...fixture("ai-activities-page-2.json").data.activities.activities];
+  const [copilot, blocked, firewall, unsanctioned] = list.map((a) => mapAiActivity(a, T, TZ, NOW));
+  matchesTable(copilot, "fact_ai_activity");
+  assert.equal(copilot.start_time, "2026-11-19T01:15:02Z");
+  assert.equal(copilot.start_local_date, "2026-11-19");
+  assert.equal(copilot.start_date_key, 20261119);
+  assert.equal(copilot.records, 12);
+  assert.equal(copilot.sensor_types, "ENDPOINT");
+  assert.equal(copilot.policy_name, "Example standard");
+  assert.match(copilot.user_key, /^[0-9a-f]{32}$/);
+  assert.equal(copilot.user_key, userKey(T, "S-1-5-21-1000000001-1000000002-1000000003-1104"));
+  assert.notEqual(copilot.user_key, userKey("another-tenant", "S-1-5-21-1000000001-1000000002-1000000003-1104"), "the key depends on the tenant");
+  assert.equal(blocked.start_time, "2026-11-19T22:05:11Z", "fractions are dropped");
+  assert.equal(blocked.start_local_date, "2026-11-20", "the local date is Sydney's");
+  assert.equal(blocked.risk_rank, 5);
+  assert.equal(firewall.action, null, "a null action stays empty");
+  assert.equal(firewall.policy_id, null, "an empty policyId is empty, not a blank string");
+  assert.equal(firewall.records, 48, "Int64 as a string");
+  assert.equal(firewall.actor_type, "NETWORK_ENTITY");
+  assert.equal(firewall.device_id, "C01000EXAMPLE01");
+  assert.equal(unsanctioned.unsanctioned, true);
+  assert.equal(unsanctioned.sensor_types, "ENDPOINT|FIREWALL");
+  assert.equal(unsanctioned.model, null);
+  assert.equal(uniqueActivities([...list, list[0]]).length, list.length);
+  assert.equal(userKey(T, ""), null);
+});
+
+test("AI Defense daily counts: one row per day, app, action and risk", () => {
+  const list = fixture("ai-activities-page.json").data.activities.activities.map((a) => mapAiActivity(a, T, TZ, NOW));
+  const daily = aiActivityDaily([...list, list[0]], T);
+  daily.forEach((r) => matchesTable(r, "fact_ai_activity_daily"));
+  const copilot = daily.find((r) => r.application_id === "microsoft-copilot");
+  assert.equal(copilot.activities, 2);
+  assert.equal(copilot.records, 24);
+  assert.equal(daily.find((r) => r.application_id === "chatgpt").action, null);
+  assert.equal(daily.length, 3);
+});
+
+test("AI Defense apps, sanctioning, users, policies and the status snapshot", () => {
+  const sanctioning = sanctioningByApp(fixture("ai-app-sanctioning.json").data.appSanctioning.entries);
+  assert.deepEqual(sanctioning.get("deepseek"), { status: "BLOCKED", policies: "Example standard" });
+  const apps = fixture("ai-app-inventory.json").data.appInventory.entries.map((a) => mapAiApp(a, T, "2026-11-21", 30, sanctioning));
+  apps.forEach((r) => matchesTable(r, "fact_ai_app_snapshot"));
+  const chat = apps.find((r) => r.application_id === "chatgpt");
+  assert.equal(chat.activities, 272);
+  assert.equal(chat.sanctioning_status, "WARNED");
+  assert.equal(chat.last_seen_at, "2026-11-21T02:10:30Z");
+  assert.equal(apps.find((r) => r.application_id === "deepseek").last_seen_at, null);
+  assert.equal(mapAiApp({ id: "unknown-app", name: "Unknown" }, T, "2026-11-21", 30, sanctioning).sanctioning_status, null);
+
+  const [user] = fixture("ai-user-inventory.json").data.userInventory.entries.map((u) => mapAiUser(u, T, "2026-11-21", 30));
+  matchesTable(user, "fact_ai_user_snapshot");
+  assert.equal(user.user_key, userKey(T, user.user_id), "the user key matches the activity user key");
+  assert.equal(user.policy_violations, 14);
+  assert.equal(user.top_app_id, "microsoft-copilot");
+
+  const [standard, education] = fixture("ai-policies.json").data.policies.policies.map((p) => mapAiPolicy(p, T));
+  matchesTable(standard, "dim_ai_policy");
+  assert.equal(standard.rules, 3);
+  assert.equal(standard.block_rules, 1);
+  assert.equal(standard.dns_enabled, false, "a sensor Sophos sends as null is off");
+  assert.equal(standard.created_at, "2026-07-23T15:56:53Z");
+  assert.equal(education.rank, 2);
+  assert.equal(education.app_control_category_action, "WARN");
+
+  const overview = fixture("ai-defense-overview.json").data;
+  const snap = mapAiDefenseSnapshot(overview.secureAITenantSettings, overview.inventorySummary, T, "2026-11-21", 30);
+  matchesTable(snap, "fact_ai_defense_snapshot");
+  assert.equal(snap.license_state, "ACTIVE");
+  assert.equal(snap.license_expiry_date, "2027-06-30");
+  assert.equal(snap.apps_train_on_data, 1);
+  assert.equal(snap.users_with_violations, 1);
+  const none = mapAiDefenseSnapshot(null, { apps: {}, users: {} }, T, "2026-11-21", 30);
+  assert.equal(none.license_state, null);
+  assert.equal(none.renewal_pending, null);
+  assert.equal(none.apps, 0);
+  assert.equal(none.apps_train_on_data, null);
+  assert.equal(riskRank("info"), 1);
+  assert.equal(riskRank("ERROR"), 0);
 });
 
 test("sensor labels", () => {

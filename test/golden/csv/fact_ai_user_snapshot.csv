@@ -1,0 +1,4 @@
+tenant_id,snapshot_date,user_key,user_id,user_name,risk,risk_rank,apps_used,activities,policy_violations,unsanctioned_activities,top_app_id,top_app_name,first_seen_at,last_seen_at,window_days
+11111111-2222-4333-8444-555555555555,2026-11-21,8ec12e0e8a35d5197d9614183346d511,,,LOW,2,1,5,0,5,chatgpt,ChatGPT,2026-11-10T02:10:09Z,2026-11-21T02:10:30Z,30
+11111111-2222-4333-8444-555555555555,2026-11-21,9d513c995e9e76a0e6bdd84f06d015c1,,,CRITICAL,5,2,310,14,0,microsoft-copilot,Microsoft Copilot,2026-10-23T01:00:00Z,2026-11-21T07:30:52Z,30
+11111111-2222-4333-8444-555555555555,2026-11-21,b8272c0647e6b271bdd93e7085bef58f,,,LOW,2,1,267,0,0,chatgpt,ChatGPT,2026-10-25T03:30:00Z,2026-11-20T03:41:12Z,30

@@ -1,0 +1,63 @@
+{
+  "data": {
+    "appSanctioning": {
+      "entries": [
+        {
+          "appId": "microsoft-copilot",
+          "status": "APPROVED",
+          "enforcementTargets": [
+            {
+              "mechanism": "WEB_CONTROL",
+              "status": "APPROVED",
+              "matchedPolicy": {
+                "id": "11111111-aaaa-4bbb-8ccc-000000000001",
+                "name": "Example standard"
+              }
+            },
+            {
+              "mechanism": "APP_CONTROL",
+              "status": "APPROVED",
+              "matchedPolicy": {
+                "id": "11111111-aaaa-4bbb-8ccc-000000000001",
+                "name": "Example standard"
+              }
+            }
+          ]
+        },
+        {
+          "appId": "chatgpt",
+          "status": "WARNED",
+          "enforcementTargets": [
+            {
+              "mechanism": "WEB_CONTROL",
+              "status": "WARNED",
+              "matchedPolicy": {
+                "id": "11111111-aaaa-4bbb-8ccc-000000000001",
+                "name": "Example standard"
+              }
+            }
+          ]
+        },
+        {
+          "appId": "deepseek",
+          "status": "BLOCKED",
+          "enforcementTargets": [
+            {
+              "mechanism": "WEB_CONTROL",
+              "status": "BLOCKED",
+              "matchedPolicy": {
+                "id": "11111111-aaaa-4bbb-8ccc-000000000001",
+                "name": "Example standard"
+              }
+            },
+            {
+              "mechanism": "APP_CONTROL",
+              "status": "BLOCKED",
+              "matchedPolicy": null
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

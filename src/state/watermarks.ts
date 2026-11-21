@@ -10,6 +10,12 @@ export interface TenantWatermarks {
   detectionsWindowStart?: string;
   /** Earliest local date a backfill covered. */
   backfilledFrom?: string;
+  /** Start of the last AI Defense activity window read. */
+  aiActivitiesWindowStart?: string;
+  /** End of the last AI Defense activity window read in full. The next run reads from no later than this day. */
+  aiActivitiesReadTo?: string;
+  /** Earliest local date an AI Defense backfill covered. */
+  aiBackfilledFrom?: string;
   lastRunAt?: string;
   lastMode?: "run" | "backfill";
 }

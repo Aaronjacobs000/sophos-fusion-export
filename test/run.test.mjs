@@ -229,3 +229,67 @@ test("detail past retention is pruned while the daily counts stay", async () => 
     await rm(dir, { recursive: true, force: true });
   }
 });
+
+const aiOps = (sophos) => sophos.requests.filter((r) => r.operation?.startsWith("ExportAi"));
+
+test("AI Defense: a tenant without it costs one call and leaves only the status row", async () => {
+  const dir = await scratch();
+  try {
+    const sophos = fakeSophos({
+      overrides: {
+        ExportAiDefenseOverview: () => ({ data: { secureAITenantSettings: null, inventorySummary: { apps: { totalApps: 0 }, users: { totalUsers: 0 } } } }),
+      },
+    });
+    const { summary } = await exportOnce(dir, { sophos });
+    assert.equal(summary.ok, true);
+    assert.equal(aiOps(sophos).length, 1);
+    assert.match(summary.datasets.aiDefense.notes[0], /No AI Defense/);
+    const status = parseCsv(await readFile(join(dir, "fact_ai_defense_snapshot.csv"), "utf8")).rows;
+    assert.equal(status.length, 1);
+    assert.equal(status[0].license_state, "");
+    assert.equal(parseCsv(await readFile(join(dir, "fact_ai_activity.csv"), "utf8")).rows.length, 0);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("AI Defense: a refused credential is a warning, not a failed run", async () => {
+  const dir = await scratch();
+  try {
+    const sophos = fakeSophos({ overrides: { ExportAiDefenseOverview: () => ({ errors: [{ message: "not authorized to access SecureAI" }], data: null }) } });
+    const { summary } = await exportOnce(dir, { sophos });
+    assert.equal(summary.datasets.aiDefense.ok, true);
+    assert.ok(summary.warnings.some((w) => /refused the AI Defense APIs/.test(w)));
+    assert.equal(summary.ok, true);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("AI Defense: activity gone from the window is removed, and a run after a gap reads from the last full read", async () => {
+  const dir = await scratch();
+  try {
+    await exportOnce(dir);
+    const marks = JSON.parse(await readFile(join(dir, "_state/watermarks.json"), "utf8"));
+    const tenant = Object.values(marks.tenants)[0];
+    assert.equal(tenant.aiActivitiesReadTo, "2026-11-21T08:00:00Z");
+    assert.equal(tenant.aiBackfilledFrom, "2026-11-18");
+
+    // Ten days later, with the default 3 trailing days, the run starts at the last full read instead.
+    const second = fixture("ai-activities-page.json");
+    second.data.activities.activities = second.data.activities.activities.slice(1);
+    second.data.activities.pageInfo = { hasNextPage: false, endCursor: null };
+    second.data.activities.totalCount = 2;
+    const sophos = fakeSophos({ overrides: { ExportAiActivities: () => second } });
+    await exportOnce(dir, { sophos, mode: "run", now: new Date("2026-12-01T08:00:00Z") });
+    const read = aiOps(sophos).find((r) => r.operation === "ExportAiActivities");
+    assert.equal(read.variables.filter.timeRange.startTime, "2026-11-20T13:00:00.000Z", "from local midnight of 21/11 in Sydney");
+    const ids = parseCsv(await readFile(join(dir, "fact_ai_activity.csv"), "utf8")).rows.map((r) => r.activity_id.split(":").pop());
+    // 200001 and 200002 are before the window and stay; 200004 was in the window and is gone from Sophos's answer.
+    assert.deepEqual(ids.sort(), ["200001", "200002", "200003"]);
+    const daily = parseCsv(await readFile(join(dir, "fact_ai_activity_daily.csv"), "utf8")).rows;
+    assert.ok(!daily.some((r) => r.local_date === "2026-11-21"), "the daily counts inside the window are replaced too");
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});

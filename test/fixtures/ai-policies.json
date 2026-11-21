@@ -1,0 +1,97 @@
+{
+  "data": {
+    "policies": {
+      "totalCount": 2,
+      "pageInfo": {
+        "hasNextPage": false,
+        "endCursor": null
+      },
+      "policies": [
+        {
+          "id": "11111111-aaaa-4bbb-8ccc-000000000001",
+          "name": "Example standard",
+          "rank": 1,
+          "priority": 0.000476837158203125,
+          "state": "ENABLED",
+          "enforcementStatus": "ENFORCED",
+          "origin": "CUSTOM",
+          "kind": "TENANT",
+          "builtInKey": null,
+          "createdAt": "2026-07-23T15:56:53.966335Z",
+          "updatedAt": "2026-11-18T17:40:10.021618Z",
+          "rules": [
+            {
+              "position": 0,
+              "action": "WARN"
+            },
+            {
+              "position": 1,
+              "action": "ALLOW"
+            },
+            {
+              "position": 2,
+              "action": "BLOCK"
+            }
+          ],
+          "baseRule": {
+            "generativeAiCategoryAction": "BLOCK",
+            "appControlCategoryAction": null
+          },
+          "sensors": {
+            "endpoint": {
+              "enabled": true
+            },
+            "firewall": {
+              "enabled": true
+            },
+            "dns": null,
+            "browser": null
+          }
+        },
+        {
+          "id": "11111111-aaaa-4bbb-8ccc-000000000002",
+          "name": "Education and public sector",
+          "rank": "2",
+          "priority": 0.00095367431640625,
+          "state": "DISABLED",
+          "enforcementStatus": "INACTIVE",
+          "origin": "BUILT_IN",
+          "kind": "TENANT",
+          "builtInKey": "education-v1",
+          "createdAt": "2026-08-20T17:04:23.880857Z",
+          "updatedAt": "2026-11-18T17:39:59.38878Z",
+          "rules": [
+            {
+              "position": 0,
+              "action": "WARN"
+            },
+            {
+              "position": 1,
+              "action": "BLOCK"
+            },
+            {
+              "position": 2,
+              "action": "BLOCK"
+            }
+          ],
+          "baseRule": {
+            "generativeAiCategoryAction": "ALLOW",
+            "appControlCategoryAction": "WARN"
+          },
+          "sensors": {
+            "endpoint": {
+              "enabled": true
+            },
+            "firewall": {
+              "enabled": false
+            },
+            "dns": {
+              "enabled": false
+            },
+            "browser": null
+          }
+        }
+      ]
+    }
+  }
+}

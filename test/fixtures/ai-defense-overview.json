@@ -1,0 +1,40 @@
+{
+  "data": {
+    "secureAITenantSettings": {
+      "onboarding": {
+        "status": "COMPLETED"
+      },
+      "licenseState": "ACTIVE",
+      "licenseType": "TERM",
+      "licenseExpiryDate": "2027-06-30T23:59:59.999Z",
+      "gracePeriodEndsAt": "2027-07-30T23:59:59.999Z",
+      "renewalPending": false,
+      "refreshedAt": "2026-11-21T01:00:41.521401Z"
+    },
+    "inventorySummary": {
+      "apps": {
+        "totalApps": 3,
+        "criticalRisk": 1,
+        "highRisk": 0,
+        "mediumRisk": 0,
+        "lowRisk": 2,
+        "infoRisk": 0,
+        "unknownRisk": 0,
+        "errorRisk": 0,
+        "trainsOnData": 1,
+        "unsanctionedCount": 1
+      },
+      "users": {
+        "totalUsers": 3,
+        "criticalRisk": 1,
+        "highRisk": 0,
+        "mediumRisk": 0,
+        "lowRisk": 2,
+        "infoRisk": 0,
+        "unknownRisk": 0,
+        "withViolations": 1,
+        "unsanctionedCount": 1
+      }
+    }
+  }
+}

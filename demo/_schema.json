@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "1.0",
+  "schemaVersion": "1.1",
   "generator": "sophos-fusion-export",
   "conventions": {
     "encoding": "UTF-8, no byte order mark",
@@ -1428,6 +1428,883 @@
           "type": "datetime",
           "personal": false,
           "description": "Last export run that still saw the alert in the API."
+        }
+      ]
+    },
+    {
+      "name": "fact_ai_defense_snapshot",
+      "file": "fact_ai_defense_snapshot.csv",
+      "version": "1.0",
+      "description": "Sophos AI Defense status and Sophos's own inventory totals, one snapshot a day. The totals cover the inventory window (aiDefense.inventoryDays) ending at the export.",
+      "load": "snapshot",
+      "key": [
+        "tenant_id",
+        "snapshot_date"
+      ],
+      "personalOnly": false,
+      "columns": [
+        {
+          "name": "tenant_id",
+          "type": "string",
+          "personal": false,
+          "description": "Sophos Central tenant ID (a UUID)."
+        },
+        {
+          "name": "snapshot_date",
+          "type": "date",
+          "personal": false,
+          "description": "Day of the snapshot in the report time zone."
+        },
+        {
+          "name": "license_state",
+          "type": "string",
+          "personal": false,
+          "description": "ACTIVE, GRACE_PERIOD or EXPIRED. Empty when the tenant has no AI Defense settings record (no AI Defense)."
+        },
+        {
+          "name": "license_type",
+          "type": "string",
+          "personal": false,
+          "description": "License type Sophos reports, for example TERM or TRIAL."
+        },
+        {
+          "name": "license_expiry_date",
+          "type": "date",
+          "personal": false,
+          "description": "When the AI Defense license ends."
+        },
+        {
+          "name": "grace_period_ends_at",
+          "type": "datetime",
+          "personal": false,
+          "description": "When the grace period after expiry ends."
+        },
+        {
+          "name": "renewal_pending",
+          "type": "boolean",
+          "personal": false,
+          "description": "A renewal Sophos has detected and nobody has acknowledged yet."
+        },
+        {
+          "name": "onboarding_status",
+          "type": "string",
+          "personal": false,
+          "description": "NOT_STARTED, IN_PROGRESS or COMPLETED."
+        },
+        {
+          "name": "license_refreshed_at",
+          "type": "datetime",
+          "personal": false,
+          "description": "When Sophos last read the license."
+        },
+        {
+          "name": "window_days",
+          "type": "integer",
+          "personal": false,
+          "description": "Days the inventory totals cover."
+        },
+        {
+          "name": "apps",
+          "type": "integer",
+          "personal": false,
+          "description": "AI applications in the inventory window."
+        },
+        {
+          "name": "apps_critical",
+          "type": "integer",
+          "personal": false,
+          "description": "Of those, critical risk."
+        },
+        {
+          "name": "apps_high",
+          "type": "integer",
+          "personal": false,
+          "description": "High risk."
+        },
+        {
+          "name": "apps_medium",
+          "type": "integer",
+          "personal": false,
+          "description": "Medium risk."
+        },
+        {
+          "name": "apps_low",
+          "type": "integer",
+          "personal": false,
+          "description": "Low risk."
+        },
+        {
+          "name": "apps_info",
+          "type": "integer",
+          "personal": false,
+          "description": "Informational risk."
+        },
+        {
+          "name": "apps_unknown",
+          "type": "integer",
+          "personal": false,
+          "description": "Risk not classified."
+        },
+        {
+          "name": "apps_error",
+          "type": "integer",
+          "personal": false,
+          "description": "Risk lookup failed."
+        },
+        {
+          "name": "apps_train_on_data",
+          "type": "integer",
+          "personal": false,
+          "description": "Apps known to train on user data, including those that do by default with an opt out. Empty when Sophos sends none."
+        },
+        {
+          "name": "apps_unsanctioned",
+          "type": "integer",
+          "personal": false,
+          "description": "Apps used with no policy covering them."
+        },
+        {
+          "name": "users",
+          "type": "integer",
+          "personal": false,
+          "description": "Users seen using AI applications in the window."
+        },
+        {
+          "name": "users_critical",
+          "type": "integer",
+          "personal": false,
+          "description": "Users whose worst activity was critical risk."
+        },
+        {
+          "name": "users_high",
+          "type": "integer",
+          "personal": false,
+          "description": "High risk."
+        },
+        {
+          "name": "users_medium",
+          "type": "integer",
+          "personal": false,
+          "description": "Medium risk."
+        },
+        {
+          "name": "users_low",
+          "type": "integer",
+          "personal": false,
+          "description": "Low risk."
+        },
+        {
+          "name": "users_info",
+          "type": "integer",
+          "personal": false,
+          "description": "Informational risk."
+        },
+        {
+          "name": "users_unknown",
+          "type": "integer",
+          "personal": false,
+          "description": "Risk not classified."
+        },
+        {
+          "name": "users_with_violations",
+          "type": "integer",
+          "personal": false,
+          "description": "Users with at least one blocked, warned or modified activity."
+        },
+        {
+          "name": "users_unsanctioned",
+          "type": "integer",
+          "personal": false,
+          "description": "Users of apps no policy covers."
+        }
+      ]
+    },
+    {
+      "name": "fact_ai_activity",
+      "file": "fact_ai_activity.csv",
+      "version": "1.0",
+      "description": "Sophos AI Defense activity, one row per activity (Sophos folds related telemetry into one activity). The last aiDefense.trailingDays are read again on every run.",
+      "load": "window",
+      "key": [
+        "tenant_id",
+        "activity_id"
+      ],
+      "personalOnly": false,
+      "columns": [
+        {
+          "name": "tenant_id",
+          "type": "string",
+          "personal": false,
+          "description": "Sophos Central tenant ID (a UUID)."
+        },
+        {
+          "name": "activity_id",
+          "type": "string",
+          "personal": false,
+          "description": "Activity ID."
+        },
+        {
+          "name": "start_time",
+          "type": "datetime",
+          "personal": false,
+          "description": "When the activity started."
+        },
+        {
+          "name": "end_time",
+          "type": "datetime",
+          "personal": false,
+          "description": "When the activity ended."
+        },
+        {
+          "name": "start_local_date",
+          "type": "date",
+          "personal": false,
+          "description": "start_time as a date in the report time zone."
+        },
+        {
+          "name": "start_date_key",
+          "type": "integer",
+          "personal": false,
+          "description": "start_local_date as a number, YYYYMMDD."
+        },
+        {
+          "name": "action",
+          "type": "string",
+          "personal": false,
+          "description": "ALLOWED, BLOCKED, WARNED, MODIFIED or UNKNOWN. Empty when the sensor reported none."
+        },
+        {
+          "name": "risk",
+          "type": "string",
+          "personal": false,
+          "description": "CRITICAL, HIGH, MEDIUM, LOW, INFO, UNKNOWN or ERROR."
+        },
+        {
+          "name": "risk_rank",
+          "type": "integer",
+          "personal": false,
+          "description": "5 CRITICAL, 4 HIGH, 3 MEDIUM, 2 LOW, 1 INFO, 0 otherwise, for sorting."
+        },
+        {
+          "name": "application_id",
+          "type": "string",
+          "personal": false,
+          "description": "AI application ID (dim_ai_app), for example chatgpt."
+        },
+        {
+          "name": "application_name",
+          "type": "string",
+          "personal": false,
+          "description": "AI application name."
+        },
+        {
+          "name": "provider",
+          "type": "string",
+          "personal": false,
+          "description": "Company behind the application, when Sophos knows it."
+        },
+        {
+          "name": "model_provider",
+          "type": "string",
+          "personal": false,
+          "description": "Company providing the model used, when Sophos knows it."
+        },
+        {
+          "name": "model",
+          "type": "string",
+          "personal": false,
+          "description": "Model used, when Sophos knows it."
+        },
+        {
+          "name": "user_key",
+          "type": "string",
+          "personal": false,
+          "description": "A one-way hash of the tenant and Sophos's actor ID, always written, so activity joins to users without naming them. Pseudonymous, not anonymous."
+        },
+        {
+          "name": "actor_type",
+          "type": "string",
+          "personal": false,
+          "description": "USER, SYSTEM, SERVICE, PROCESS, NETWORK_ENTITY or UNKNOWN."
+        },
+        {
+          "name": "actor_id",
+          "type": "string",
+          "personal": true,
+          "description": "Sophos's actor ID: a user SID, or an ID made from the actor's name. Can be an IP address, so it is personal data."
+        },
+        {
+          "name": "actor_name",
+          "type": "string",
+          "personal": true,
+          "description": "User or actor name."
+        },
+        {
+          "name": "device_id",
+          "type": "string",
+          "personal": false,
+          "description": "Device ID: the Sophos endpoint ID, or the firewall's ID for firewall traffic."
+        },
+        {
+          "name": "device_name",
+          "type": "string",
+          "personal": true,
+          "description": "Device name."
+        },
+        {
+          "name": "device_type",
+          "type": "string",
+          "personal": false,
+          "description": "COMPUTER, SERVER, SECURITY_VM or UNKNOWN."
+        },
+        {
+          "name": "device_platform",
+          "type": "string",
+          "personal": false,
+          "description": "WINDOWS, MACOS, LINUX, IOS, ANDROID or UNKNOWN."
+        },
+        {
+          "name": "sensor_types",
+          "type": "string",
+          "personal": false,
+          "description": "Sensor types that saw the activity, joined with |, for example ENDPOINT|FIREWALL."
+        },
+        {
+          "name": "sensors",
+          "type": "string",
+          "personal": false,
+          "description": "Sensor names joined with |, for example SFOS|SOPHOS_ENDPOINT."
+        },
+        {
+          "name": "policy_id",
+          "type": "string",
+          "personal": false,
+          "description": "AI Defense policy that set the action (dim_ai_policy). Empty when none was recorded."
+        },
+        {
+          "name": "policy_name",
+          "type": "string",
+          "personal": false,
+          "description": "That policy's name when the activity was recorded."
+        },
+        {
+          "name": "unsanctioned",
+          "type": "boolean",
+          "personal": false,
+          "description": "Allowed, for an app no policy covers."
+        },
+        {
+          "name": "records",
+          "type": "integer",
+          "personal": false,
+          "description": "Telemetry records folded into the activity. At least 1."
+        },
+        {
+          "name": "exported_at",
+          "type": "datetime",
+          "personal": false,
+          "description": "When this row was last written."
+        }
+      ]
+    },
+    {
+      "name": "fact_ai_activity_daily",
+      "file": "fact_ai_activity_daily.csv",
+      "version": "1.0",
+      "description": "AI Defense activity counts by day, application, action and risk. Kept after activity detail is pruned.",
+      "load": "window",
+      "key": [
+        "tenant_id",
+        "local_date",
+        "application_id",
+        "action",
+        "risk"
+      ],
+      "personalOnly": false,
+      "columns": [
+        {
+          "name": "tenant_id",
+          "type": "string",
+          "personal": false,
+          "description": "Sophos Central tenant ID (a UUID)."
+        },
+        {
+          "name": "local_date",
+          "type": "date",
+          "personal": false,
+          "description": "Day in the report time zone."
+        },
+        {
+          "name": "date_key",
+          "type": "integer",
+          "personal": false,
+          "description": "local_date as a number, YYYYMMDD."
+        },
+        {
+          "name": "application_id",
+          "type": "string",
+          "personal": false,
+          "description": "AI application ID (dim_ai_app)."
+        },
+        {
+          "name": "action",
+          "type": "string",
+          "personal": false,
+          "description": "ALLOWED, BLOCKED, WARNED, MODIFIED, UNKNOWN, or empty when none was reported."
+        },
+        {
+          "name": "risk",
+          "type": "string",
+          "personal": false,
+          "description": "Activity risk."
+        },
+        {
+          "name": "risk_rank",
+          "type": "integer",
+          "personal": false,
+          "description": "5 CRITICAL down to 1 INFO, 0 otherwise."
+        },
+        {
+          "name": "activities",
+          "type": "integer",
+          "personal": false,
+          "description": "Activities that started that day."
+        },
+        {
+          "name": "records",
+          "type": "integer",
+          "personal": false,
+          "description": "Telemetry records in those activities."
+        },
+        {
+          "name": "unsanctioned_activities",
+          "type": "integer",
+          "personal": false,
+          "description": "Of the activities, those allowed for an app no policy covers."
+        },
+        {
+          "name": "application_name",
+          "type": "string",
+          "personal": false,
+          "description": "Application name, repeated for tools that can't join to dim_ai_app."
+        }
+      ]
+    },
+    {
+      "name": "dim_ai_app",
+      "file": "dim_ai_app.csv",
+      "version": "1.0",
+      "description": "AI applications seen in activity or the inventory, with the sanctioning status the tenant's policies give each one now.",
+      "load": "upsert",
+      "key": [
+        "tenant_id",
+        "application_id"
+      ],
+      "personalOnly": false,
+      "columns": [
+        {
+          "name": "tenant_id",
+          "type": "string",
+          "personal": false,
+          "description": "Sophos Central tenant ID (a UUID)."
+        },
+        {
+          "name": "application_id",
+          "type": "string",
+          "personal": false,
+          "description": "AI application ID."
+        },
+        {
+          "name": "application_name",
+          "type": "string",
+          "personal": false,
+          "description": "Application name."
+        },
+        {
+          "name": "provider",
+          "type": "string",
+          "personal": false,
+          "description": "Company behind the application."
+        },
+        {
+          "name": "risk",
+          "type": "string",
+          "personal": false,
+          "description": "Application risk Sophos assigns."
+        },
+        {
+          "name": "risk_rank",
+          "type": "integer",
+          "personal": false,
+          "description": "5 CRITICAL down to 1 INFO, 0 otherwise."
+        },
+        {
+          "name": "sanctioning_status",
+          "type": "string",
+          "personal": false,
+          "description": "APPROVED, BLOCKED, WARNED or NOT_COVERED, from the tenant's policies at the last export. Empty when not read."
+        },
+        {
+          "name": "sanctioning_policies",
+          "type": "string",
+          "personal": false,
+          "description": "Policies that set the status, joined with |."
+        },
+        {
+          "name": "last_seen_at",
+          "type": "datetime",
+          "personal": false,
+          "description": "Latest activity the exporter has seen for the application."
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime",
+          "personal": false,
+          "description": "When this row was last written."
+        }
+      ]
+    },
+    {
+      "name": "fact_ai_app_snapshot",
+      "file": "fact_ai_app_snapshot.csv",
+      "version": "1.0",
+      "description": "The AI application inventory, one snapshot a day: use, users and sanctioning per application over the inventory window.",
+      "load": "snapshot",
+      "key": [
+        "tenant_id",
+        "snapshot_date",
+        "application_id"
+      ],
+      "personalOnly": false,
+      "columns": [
+        {
+          "name": "tenant_id",
+          "type": "string",
+          "personal": false,
+          "description": "Sophos Central tenant ID (a UUID)."
+        },
+        {
+          "name": "snapshot_date",
+          "type": "date",
+          "personal": false,
+          "description": "Day of the snapshot in the report time zone."
+        },
+        {
+          "name": "application_id",
+          "type": "string",
+          "personal": false,
+          "description": "AI application ID (dim_ai_app)."
+        },
+        {
+          "name": "application_name",
+          "type": "string",
+          "personal": false,
+          "description": "Application name."
+        },
+        {
+          "name": "provider",
+          "type": "string",
+          "personal": false,
+          "description": "Company behind the application."
+        },
+        {
+          "name": "risk",
+          "type": "string",
+          "personal": false,
+          "description": "Application risk."
+        },
+        {
+          "name": "risk_rank",
+          "type": "integer",
+          "personal": false,
+          "description": "5 CRITICAL down to 1 INFO, 0 otherwise."
+        },
+        {
+          "name": "sanctioning_status",
+          "type": "string",
+          "personal": false,
+          "description": "APPROVED, BLOCKED, WARNED or NOT_COVERED, at the snapshot."
+        },
+        {
+          "name": "window_days",
+          "type": "integer",
+          "personal": false,
+          "description": "Days the counts cover, ending at the export."
+        },
+        {
+          "name": "activities",
+          "type": "integer",
+          "personal": false,
+          "description": "Activities for the application in the window."
+        },
+        {
+          "name": "unique_users",
+          "type": "integer",
+          "personal": false,
+          "description": "Distinct users of the application in the window."
+        },
+        {
+          "name": "unsanctioned_activities",
+          "type": "integer",
+          "personal": false,
+          "description": "Activities allowed with no policy covering the application."
+        },
+        {
+          "name": "last_seen_at",
+          "type": "datetime",
+          "personal": false,
+          "description": "Latest activity in the window. Empty for a catalog entry with no activity."
+        }
+      ]
+    },
+    {
+      "name": "fact_ai_user_snapshot",
+      "file": "fact_ai_user_snapshot.csv",
+      "version": "1.0",
+      "description": "The AI user inventory, one snapshot a day: each user's AI use and risk over the inventory window. Names and Sophos's actor IDs are written only with the personal data switch on.",
+      "load": "snapshot",
+      "key": [
+        "tenant_id",
+        "snapshot_date",
+        "user_key"
+      ],
+      "personalOnly": false,
+      "columns": [
+        {
+          "name": "tenant_id",
+          "type": "string",
+          "personal": false,
+          "description": "Sophos Central tenant ID (a UUID)."
+        },
+        {
+          "name": "snapshot_date",
+          "type": "date",
+          "personal": false,
+          "description": "Day of the snapshot in the report time zone."
+        },
+        {
+          "name": "user_key",
+          "type": "string",
+          "personal": false,
+          "description": "A one-way hash of the tenant and Sophos's actor ID (as in fact_ai_activity). Pseudonymous, not anonymous."
+        },
+        {
+          "name": "user_id",
+          "type": "string",
+          "personal": true,
+          "description": "Sophos's actor ID."
+        },
+        {
+          "name": "user_name",
+          "type": "string",
+          "personal": true,
+          "description": "User name."
+        },
+        {
+          "name": "risk",
+          "type": "string",
+          "personal": false,
+          "description": "Worst activity risk for the user in the window."
+        },
+        {
+          "name": "risk_rank",
+          "type": "integer",
+          "personal": false,
+          "description": "5 CRITICAL down to 1 INFO, 0 otherwise."
+        },
+        {
+          "name": "apps_used",
+          "type": "integer",
+          "personal": false,
+          "description": "Distinct AI applications the user used."
+        },
+        {
+          "name": "activities",
+          "type": "integer",
+          "personal": false,
+          "description": "The user's activities in the window."
+        },
+        {
+          "name": "policy_violations",
+          "type": "integer",
+          "personal": false,
+          "description": "Activities blocked, warned or modified."
+        },
+        {
+          "name": "unsanctioned_activities",
+          "type": "integer",
+          "personal": false,
+          "description": "Activities allowed for apps no policy covers."
+        },
+        {
+          "name": "top_app_id",
+          "type": "string",
+          "personal": false,
+          "description": "The application the user used most (dim_ai_app)."
+        },
+        {
+          "name": "top_app_name",
+          "type": "string",
+          "personal": false,
+          "description": "Its name."
+        },
+        {
+          "name": "first_seen_at",
+          "type": "datetime",
+          "personal": false,
+          "description": "First activity in the window."
+        },
+        {
+          "name": "last_seen_at",
+          "type": "datetime",
+          "personal": false,
+          "description": "Latest activity in the window."
+        },
+        {
+          "name": "window_days",
+          "type": "integer",
+          "personal": false,
+          "description": "Days the counts cover, ending at the export."
+        }
+      ]
+    },
+    {
+      "name": "dim_ai_policy",
+      "file": "dim_ai_policy.csv",
+      "version": "1.0",
+      "description": "AI Defense policies, in the order Sophos checks them. The current list, replaced on every run.",
+      "load": "reference",
+      "key": [
+        "tenant_id",
+        "policy_id"
+      ],
+      "personalOnly": false,
+      "columns": [
+        {
+          "name": "tenant_id",
+          "type": "string",
+          "personal": false,
+          "description": "Sophos Central tenant ID (a UUID)."
+        },
+        {
+          "name": "policy_id",
+          "type": "string",
+          "personal": false,
+          "description": "Policy ID."
+        },
+        {
+          "name": "policy_name",
+          "type": "string",
+          "personal": false,
+          "description": "Policy name."
+        },
+        {
+          "name": "rank",
+          "type": "integer",
+          "personal": false,
+          "description": "1 is checked first."
+        },
+        {
+          "name": "state",
+          "type": "string",
+          "personal": false,
+          "description": "ENABLED or DISABLED."
+        },
+        {
+          "name": "enforcement_status",
+          "type": "string",
+          "personal": false,
+          "description": "INACTIVE, PENDING, ENFORCED or FAILED."
+        },
+        {
+          "name": "origin",
+          "type": "string",
+          "personal": false,
+          "description": "CUSTOM, BUILT_IN or PARTNER."
+        },
+        {
+          "name": "kind",
+          "type": "string",
+          "personal": false,
+          "description": "TENANT or TENANT_BASE."
+        },
+        {
+          "name": "built_in_key",
+          "type": "string",
+          "personal": false,
+          "description": "Template a built-in policy came from."
+        },
+        {
+          "name": "rules",
+          "type": "integer",
+          "personal": false,
+          "description": "Rules in the policy."
+        },
+        {
+          "name": "block_rules",
+          "type": "integer",
+          "personal": false,
+          "description": "Rules that block."
+        },
+        {
+          "name": "warn_rules",
+          "type": "integer",
+          "personal": false,
+          "description": "Rules that warn."
+        },
+        {
+          "name": "allow_rules",
+          "type": "integer",
+          "personal": false,
+          "description": "Rules that allow."
+        },
+        {
+          "name": "generative_ai_category_action",
+          "type": "string",
+          "personal": false,
+          "description": "BLOCK, WARN or ALLOW for Generative AI web traffic no rule matched."
+        },
+        {
+          "name": "app_control_category_action",
+          "type": "string",
+          "personal": false,
+          "description": "The same for application control, when set."
+        },
+        {
+          "name": "endpoint_enabled",
+          "type": "boolean",
+          "personal": false,
+          "description": "The policy applies through Sophos Endpoint."
+        },
+        {
+          "name": "firewall_enabled",
+          "type": "boolean",
+          "personal": false,
+          "description": "Through Sophos Firewall."
+        },
+        {
+          "name": "dns_enabled",
+          "type": "boolean",
+          "personal": false,
+          "description": "Through Sophos DNS Protection."
+        },
+        {
+          "name": "browser_enabled",
+          "type": "boolean",
+          "personal": false,
+          "description": "Through the browser extension."
+        },
+        {
+          "name": "created_at",
+          "type": "datetime",
+          "personal": false,
+          "description": "When the policy was created."
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime",
+          "personal": false,
+          "description": "When the policy last changed."
         }
       ]
     }

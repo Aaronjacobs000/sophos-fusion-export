@@ -1,0 +1,4 @@
+tenant_id,snapshot_date,application_id,application_name,provider,risk,risk_rank,sanctioning_status,window_days,activities,unique_users,unsanctioned_activities,last_seen_at
+11111111-2222-4333-8444-555555555555,2026-11-21,chatgpt,ChatGPT,OpenAI,LOW,2,WARNED,30,272,3,5,2026-11-21T02:10:30Z
+11111111-2222-4333-8444-555555555555,2026-11-21,deepseek,DeepSeek,DeepSeek,CRITICAL,5,BLOCKED,30,14,1,0,
+11111111-2222-4333-8444-555555555555,2026-11-21,microsoft-copilot,Microsoft Copilot,Microsoft,LOW,2,APPROVED,30,320,25,0,2026-11-21T07:30:52Z

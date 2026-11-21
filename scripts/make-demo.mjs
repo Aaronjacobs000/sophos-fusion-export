@@ -177,6 +177,104 @@ const health = {
   },
 };
 
+// AI Defense: apps, users, policies and activity. Generated after everything above, so the
+// seeded sequence for the other tables is unchanged.
+const AI_POLICY = { id: uuid(80001), name: "Example AI standard" };
+const AI_APPS = [
+  // id, name, provider, risk, sanctioning, weight
+  ["microsoft-copilot", "Microsoft Copilot", "Microsoft", "LOW", "APPROVED", 30],
+  ["chatgpt", "ChatGPT", "OpenAI", "LOW", "WARNED", 22],
+  ["claude", "Claude", "Anthropic", "LOW", "WARNED", 12],
+  ["gemini", "Gemini", "Google", "LOW", "WARNED", 10],
+  ["perplexity", "Perplexity", "Perplexity AI", "MEDIUM", "WARNED", 6],
+  ["deepseek", "DeepSeek", "DeepSeek", "CRITICAL", "BLOCKED", 5],
+  ["grok", "Grok", "xAI", "HIGH", "BLOCKED", 4],
+  ["demo-notes-ai", "Demo Notes AI", "Example Apps", "MEDIUM", "NOT_COVERED", 3],
+];
+const AI_USERS = Array.from({ length: 22 }, (_, n) => ({ id: `S-1-5-21-1000000001-1000000002-1000000003-${1100 + n}`, name: `DEMO\\user${n}`, type: "USER" }));
+const AI_WEIGHT = AI_APPS.reduce((n, a) => n + a[5], 0);
+const pickApp = () => {
+  let r = rand() * AI_WEIGHT;
+  for (const a of AI_APPS) if ((r -= a[5]) < 0) return a;
+  return AI_APPS[0];
+};
+const aiActivities = [];
+for (let d = 30; d >= 0; d--) {
+  const perDay = (d % 7 === 0 || d % 7 === 1 ? 8 : 30) + Math.floor(rand() * 25);
+  for (let i = 0; i < perDay; i++) {
+    const start = NOW.getTime() - d * 86_400_000 - rand() * 86_400_000;
+    if (start > NOW.getTime()) continue;
+    const [appId, appName, provider, , status] = pickApp();
+    const user = AI_USERS[Math.floor(rand() * rand() * AI_USERS.length)];
+    const viaFirewall = rand() < 0.35;
+    const action = status === "BLOCKED" ? "BLOCKED" : status === "WARNED" ? (rand() < 0.7 ? "WARNED" : "ALLOWED") : "ALLOWED";
+    const risk = status === "BLOCKED" ? "CRITICAL" : appId === "perplexity" || appId === "demo-notes-ai" ? "MEDIUM" : "LOW";
+    const pc = endpoints[Math.floor(rand() * endpoints.length)];
+    aiActivities.push({
+      id: `activity://demo:secure-ai.activity:${aiActivities.length + 1}`,
+      timestamp: { startTime: new Date(start).toISOString(), endTime: new Date(start + rand() * 600_000).toISOString() },
+      actor: user,
+      application: { id: appId, name: appName },
+      applicationProvider: { name: provider },
+      modelProvider: { name: provider },
+      model: { name: appName },
+      sensors: viaFirewall ? [{ name: "SFOS", type: "FIREWALL" }] : [{ name: "SOPHOS_ENDPOINT", type: "ENDPOINT" }],
+      action,
+      policyId: status === "NOT_COVERED" ? "" : AI_POLICY.id,
+      policy: status === "NOT_COVERED" ? "" : AI_POLICY.name,
+      device: viaFirewall ? { id: "C01000DEMO0001", name: "Demo Firewall", type: "UNKNOWN", platform: "UNKNOWN" } : { id: pc.id, name: pc.hostname, type: "COMPUTER", platform: "WINDOWS" },
+      risk,
+      aggregationCount: 1 + Math.floor(rand() * 40),
+      isUnsanctioned: status === "NOT_COVERED" && action === "ALLOWED",
+    });
+  }
+}
+aiActivities.sort((a, b) => (a.timestamp.startTime < b.timestamp.startTime ? -1 : 1));
+const inRange = (list, range) => list.filter((a) => a.timestamp.startTime >= range.startTime && a.timestamp.startTime <= range.endTime);
+function aiApps(range) {
+  return AI_APPS.map(([id, name, provider, risk]) => {
+    const used = inRange(aiActivities, range).filter((a) => a.application.id === id);
+    return { id, name, provider, risk, usage: used.length, uniqueUsers: new Set(used.map((a) => a.actor.id)).size, lastSeen: used.at(-1)?.timestamp.startTime ?? null, unsanctionedCount: used.filter((a) => a.isUnsanctioned).length };
+  });
+}
+function aiUsers(range) {
+  const rank = { CRITICAL: 5, HIGH: 4, MEDIUM: 3, LOW: 2 };
+  return AI_USERS.map((u) => {
+    const used = inRange(aiActivities, range).filter((a) => a.actor.id === u.id);
+    if (!used.length) return null;
+    const byApp = new Map();
+    for (const a of used) byApp.set(a.application.id, [a.application.name, (byApp.get(a.application.id)?.[1] ?? 0) + 1]);
+    const [topAppId, [topApp]] = [...byApp].sort((x, y) => y[1][1] - x[1][1])[0];
+    return {
+      id: u.id,
+      name: u.name,
+      risk: used.reduce((w, a) => (rank[a.risk] > rank[w] ? a.risk : w), "LOW"),
+      appsUsed: byApp.size,
+      usage: used.length,
+      policyViolations: used.filter((a) => a.action !== "ALLOWED").length,
+      topAppId,
+      topApp,
+      firstSeen: used[0].timestamp.startTime,
+      lastSeen: used.at(-1).timestamp.startTime,
+      unsanctionedCount: used.filter((a) => a.isUnsanctioned).length,
+    };
+  }).filter(Boolean);
+}
+const aiPolicies = [
+  { ...AI_POLICY, rank: 1, priority: 0.0005, state: "ENABLED", enforcementStatus: "ENFORCED", origin: "CUSTOM", kind: "TENANT", builtInKey: null, createdAt: "2026-10-20T00:00:00Z", updatedAt: "2026-11-12T03:00:00Z", rules: [{ position: 0, action: "BLOCK" }, { position: 1, action: "WARN" }, { position: 2, action: "ALLOW" }], baseRule: { generativeAiCategoryAction: "WARN", appControlCategoryAction: null }, sensors: { endpoint: { enabled: true }, firewall: { enabled: true }, dns: null, browser: null } },
+  { id: uuid(80002), name: "Education and public sector", rank: 2, priority: 0.001, state: "DISABLED", enforcementStatus: "INACTIVE", origin: "BUILT_IN", kind: "TENANT", builtInKey: "education-v1", createdAt: "2026-10-20T00:00:00Z", updatedAt: "2026-10-20T00:00:00Z", rules: [{ position: 0, action: "WARN" }, { position: 1, action: "BLOCK" }], baseRule: { generativeAiCategoryAction: "ALLOW", appControlCategoryAction: null }, sensors: { endpoint: { enabled: true }, firewall: { enabled: false }, dns: null, browser: null } },
+];
+function aiSummary(range) {
+  const apps = aiApps(range).filter((a) => a.usage > 0);
+  const users = aiUsers(range);
+  const count = (list, risk) => list.filter((x) => x.risk === risk).length;
+  return {
+    apps: { totalApps: apps.length, criticalRisk: count(apps, "CRITICAL"), highRisk: count(apps, "HIGH"), mediumRisk: count(apps, "MEDIUM"), lowRisk: count(apps, "LOW"), infoRisk: 0, unknownRisk: 0, errorRisk: 0, trainsOnData: 2, unsanctionedCount: apps.filter((a) => a.unsanctionedCount > 0).length },
+    users: { totalUsers: users.length, criticalRisk: count(users, "CRITICAL"), highRisk: count(users, "HIGH"), mediumRisk: count(users, "MEDIUM"), lowRisk: count(users, "LOW"), infoRisk: 0, unknownRisk: 0, withViolations: users.filter((u) => u.policyViolations > 0).length, unsanctionedCount: users.filter((u) => u.unsanctionedCount > 0).length },
+  };
+}
+const offsetPage = (entries, v) => ({ totalCount: entries.length, offset: v.offset ?? 0, hasNextPage: (v.offset ?? 0) + v.limit < entries.length, entries: entries.slice(v.offset ?? 0, (v.offset ?? 0) + v.limit) });
+
 function window(ql) {
   const m = /EARLIEST='([^']+)' LATEST='([^']+)'/.exec(ql);
   const from = Date.parse(m[1]) / 1000;
@@ -203,6 +301,24 @@ async function fakeFetch(input, init = {}) {
       } });
     }
     if (op === "ExportDetectionCount") return json({ data: { detectionCountByTenant: { items: [{ count: window(body.variables.in.ql_query).length, tenant: { id: "100000" } }] } } });
+    const v = body.variables ?? {};
+    if (op === "ExportAiDefenseOverview") {
+      return json({ data: { secureAITenantSettings: { onboarding: { status: "COMPLETED" }, licenseState: "ACTIVE", licenseType: "TERM", licenseExpiryDate: "2027-12-31T23:59:59.999Z", gracePeriodEndsAt: "2028-01-30T23:59:59.999Z", renewalPending: false, refreshedAt: "2026-11-20T01:00:00Z" }, inventorySummary: aiSummary(v.summary.timeRange) } });
+    }
+    if (op === "ExportAiActivities") {
+      const list = inRange(aiActivities, v.filter.timeRange);
+      const start = Number(v.after ?? 0);
+      const page = list.slice(start, start + Math.min(100, v.first));
+      const next = start + page.length;
+      return json({ data: { activities: { totalCount: list.length, pageInfo: { hasNextPage: next < list.length, endCursor: next < list.length ? String(next) : null }, activities: page } } });
+    }
+    if (op === "ExportAiAppInventory") return json({ data: { appInventory: offsetPage(aiApps(v.filter.timeRange), v) } });
+    if (op === "ExportAiUserInventory") return json({ data: { userInventory: offsetPage(aiUsers(v.filter.timeRange), v) } });
+    if (op === "ExportAiAppSanctioning") {
+      const status = new Map(AI_APPS.map((a) => [a[0], a[4]]));
+      return json({ data: { appSanctioning: { entries: v.appIds.map((appId) => ({ appId, status: status.get(appId) ?? "NOT_COVERED", enforcementTargets: status.get(appId) === "NOT_COVERED" ? [] : [{ mechanism: "WEB_CONTROL", status: status.get(appId), matchedPolicy: AI_POLICY }] })) } } });
+    }
+    if (op === "ExportAiPolicies") return json({ data: { policies: { totalCount: aiPolicies.length, pageInfo: { hasNextPage: false, endCursor: null }, policies: aiPolicies } } });
     if (op === "ExportDetectionSearch") {
       const list = window(body.variables.in.cql_query).slice(0, body.variables.in.limit);
       return json({ data: { detectionSearch: { status: "OK", reason: "success", alerts: { total_results: list.length, list } } } });

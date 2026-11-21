@@ -1,0 +1,41 @@
+{
+  "data": {
+    "appInventory": {
+      "totalCount": 3,
+      "offset": 0,
+      "hasNextPage": false,
+      "entries": [
+        {
+          "id": "microsoft-copilot",
+          "name": "Microsoft Copilot",
+          "provider": "Microsoft",
+          "risk": "LOW",
+          "usage": 320,
+          "uniqueUsers": 25,
+          "lastSeen": "2026-11-21T07:30:52Z",
+          "unsanctionedCount": 0
+        },
+        {
+          "id": "chatgpt",
+          "name": "ChatGPT",
+          "provider": "OpenAI",
+          "risk": "LOW",
+          "usage": "272",
+          "uniqueUsers": 3,
+          "lastSeen": "2026-11-21T02:10:30.120Z",
+          "unsanctionedCount": 5
+        },
+        {
+          "id": "deepseek",
+          "name": "DeepSeek",
+          "provider": "DeepSeek",
+          "risk": "CRITICAL",
+          "usage": 14,
+          "uniqueUsers": 1,
+          "lastSeen": null,
+          "unsanctionedCount": 0
+        }
+      ]
+    }
+  }
+}

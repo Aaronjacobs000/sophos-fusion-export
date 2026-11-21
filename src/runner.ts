@@ -5,6 +5,7 @@
  * the others still run; its tables keep their previous rows.
  */
 
+import { aiDefenseDataset } from "./datasets/ai-defense.js";
 import { alertsDataset } from "./datasets/alerts.js";
 import { casesDataset } from "./datasets/cases.js";
 import type { Dataset, RunContext, TenantFacts } from "./datasets/context.js";
@@ -27,6 +28,7 @@ export const DATASET_MODULES: Record<DatasetName, Dataset> = {
   detections: detectionsDataset,
   endpoints: endpointsDataset,
   alerts: alertsDataset,
+  aiDefense: aiDefenseDataset,
 };
 
 export interface RunRequest {
@@ -126,6 +128,7 @@ export async function runExport(request: RunRequest): Promise<RunSummary> {
       detectionRetentionDays: config.detections.retentionDays,
       detectionPageSize: config.detections.pageSize,
       caseOverlapMinutes: config.cases.overlapMinutes,
+      aiDefense: config.aiDefense,
       ...(config.tenantName ? { tenantName: config.tenantName } : {}),
     },
     log,

@@ -38,6 +38,12 @@ export function fakeSophos(options = {}) {
         case "ExportCaseReferenceData": return json(fixture("case-reference.json"));
         case "ExportDetectionCount": return json({ data: { detectionCountByTenant: { items: [{ count: fixture("detections-page.json").data.detectionSearch.alerts.list.length, tenant: { id: "100001" } }] } } });
         case "ExportDetectionSearch": return json(fixture("detections-page.json"));
+        case "ExportAiDefenseOverview": return json(fixture("ai-defense-overview.json"));
+        case "ExportAiActivities": return json(fixture(body.variables.after === "cursor-1" ? "ai-activities-page-2.json" : "ai-activities-page.json"));
+        case "ExportAiAppInventory": return json(fixture("ai-app-inventory.json"));
+        case "ExportAiUserInventory": return json(fixture("ai-user-inventory.json"));
+        case "ExportAiAppSanctioning": return json(fixture("ai-app-sanctioning.json"));
+        case "ExportAiPolicies": return json(fixture("ai-policies.json"));
         default: return json({ errors: [{ message: `unknown operation ${op}` }] });
       }
     }

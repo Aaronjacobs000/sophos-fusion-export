@@ -1,0 +1,50 @@
+{
+  "data": {
+    "userInventory": {
+      "totalCount": 3,
+      "offset": 0,
+      "hasNextPage": false,
+      "entries": [
+        {
+          "id": "S-1-5-21-1000000001-1000000002-1000000003-1104",
+          "name": "EXAMPLE\\alex.reed",
+          "risk": "CRITICAL",
+          "appsUsed": 2,
+          "usage": 310,
+          "policyViolations": 14,
+          "topAppId": "microsoft-copilot",
+          "topApp": "Microsoft Copilot",
+          "firstSeen": "2026-10-23T01:00:00Z",
+          "lastSeen": "2026-11-21T07:30:52Z",
+          "unsanctionedCount": 0
+        },
+        {
+          "id": "actor-fallback:v1:0f1e2d3c4b5a69788796a5b4c3d2e1f0",
+          "name": "sam.lee@example.com",
+          "risk": "LOW",
+          "appsUsed": 1,
+          "usage": 5,
+          "policyViolations": 0,
+          "topAppId": "chatgpt",
+          "topApp": "ChatGPT",
+          "firstSeen": "2026-11-10T02:10:09Z",
+          "lastSeen": "2026-11-21T02:10:30Z",
+          "unsanctionedCount": 5
+        },
+        {
+          "id": "192.0.2.44",
+          "name": "192.0.2.44",
+          "risk": "LOW",
+          "appsUsed": 1,
+          "usage": 267,
+          "policyViolations": 0,
+          "topAppId": "chatgpt",
+          "topApp": "ChatGPT",
+          "firstSeen": "2026-10-25T03:30:00Z",
+          "lastSeen": "2026-11-20T03:41:12Z",
+          "unsanctionedCount": 0
+        }
+      ]
+    }
+  }
+}

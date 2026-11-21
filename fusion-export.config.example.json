@@ -8,7 +8,8 @@
   "backfillDays": 90,
   "detections": { "trailingDays": 7, "retentionDays": 90, "pageSize": 10000 },
   "cases": { "overlapMinutes": 15 },
-  "datasets": ["licenses", "cases", "detections", "endpoints", "alerts"],
+  "aiDefense": { "trailingDays": 3, "retentionDays": 90, "backfillDays": 30, "inventoryDays": 30 },
+  "datasets": ["licenses", "cases", "detections", "endpoints", "alerts", "aiDefense"],
   "sharepoint": {
     "siteUrl": "https://contoso.sharepoint.com/sites/reporting",
     "library": "Documents",

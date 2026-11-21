@@ -5,13 +5,14 @@
 
 import { access, constants, mkdir } from "node:fs/promises";
 import type { ExportConfig } from "./config.js";
-import { CASES_PAGE, DETECTION_COUNT } from "./sophos/documents.js";
+import { AI_ACTIVITIES, AI_DEFENSE_OVERVIEW, CASES_PAGE, DETECTION_COUNT } from "./sophos/documents.js";
 import { isForbidden, isNotOnFusion, SophosSession } from "./sophos/session.js";
 import { SharePointSink, type SharePointConfig } from "./sinks/sharepoint.js";
 import { hasSecOpsLicense, parseLicenses } from "./vendor/sophos-core/index.js";
 import { ALERT_PAGE_SIZE } from "./datasets/alerts.js";
 import { ENDPOINT_PAGE_SIZE } from "./datasets/endpoints.js";
 import { CASES_PAGE_SIZE } from "./datasets/cases.js";
+import { AI_ACTIVITY_PAGE_SIZE, AI_INVENTORY_PAGE_SIZE } from "./datasets/ai-defense.js";
 
 export interface Check {
   name: string;
@@ -116,6 +117,32 @@ export async function runDoctor(options: {
     estimate.alerts = Math.max(1, Math.ceil(count / ALERT_PAGE_SIZE));
     return `${count} open alerts`;
   });
+
+  if (config.datasets.includes("aiDefense")) {
+    await attempt("AI Defense", async () => {
+      const now = Date.now();
+      const window = (days: number) => ({ startTime: new Date(now - days * 86_400_000).toISOString(), endTime: new Date(now).toISOString() });
+      try {
+        const { data } = await session!.graphql<{ secureAITenantSettings: { licenseState?: string | null } | null; inventorySummary: { apps: { totalApps: number }; users: { totalUsers: number } } }>(AI_DEFENSE_OVERVIEW, {
+          summary: { timeRange: window(config.aiDefense.inventoryDays) },
+        });
+        const apps = Number(data.inventorySummary.apps.totalApps) || 0;
+        const users = Number(data.inventorySummary.users.totalUsers) || 0;
+        if (!data.secureAITenantSettings && apps === 0 && users === 0) {
+          estimate.aiDefense = 1;
+          return "no AI Defense on this tenant; the AI Defense tables stay empty";
+        }
+        const { data: day } = await session!.graphql<{ activities: { totalCount: number } }>(AI_ACTIVITIES, { filter: { timeRange: window(1) }, first: 1 });
+        const perDay = Number(day.activities.totalCount) || 0;
+        const pages = (n: number) => Math.max(1, Math.ceil(n / AI_INVENTORY_PAGE_SIZE));
+        estimate.aiDefense = 2 + Math.max(1, Math.ceil((perDay * (config.aiDefense.trailingDays + 1)) / AI_ACTIVITY_PAGE_SIZE)) + 2 * pages(apps) + pages(users);
+        return `license ${data.secureAITenantSettings?.licenseState ?? "not recorded"}; ${perDay} activities in the last 24 hours; ${apps} apps and ${users} users in the last ${config.aiDefense.inventoryDays} days. A backfill reads ${config.aiDefense.backfillDays} days at ${AI_ACTIVITY_PAGE_SIZE} activities a call`;
+      } catch (error) {
+        if (isNotOnFusion(error)) return "not on Sophos Fusion, so no AI Defense data";
+        throw error;
+      }
+    });
+  }
 
   const perRun = Object.values(estimate).reduce((a, b) => a + b, 0);
   add(

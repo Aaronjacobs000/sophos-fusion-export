@@ -11,6 +11,12 @@ const schemaFor = {
   ExportCaseReferenceData: "cases-v2",
   ExportDetectionSearch: "detections-v2",
   ExportDetectionCount: "detections-v2",
+  ExportAiDefenseOverview: "ai-defense-activity-v1",
+  ExportAiActivities: "ai-defense-activity-v1",
+  ExportAiAppInventory: "ai-defense-activity-v1",
+  ExportAiUserInventory: "ai-defense-activity-v1",
+  ExportAiAppSanctioning: "ai-defense-policy-v1",
+  ExportAiPolicies: "ai-defense-policy-v1",
 };
 
 const schemas = new Map();

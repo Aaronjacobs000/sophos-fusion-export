@@ -27,4 +27,4 @@ Through sophos-core: `TokenManager`, `TenantResolver`, `SophosClient` and `Fusio
 
 ## Sophos Fusion GraphQL schemas
 
-`schemas/fusion/cases-v2.graphql` and `schemas/fusion/detections-v2.graphql` are the schemas Sophos publishes on https://developer.sophos.com, copied unmodified from NotFusion's vendored set. Tests validate every query the exporter sends against them. They remain Sophos's material; this project's licence does not cover them.
+`schemas/fusion/cases-v2.graphql`, `schemas/fusion/detections-v2.graphql`, `schemas/fusion/ai-defense-activity-v1.graphql` and `schemas/fusion/ai-defense-policy-v1.graphql` are the schemas Sophos publishes on https://developer.sophos.com, copied unmodified (the AI Defense pair downloaded on 21/11/2026 and identical to NotFusion's vendored copies). Tests validate every query the exporter sends against them. They remain Sophos's material; this project's licence does not cover them.

@@ -10,7 +10,7 @@ import { resolve } from "node:path";
 import { DEFAULT_PER_HOUR, DEFAULT_PER_MINUTE, MAX_PER_MINUTE } from "./sophos/limiter.js";
 import { assertTimeZone } from "./time.js";
 
-export const DATASETS = ["licenses", "cases", "detections", "endpoints", "alerts"] as const;
+export const DATASETS = ["licenses", "cases", "detections", "endpoints", "alerts", "aiDefense"] as const;
 export type DatasetName = (typeof DATASETS)[number];
 
 export interface SharePointSettings {
@@ -31,6 +31,7 @@ export interface ExportConfig {
   backfillDays: number;
   detections: { trailingDays: number; retentionDays: number; pageSize: number };
   cases: { overlapMinutes: number };
+  aiDefense: { trailingDays: number; retentionDays: number; backfillDays: number; inventoryDays: number };
   datasets: DatasetName[];
   sharepoint?: SharePointSettings;
 }
@@ -44,6 +45,7 @@ export const DEFAULTS: ExportConfig = {
   backfillDays: 90,
   detections: { trailingDays: 7, retentionDays: 90, pageSize: 10_000 },
   cases: { overlapMinutes: 15 },
+  aiDefense: { trailingDays: 3, retentionDays: 90, backfillDays: 30, inventoryDays: 30 },
   datasets: [...DATASETS],
 };
 
@@ -78,6 +80,9 @@ export function buildConfig(raw: Record<string, unknown>, baseDir = process.cwd(
   const rate = (raw.rate ?? {}) as Record<string, unknown>;
   const detections = (raw.detections ?? {}) as Record<string, unknown>;
   const cases = (raw.cases ?? {}) as Record<string, unknown>;
+  const ai = (raw.aiDefense ?? {}) as Record<string, unknown>;
+  const aiSetting = (key: "trailingDays" | "retentionDays" | "backfillDays" | "inventoryDays", max: number) =>
+    ai[key] === undefined ? DEFAULTS.aiDefense[key] : positiveInt(ai[key], `aiDefense.${key}`, max);
   const config: ExportConfig = {
     outputDir: resolve(baseDir, typeof raw.outputDir === "string" ? raw.outputDir : DEFAULTS.outputDir),
     reportTimezone: typeof raw.reportTimezone === "string" ? raw.reportTimezone : DEFAULTS.reportTimezone,
@@ -95,6 +100,12 @@ export function buildConfig(raw: Record<string, unknown>, baseDir = process.cwd(
       pageSize: detections.pageSize === undefined ? DEFAULTS.detections.pageSize : positiveInt(detections.pageSize, "detections.pageSize", 10_000),
     },
     cases: { overlapMinutes: cases.overlapMinutes === undefined ? DEFAULTS.cases.overlapMinutes : positiveInt(cases.overlapMinutes, "cases.overlapMinutes", 1440) },
+    aiDefense: {
+      trailingDays: aiSetting("trailingDays", 90),
+      retentionDays: aiSetting("retentionDays", 3650),
+      backfillDays: aiSetting("backfillDays", 400),
+      inventoryDays: aiSetting("inventoryDays", 90),
+    },
     datasets: DEFAULTS.datasets,
   };
   if (raw.datasets !== undefined) {
@@ -116,6 +127,9 @@ export function buildConfig(raw: Record<string, unknown>, baseDir = process.cwd(
   }
   if (config.detections.retentionDays < config.detections.trailingDays) {
     throw new ConfigError("detections.retentionDays can't be shorter than detections.trailingDays.");
+  }
+  if (config.aiDefense.retentionDays < Math.max(config.aiDefense.trailingDays, config.aiDefense.backfillDays)) {
+    throw new ConfigError("aiDefense.retentionDays can't be shorter than aiDefense.trailingDays or aiDefense.backfillDays.");
   }
   assertTimeZone(config.reportTimezone);
   return config;

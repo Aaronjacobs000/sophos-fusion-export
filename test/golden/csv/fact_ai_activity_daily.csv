@@ -1,0 +1,5 @@
+tenant_id,local_date,date_key,application_id,action,risk,risk_rank,activities,records,unsanctioned_activities,application_name
+11111111-2222-4333-8444-555555555555,2026-11-19,20261119,microsoft-copilot,ALLOWED,LOW,2,1,12,0,Microsoft Copilot
+11111111-2222-4333-8444-555555555555,2026-11-20,20261120,chatgpt,,LOW,2,1,48,0,ChatGPT
+11111111-2222-4333-8444-555555555555,2026-11-20,20261120,deepseek,BLOCKED,CRITICAL,5,1,3,0,DeepSeek
+11111111-2222-4333-8444-555555555555,2026-11-21,20261121,chatgpt,ALLOWED,LOW,2,1,1,1,ChatGPT

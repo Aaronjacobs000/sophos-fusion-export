@@ -1,0 +1,3 @@
+tenant_id,policy_id,policy_name,rank,state,enforcement_status,origin,kind,built_in_key,rules,block_rules,warn_rules,allow_rules,generative_ai_category_action,app_control_category_action,endpoint_enabled,firewall_enabled,dns_enabled,browser_enabled,created_at,updated_at
+11111111-2222-4333-8444-555555555555,11111111-aaaa-4bbb-8ccc-000000000001,Example standard,1,ENABLED,ENFORCED,CUSTOM,TENANT,,3,1,1,1,BLOCK,,true,true,false,false,2026-07-23T15:56:53Z,2026-11-18T17:40:10Z
+11111111-2222-4333-8444-555555555555,11111111-aaaa-4bbb-8ccc-000000000002,Education and public sector,2,DISABLED,INACTIVE,BUILT_IN,TENANT,education-v1,3,2,1,0,ALLOW,WARN,true,false,false,false,2026-08-20T17:04:23Z,2026-11-18T17:39:59Z

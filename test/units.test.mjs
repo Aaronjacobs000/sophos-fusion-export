@@ -56,6 +56,11 @@ test("config: defaults, limits, and no secrets in the file", () => {
   assert.throws(() => buildConfig({ datasets: ["cases", "nope"] }), ConfigError);
   assert.deepEqual(buildConfig({ datasets: ["alerts", "cases"] }).datasets, ["cases", "alerts"]);
   assert.throws(() => buildConfig({ detections: { trailingDays: 30, retentionDays: 7 } }), ConfigError);
+  assert.deepEqual(c.aiDefense, { trailingDays: 3, retentionDays: 90, backfillDays: 30, inventoryDays: 30 });
+  assert.ok(c.datasets.includes("aiDefense"));
+  assert.equal(buildConfig({ aiDefense: { inventoryDays: 7 } }).aiDefense.inventoryDays, 7);
+  assert.throws(() => buildConfig({ aiDefense: { inventoryDays: 91 } }), /aiDefense.inventoryDays/);
+  assert.throws(() => buildConfig({ aiDefense: { backfillDays: 120 } }), /aiDefense.retentionDays/);
 });
 
 test("command line: options and their checks", () => {

@@ -19,6 +19,8 @@ export interface RunOptions {
   detectionPageSize: number;
   /** Re-read cases updated this long before the last watermark. */
   caseOverlapMinutes: number;
+  /** AI Defense: activity re-read on every run, retention of activity detail, the most a backfill reads, and the inventory window. */
+  aiDefense: { trailingDays: number; retentionDays: number; backfillDays: number; inventoryDays: number };
   tenantName?: string;
 }
 

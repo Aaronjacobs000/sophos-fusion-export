@@ -1,0 +1,142 @@
+{
+  "data": {
+    "activities": {
+      "totalCount": 4,
+      "pageInfo": {
+        "hasNextPage": true,
+        "endCursor": "cursor-1"
+      },
+      "activities": [
+        {
+          "id": "activity://demo:secure-ai.activity:100001:200001",
+          "timestamp": {
+            "startTime": "2026-11-19T01:15:02Z",
+            "endTime": "2026-11-19T01:20:40Z"
+          },
+          "actor": {
+            "id": "S-1-5-21-1000000001-1000000002-1000000003-1104",
+            "name": "EXAMPLE\\alex.reed",
+            "type": "USER"
+          },
+          "application": {
+            "id": "microsoft-copilot",
+            "name": "Microsoft Copilot"
+          },
+          "applicationProvider": {
+            "name": "Microsoft"
+          },
+          "modelProvider": {
+            "name": "Microsoft"
+          },
+          "model": {
+            "name": "Microsoft Copilot"
+          },
+          "sensors": [
+            {
+              "name": "SOPHOS_ENDPOINT",
+              "type": "ENDPOINT"
+            }
+          ],
+          "action": "ALLOWED",
+          "policyId": "11111111-aaaa-4bbb-8ccc-000000000001",
+          "policy": "Example standard",
+          "device": {
+            "id": "6c1f2a3b-4d5e-4f60-8a71-b2c3d4e5f601",
+            "name": "LAPTOP-0142",
+            "type": "COMPUTER",
+            "platform": "WINDOWS"
+          },
+          "risk": "LOW",
+          "aggregationCount": 12,
+          "isUnsanctioned": false
+        },
+        {
+          "id": "activity://demo:secure-ai.activity:100002:200002",
+          "timestamp": {
+            "startTime": "2026-11-19T22:05:11.336Z",
+            "endTime": "2026-11-19T22:06:00Z"
+          },
+          "actor": {
+            "id": "S-1-5-21-1000000001-1000000002-1000000003-1104",
+            "name": "EXAMPLE\\alex.reed",
+            "type": "USER"
+          },
+          "application": {
+            "id": "deepseek",
+            "name": "DeepSeek"
+          },
+          "applicationProvider": {
+            "name": "DeepSeek"
+          },
+          "modelProvider": {
+            "name": "DeepSeek"
+          },
+          "model": {
+            "name": "DeepSeek"
+          },
+          "sensors": [
+            {
+              "name": "SOPHOS_ENDPOINT",
+              "type": "ENDPOINT"
+            }
+          ],
+          "action": "BLOCKED",
+          "policyId": "11111111-aaaa-4bbb-8ccc-000000000001",
+          "policy": "Example standard",
+          "device": {
+            "id": "6c1f2a3b-4d5e-4f60-8a71-b2c3d4e5f601",
+            "name": "LAPTOP-0142",
+            "type": "COMPUTER",
+            "platform": "WINDOWS"
+          },
+          "risk": "CRITICAL",
+          "aggregationCount": 3,
+          "isUnsanctioned": false
+        },
+        {
+          "id": "activity://demo:secure-ai.activity:100003:200003",
+          "timestamp": {
+            "startTime": "2026-11-20T03:30:00Z",
+            "endTime": "2026-11-20T03:41:12Z"
+          },
+          "actor": {
+            "id": "192.0.2.44",
+            "name": "192.0.2.44",
+            "type": "NETWORK_ENTITY"
+          },
+          "application": {
+            "id": "chatgpt",
+            "name": "ChatGPT"
+          },
+          "applicationProvider": {
+            "name": "OpenAI"
+          },
+          "modelProvider": {
+            "name": "OpenAI"
+          },
+          "model": {
+            "name": "ChatGPT"
+          },
+          "sensors": [
+            {
+              "name": "SFOS",
+              "type": "FIREWALL"
+            }
+          ],
+          "action": null,
+          "policyId": "",
+          "policy": "",
+          "device": {
+            "id": "C01000EXAMPLE01",
+            "name": "Example Firewall",
+            "type": "UNKNOWN",
+            "platform": "UNKNOWN"
+          },
+          "risk": "LOW",
+          "aggregationCount": "48",
+          "isUnsanctioned": false
+        }
+      ]
+    }
+  }
+}
