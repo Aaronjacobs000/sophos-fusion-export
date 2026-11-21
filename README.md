@@ -46,12 +46,12 @@ Sophos APIs --> exporter (scheduled, read only) --> CSV folder --> SharePoint or
 
 `powerbi/direct` is a Power BI project whose Power Query signs in to Sophos and reads cases, detections, endpoints, alerts and licenses on every refresh. It needs no exporter and no SharePoint, which makes it quick to try. It is not the recommended path, for these reasons:
 
-- **The client secret sits in the file.** It is a Power Query parameter, so anyone who can open the file, or edit the semantic model once it is published, can read it. A copy of the file is a copy of the credential.
-- **The data source must be Anonymous.** Power Query only sends a POST anonymously, and both the Sophos token request and Sophos Fusion GraphQL are POSTs. Power BI can't protect the credential with its own credential store.
-- **Scheduled refresh in the service needs static addresses.** Every request uses a fixed base URL with `RelativePath` and `Query`, and the tenant's regional host is a parameter you set (`SophosRegionHost`), not something the file looks up. Change those patterns and the service refuses to refresh.
-- **One tenant per file.**
-- **No history past what Sophos keeps.** Each refresh replaces the tables, so there is nothing older than Sophos's retention and no daily snapshots.
-- **Each refresh spends the shared rate limit.** Sophos allows 100 calls a minute per credential, shared with every integration that uses it. Power BI can refresh 8 times a day on Pro and retries failed refreshes.
+- The client secret sits in the file. It is a Power Query parameter, so anyone who can open the file, or edit the semantic model once it is published, can read it. A copy of the file is a copy of the credential.
+- The data source must be Anonymous. Power Query only sends a POST anonymously, and both the Sophos token request and Sophos Fusion GraphQL are POSTs. Power BI can't protect the credential with its own credential store.
+- Scheduled refresh in the service needs static addresses. Every request uses a fixed base URL with `RelativePath` and `Query`, and the tenant's regional host is a parameter you set (`SophosRegionHost`), not something the file looks up. Change those patterns and the service refuses to refresh.
+- One tenant per file.
+- No history past what Sophos keeps. Each refresh replaces the tables, so there is nothing older than Sophos's retention and no daily snapshots.
+- Each refresh spends the shared rate limit. Sophos allows 100 calls a minute per credential, shared with every integration that uses it. Power BI Pro allows 8 scheduled refreshes a day, and each one reads everything again.
 - It reads at most 10,000 detections per refresh (the most one search returns) and up to 30 days of them.
 
 If you use it, create a dedicated credential with the least access you can, keep the file somewhere only its owners can read, and delete the credential in Sophos Central when you stop.
@@ -194,8 +194,8 @@ For a OneDrive for Business folder, use the OneDrive URL (`https://contoso-my.sh
 
 Publish it one of two ways:
 
-- **Power BI Desktop (Windows):** open `powerbi/csv/FusionExport.pbip`, set the parameters `SharePointSiteUrl` and `ExportFolder` (Transform data > Edit parameters), sign in to SharePoint with your organizational account when asked, then publish.
-- **Without Desktop (macOS, Linux):** `scripts/publish-fabric.mjs` creates or updates the model and report in a workspace through the Fabric REST API.
+- With Power BI Desktop (Windows), open `powerbi/csv/FusionExport.pbip`, set the parameters `SharePointSiteUrl` and `ExportFolder` (Transform data > Edit parameters), sign in to SharePoint with your organizational account when asked, then publish.
+- Without Desktop (macOS, Linux), `scripts/publish-fabric.mjs` creates or updates the model and report in a workspace through the Fabric REST API.
 
   ```sh
   export FABRIC_TOKEN=$(az account get-access-token --resource https://api.fabric.microsoft.com --query accessToken -o tsv)
@@ -205,8 +205,8 @@ Publish it one of two ways:
 
 Then, in the Power BI service, open the semantic model's settings once:
 
-1. **Data source credentials > Edit credentials:** authentication method OAuth2, privacy level Organizational, then sign in with an account that can read the site.
-2. **Refresh:** turn on scheduled refresh and pick times an hour or so after the exporter's runs. Set the time zone to match `reportTimezone`.
+1. Under Data source credentials, choose Edit credentials: authentication method OAuth2, privacy level Organizational, then sign in with an account that can read the site.
+2. Under Refresh, turn on scheduled refresh and pick times an hour or so after the exporter's runs. Set the time zone to match `reportTimezone`.
 
 Licensing: a Microsoft Fabric (Free) license is enough to publish to and refresh in your own My workspace. Sharing the report, or a shared workspace, needs Power BI Pro (or a Fabric capacity). The repository has no `.pbit`; building one needs Power BI Desktop on Windows (open the PBIP, then File > Save as > Power BI template).
 

@@ -269,6 +269,7 @@ export const TABLES: readonly TableDef[] = [
       col("detector_id", "string", "Detector ID."),
       col("detections", "integer", "Detections created that day."),
       col("open_detections", "integer", "Of those, detections still OPEN at export time."),
+      col("detector_name", "string", "Detector name, repeated here for tools that can't join to dim_detector."),
     ],
   },
   {
@@ -284,6 +285,7 @@ export const TABLES: readonly TableDef[] = [
       col("technique_id", "string", "ATT&CK technique ID."),
       col("tactic", "string", "ATT&CK tactic short name; empty when no enrichment gives one."),
       col("detections", "integer", "Detections created that day naming the technique."),
+      col("technique_name", "string", "Technique name, when an enrichment gives it, repeated for tools that can't join."),
     ],
   },
   {
@@ -298,6 +300,7 @@ export const TABLES: readonly TableDef[] = [
       col("date_key", "integer", "local_date as a number, YYYYMMDD, for tools that filter dates numerically."),
       col("sensor_type", "string", "Sensor type code (dim_sensor_type)."),
       col("detections", "integer", "Detections created that day with this sensor type."),
+      col("sensor_label", "string", "Readable sensor label, repeated for tools that can't join to dim_sensor_type."),
     ],
   },
   {

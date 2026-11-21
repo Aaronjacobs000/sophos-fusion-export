@@ -692,8 +692,8 @@
           "root_selector": "",
           "columns": [
             {
-              "selector": "detector_id",
-              "text": "detector_id",
+              "selector": "detector_name",
+              "text": "detector_name",
               "type": "string"
             },
             {
@@ -711,53 +711,11 @@
           "computed_columns": [],
           "filterExpression": "(date_key ?? 0) >= ${__from:date:YYYYMMDD} && (date_key ?? 0) <= ${__to:date:YYYYMMDD}",
           "summarizeExpression": "sum(detections)",
-          "summarizeBy": "detector_id",
+          "summarizeBy": "detector_name",
           "summarizeAlias": "detections"
-        },
-        {
-          "refId": "B",
-          "datasource": {
-            "type": "yesoreyeram-infinity-datasource",
-            "uid": "fusion-export-csv"
-          },
-          "type": "csv",
-          "source": "url",
-          "url": "/dim_detector.csv",
-          "url_options": {
-            "method": "GET",
-            "data": ""
-          },
-          "parser": "backend",
-          "format": "table",
-          "root_selector": "",
-          "columns": [
-            {
-              "selector": "detector_id",
-              "text": "detector_id",
-              "type": "string"
-            },
-            {
-              "selector": "detector_name",
-              "text": "detector_name",
-              "type": "string"
-            }
-          ],
-          "filters": [],
-          "computed_columns": [],
-          "filterExpression": "",
-          "summarizeExpression": "",
-          "summarizeBy": "",
-          "summarizeAlias": ""
         }
       ],
       "transformations": [
-        {
-          "id": "joinByField",
-          "options": {
-            "byField": "detector_id",
-            "mode": "inner"
-          }
-        },
         {
           "id": "sortBy",
           "options": {
@@ -774,19 +732,6 @@
           "id": "limit",
           "options": {
             "limitField": 10
-          }
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "detector_id": true
-            },
-            "indexByName": {
-              "detector_name": 0,
-              "detections": 1
-            },
-            "renameByName": {}
           }
         }
       ],
@@ -970,6 +915,11 @@
               "type": "string"
             },
             {
+              "selector": "technique_name",
+              "text": "technique_name",
+              "type": "string"
+            },
+            {
               "selector": "date_key",
               "text": "date_key",
               "type": "number"
@@ -981,10 +931,16 @@
             }
           ],
           "filters": [],
-          "computed_columns": [],
+          "computed_columns": [
+            {
+              "selector": "technique_id + ' ' + (technique_name ?? '')",
+              "text": "technique",
+              "type": "string"
+            }
+          ],
           "filterExpression": "(date_key ?? 0) >= ${__from:date:YYYYMMDD} && (date_key ?? 0) <= ${__to:date:YYYYMMDD}",
           "summarizeExpression": "sum(detections)",
-          "summarizeBy": "technique_id",
+          "summarizeBy": "technique",
           "summarizeAlias": "detections"
         }
       ],
@@ -1013,7 +969,7 @@
             "excludeByName": {},
             "indexByName": {},
             "renameByName": {
-              "technique_id": "Technique",
+              "technique": "Technique",
               "detections": "Detections"
             }
           }
@@ -1076,8 +1032,8 @@
           "root_selector": "",
           "columns": [
             {
-              "selector": "sensor_type",
-              "text": "sensor_type",
+              "selector": "sensor_label",
+              "text": "sensor_label",
               "type": "string"
             },
             {
@@ -1095,78 +1051,19 @@
           "computed_columns": [],
           "filterExpression": "(date_key ?? 0) >= ${__from:date:YYYYMMDD} && (date_key ?? 0) <= ${__to:date:YYYYMMDD}",
           "summarizeExpression": "sum(detections)",
-          "summarizeBy": "sensor_type",
+          "summarizeBy": "sensor_label",
           "summarizeAlias": "detections"
-        },
-        {
-          "refId": "B",
-          "datasource": {
-            "type": "yesoreyeram-infinity-datasource",
-            "uid": "fusion-export-csv"
-          },
-          "type": "csv",
-          "source": "url",
-          "url": "/dim_sensor_type.csv",
-          "url_options": {
-            "method": "GET",
-            "data": ""
-          },
-          "parser": "backend",
-          "format": "table",
-          "root_selector": "",
-          "columns": [
-            {
-              "selector": "sensor_type",
-              "text": "sensor_type",
-              "type": "string"
-            },
-            {
-              "selector": "label",
-              "text": "label",
-              "type": "string"
-            }
-          ],
-          "filters": [],
-          "computed_columns": [],
-          "filterExpression": "",
-          "summarizeExpression": "",
-          "summarizeBy": "",
-          "summarizeAlias": ""
         }
       ],
       "description": "Sensor types that contributed, by readable name. A detection with two sources counts for both.",
       "transformations": [
-        {
-          "id": "joinByField",
-          "options": {
-            "byField": "sensor_type",
-            "mode": "inner"
-          }
-        },
-        {
-          "id": "groupBy",
-          "options": {
-            "fields": {
-              "label": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "detections": {
-                "aggregations": [
-                  "sum"
-                ],
-                "operation": "aggregate"
-              }
-            }
-          }
-        },
         {
           "id": "sortBy",
           "options": {
             "fields": {},
             "sort": [
               {
-                "field": "detections (sum)",
+                "field": "detections",
                 "desc": true
               }
             ]
@@ -1177,21 +1074,11 @@
           "options": {
             "limitField": 12
           }
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {},
-            "indexByName": {},
-            "renameByName": {
-              "detections (sum)": "detections"
-            }
-          }
         }
       ],
       "options": {
         "orientation": "horizontal",
-        "xField": "label",
+        "xField": "sensor_label",
         "showValue": "always",
         "groupWidth": 0.7,
         "barWidth": 0.8,

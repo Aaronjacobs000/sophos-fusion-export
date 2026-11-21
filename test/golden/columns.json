@@ -153,7 +153,8 @@
     "severity_rank:integer",
     "detector_id:string",
     "detections:integer",
-    "open_detections:integer"
+    "open_detections:integer",
+    "detector_name:string"
   ],
   "fact_technique_daily": [
     "tenant_id:string",
@@ -161,14 +162,16 @@
     "date_key:integer",
     "technique_id:string",
     "tactic:string",
-    "detections:integer"
+    "detections:integer",
+    "technique_name:string"
   ],
   "fact_sensor_daily": [
     "tenant_id:string",
     "local_date:date",
     "date_key:integer",
     "sensor_type:string",
-    "detections:integer"
+    "detections:integer",
+    "sensor_label:string"
   ],
   "fact_endpoint_snapshot": [
     "tenant_id:string",

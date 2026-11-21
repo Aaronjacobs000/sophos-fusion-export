@@ -257,6 +257,7 @@ Key: `tenant_id`, `local_date`, `severity_band`, `detector_id`. The re-read wind
 | `detector_id` | string | Detector ID. |
 | `detections` | integer | Detections created that day. |
 | `open_detections` | integer | Of those, detections still OPEN at export time. |
+| `detector_name` | string | Detector name, repeated here for tools that can't join to dim_detector. |
 
 ## fact_technique_daily
 
@@ -272,6 +273,7 @@ Key: `tenant_id`, `local_date`, `technique_id`, `tactic`. The re-read window is 
 | `technique_id` | string | ATT&CK technique ID. |
 | `tactic` | string | ATT&CK tactic short name; empty when no enrichment gives one. |
 | `detections` | integer | Detections created that day naming the technique. |
+| `technique_name` | string | Technique name, when an enrichment gives it, repeated for tools that can't join. |
 
 ## fact_sensor_daily
 
@@ -286,6 +288,7 @@ Key: `tenant_id`, `local_date`, `sensor_type`. The re-read window is replaced on
 | `date_key` | integer | local_date as a number, YYYYMMDD, for tools that filter dates numerically. |
 | `sensor_type` | string | Sensor type code (dim_sensor_type). |
 | `detections` | integer | Detections created that day with this sensor type. |
+| `sensor_label` | string | Readable sensor label, repeated for tools that can't join to dim_sensor_type. |
 
 ## fact_endpoint_snapshot
 

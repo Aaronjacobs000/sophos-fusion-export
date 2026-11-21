@@ -1,4 +1,4 @@
-tenant_id,local_date,date_key,severity_band,severity_rank,detector_id,detections,open_detections
-11111111-2222-4333-8444-555555555555,2026-11-21,20261121,Critical,5,app:watchlist,1,1
-11111111-2222-4333-8444-555555555555,2026-11-21,20261121,High,4,app:event-filter:aidefense,1,0
-11111111-2222-4333-8444-555555555555,2026-11-21,20261121,Info,1,app:detect:tactic-detector,1,1
+tenant_id,local_date,date_key,severity_band,severity_rank,detector_id,detections,open_detections,detector_name
+11111111-2222-4333-8444-555555555555,2026-11-21,20261121,Critical,5,app:watchlist,1,1,Watchlist
+11111111-2222-4333-8444-555555555555,2026-11-21,20261121,High,4,app:event-filter:aidefense,1,0,AI Defense Findings
+11111111-2222-4333-8444-555555555555,2026-11-21,20261121,Info,1,app:detect:tactic-detector,1,1,Tactic Graphs Detector

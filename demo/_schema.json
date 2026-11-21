@@ -74,7 +74,7 @@
           "name": "license_codes",
           "type": "string",
           "personal": false,
-          "description": "Licence codes the tenant holds, joined with |."
+          "description": "License codes the tenant holds, joined with |."
         },
         {
           "name": "exported_at",
@@ -88,7 +88,7 @@
       "name": "fact_license",
       "file": "fact_license.csv",
       "version": "1.0",
-      "description": "Licences held by the tenant, one snapshot a day.",
+      "description": "Licenses held by the tenant, one snapshot a day.",
       "load": "snapshot",
       "key": [
         "tenant_id",
@@ -113,13 +113,13 @@
           "name": "license_id",
           "type": "string",
           "personal": false,
-          "description": "Sophos licence record ID."
+          "description": "Sophos license record ID."
         },
         {
           "name": "license_code",
           "type": "string",
           "personal": false,
-          "description": "Licence code, for example XDR-MSP or CIXAXDR."
+          "description": "License code, for example XDR-MSP or CIXAXDR."
         },
         {
           "name": "generic_code",
@@ -131,7 +131,7 @@
           "name": "product_name",
           "type": "string",
           "personal": false,
-          "description": "Product name Sophos gives the licence."
+          "description": "Product name Sophos gives the license."
         },
         {
           "name": "license_type",
@@ -155,25 +155,25 @@
           "name": "unlimited",
           "type": "boolean",
           "personal": false,
-          "description": "True for an unlimited licence."
+          "description": "True for an unlimited license."
         },
         {
           "name": "perpetual",
           "type": "boolean",
           "personal": false,
-          "description": "True for a perpetual licence."
+          "description": "True for a perpetual license."
         },
         {
           "name": "start_date",
           "type": "date",
           "personal": false,
-          "description": "Licence start date."
+          "description": "License start date."
         },
         {
           "name": "end_date",
           "type": "date",
           "personal": false,
-          "description": "Licence end date. Empty for a perpetual licence."
+          "description": "License end date. Empty for a perpetual license."
         },
         {
           "name": "days_to_end",
@@ -980,6 +980,12 @@
           "type": "integer",
           "personal": false,
           "description": "Of those, detections still OPEN at export time."
+        },
+        {
+          "name": "detector_name",
+          "type": "string",
+          "personal": false,
+          "description": "Detector name, repeated here for tools that can't join to dim_detector."
         }
       ]
     },
@@ -1032,6 +1038,12 @@
           "type": "integer",
           "personal": false,
           "description": "Detections created that day naming the technique."
+        },
+        {
+          "name": "technique_name",
+          "type": "string",
+          "personal": false,
+          "description": "Technique name, when an enrichment gives it, repeated for tools that can't join."
         }
       ]
     },
@@ -1077,6 +1089,12 @@
           "type": "integer",
           "personal": false,
           "description": "Detections created that day with this sensor type."
+        },
+        {
+          "name": "sensor_label",
+          "type": "string",
+          "personal": false,
+          "description": "Readable sensor label, repeated for tools that can't join to dim_sensor_type."
         }
       ]
     },

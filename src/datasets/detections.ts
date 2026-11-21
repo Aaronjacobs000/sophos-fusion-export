@@ -145,8 +145,8 @@ export function mapDetection(d: FusionDetection, tenantId: string, timeZone: str
   };
 }
 
-/** fact_detection_daily rows for a set of detection rows. */
-export function dailyCounts(rows: Iterable<Row>, tenantId: string): Row[] {
+/** fact_detection_daily rows for a set of detection rows. detectorNames maps detector ID to name. */
+export function dailyCounts(rows: Iterable<Row>, tenantId: string, detectorNames: ReadonlyMap<string, string> = new Map()): Row[] {
   const counts = new Map<string, Row>();
   for (const r of rows) {
     if (!r.created_local_date) continue;
@@ -161,6 +161,7 @@ export function dailyCounts(rows: Iterable<Row>, tenantId: string): Row[] {
       detector_id: detector || null,
       detections: 0,
       open_detections: 0,
+      detector_name: detectorNames.get(detector) ?? (detector || null),
     };
     row.detections = Number(row.detections) + 1;
     if (r.status === "OPEN") row.open_detections = Number(row.open_detections) + 1;
@@ -178,13 +179,14 @@ export function breakdownCounts(mapped: readonly MappedDetection[], tenantId: st
     if (!day) continue;
     for (const t of m.techniques) {
       const key = `${day}\u0001${t.technique_id}\u0001${t.tactic}`;
-      const row = techniques.get(key) ?? { tenant_id: tenantId, local_date: day, date_key: m.detection.created_date_key, technique_id: t.technique_id, tactic: t.tactic, detections: 0 };
+      const name = m.mitre.find((x) => x.techniqueId === t.technique_id)?.name ?? null;
+      const row = techniques.get(key) ?? { tenant_id: tenantId, local_date: day, date_key: m.detection.created_date_key, technique_id: t.technique_id, tactic: t.tactic, detections: 0, technique_name: name };
       row.detections = Number(row.detections) + 1;
       techniques.set(key, row);
     }
     for (const s of m.sensors) {
       const key = `${day}\u0001${s.sensor_type}`;
-      const row = sensors.get(key) ?? { tenant_id: tenantId, local_date: day, date_key: m.detection.created_date_key, sensor_type: s.sensor_type, detections: 0 };
+      const row = sensors.get(key) ?? { tenant_id: tenantId, local_date: day, date_key: m.detection.created_date_key, sensor_type: s.sensor_type, detections: 0, sensor_label: sensorLabel(String(s.sensor_type)) };
       row.detections = Number(row.detections) + 1;
       sensors.set(key, row);
     }
@@ -282,7 +284,8 @@ export const detectionsDataset: Dataset = {
     store(ctx, "bridge_detection_sensor").replace(inIds, inWindow.flatMap((m) => m.sensors));
     store(ctx, "bridge_detection_entity").replace(inIds, personalData ? inWindow.flatMap((m) => m.entities) : []);
 
-    const daily = dailyCounts(inWindow.map((m) => m.detection), ctx.tenantId);
+    const names = new Map(inWindow.filter((m) => m.detector).map((m) => [String(m.detector!.detector_id), String(m.detector!.detector_name)]));
+    const daily = dailyCounts(inWindow.map((m) => m.detection), ctx.tenantId, names);
     const inDays = (r: Row) => r.tenant_id === ctx.tenantId && String(r.local_date ?? "") >= firstDay;
     store(ctx, "fact_detection_daily").replace(inDays, daily);
     const breakdown = breakdownCounts(inWindow, ctx.tenantId);

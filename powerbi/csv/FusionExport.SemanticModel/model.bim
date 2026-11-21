@@ -1518,6 +1518,14 @@
             "summarizeBy": "sum",
             "description": "Of those, detections still OPEN at export time.",
             "lineageTag": "f43cc236-f606-4688-843c-c236f6069688"
+          },
+          {
+            "name": "detector_name",
+            "dataType": "string",
+            "sourceColumn": "detector_name",
+            "summarizeBy": "none",
+            "description": "Detector name, repeated here for tools that can't join to dim_detector.",
+            "lineageTag": "b4ab7b37-5a12-4be1-84ab-7b375a12bbe1"
           }
         ],
         "partitions": [
@@ -1528,7 +1536,7 @@
               "type": "m",
               "expression": [
                 "let",
-                "    Source = FusionTable(\"fact_detection_daily.csv\", {{\"tenant_id\", \"text\"}, {\"local_date\", \"date\"}, {\"date_key\", \"integer\"}, {\"severity_band\", \"text\"}, {\"severity_rank\", \"integer\"}, {\"detector_id\", \"text\"}, {\"detections\", \"integer\"}, {\"open_detections\", \"integer\"}})",
+                "    Source = FusionTable(\"fact_detection_daily.csv\", {{\"tenant_id\", \"text\"}, {\"local_date\", \"date\"}, {\"date_key\", \"integer\"}, {\"severity_band\", \"text\"}, {\"severity_rank\", \"integer\"}, {\"detector_id\", \"text\"}, {\"detections\", \"integer\"}, {\"open_detections\", \"integer\"}, {\"detector_name\", \"text\"}})",
                 "in",
                 "    Source"
               ]
@@ -1613,6 +1621,14 @@
             "summarizeBy": "sum",
             "description": "Detections created that day naming the technique.",
             "lineageTag": "e8ab777a-35c1-4ae8-88ab-777a35c13ae8"
+          },
+          {
+            "name": "technique_name",
+            "dataType": "string",
+            "sourceColumn": "technique_name",
+            "summarizeBy": "none",
+            "description": "Technique name, when an enrichment gives it, repeated for tools that can't join.",
+            "lineageTag": "6c0628c2-4a4b-4330-8c06-28c24a4b2330"
           }
         ],
         "partitions": [
@@ -1623,7 +1639,7 @@
               "type": "m",
               "expression": [
                 "let",
-                "    Source = FusionTable(\"fact_technique_daily.csv\", {{\"tenant_id\", \"text\"}, {\"local_date\", \"date\"}, {\"date_key\", \"integer\"}, {\"technique_id\", \"text\"}, {\"tactic\", \"text\"}, {\"detections\", \"integer\"}})",
+                "    Source = FusionTable(\"fact_technique_daily.csv\", {{\"tenant_id\", \"text\"}, {\"local_date\", \"date\"}, {\"date_key\", \"integer\"}, {\"technique_id\", \"text\"}, {\"tactic\", \"text\"}, {\"detections\", \"integer\"}, {\"technique_name\", \"text\"}})",
                 "in",
                 "    Source"
               ]
@@ -1686,6 +1702,14 @@
             "summarizeBy": "sum",
             "description": "Detections created that day with this sensor type.",
             "lineageTag": "fb500c82-a56e-4ab4-8b50-0c82a56edab4"
+          },
+          {
+            "name": "sensor_label",
+            "dataType": "string",
+            "sourceColumn": "sensor_label",
+            "summarizeBy": "none",
+            "description": "Readable sensor label, repeated for tools that can't join to dim_sensor_type.",
+            "lineageTag": "49e34431-1a2f-48f7-89e3-44311a2fa8f7"
           }
         ],
         "partitions": [
@@ -1696,7 +1720,7 @@
               "type": "m",
               "expression": [
                 "let",
-                "    Source = FusionTable(\"fact_sensor_daily.csv\", {{\"tenant_id\", \"text\"}, {\"local_date\", \"date\"}, {\"date_key\", \"integer\"}, {\"sensor_type\", \"text\"}, {\"detections\", \"integer\"}})",
+                "    Source = FusionTable(\"fact_sensor_daily.csv\", {{\"tenant_id\", \"text\"}, {\"local_date\", \"date\"}, {\"date_key\", \"integer\"}, {\"sensor_type\", \"text\"}, {\"detections\", \"integer\"}, {\"sensor_label\", \"text\"}})",
                 "in",
                 "    Source"
               ]

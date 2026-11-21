@@ -292,51 +292,24 @@ const detectionsBoard = dashboard(
     stat("Still open", { x: 12, y: 2, w: 6, h: 4 }, csv("A", "fact_detection_daily.csv", [["date_key", "number"], ["open_detections", "number"]], { filter: RANGE("date_key"), summarize: "sum(open_detections)" }), { unit: "short", color: "orange", description: "Detections from the range still OPEN at the last export." }),
     stat("Techniques seen", { x: 18, y: 2, w: 6, h: 4 }, csv("A", "fact_technique_daily.csv", [["date_key", "number"], ["technique_id", "string"], ["detections", "number"]], { filter: RANGE("date_key"), summarize: "sum(detections)", by: "technique_id" }), { color: "purple", calc: "count", description: "Distinct ATT&CK techniques named in the range." }),
     stackedDaily("Detections per day by severity", { x: 0, y: 6, w: 24, h: 9 }, csv("A", "fact_detection_daily.csv", [["local_date", "string"], ["severity_band", "string"], ["detections", "number"]]), "local_date", "severity_band", ["sum", "detections"], BAND_COLORS),
-    bars(
-      "Top detectors",
-      { x: 0, y: 15, w: 12, h: 9 },
-      [
-        csv("A", "fact_detection_daily.csv", [["detector_id", "string"], ["date_key", "number"], ["detections", "number"]], { filter: RANGE("date_key"), summarize: "sum(detections)", by: "detector_id", alias: "detections" }),
-        csv("B", "dim_detector.csv", [["detector_id", "string"], ["detector_name", "string"]]),
-      ],
-      {
-        xField: "detector_name",
-        color: "blue",
-        transformations: [
-          { id: "joinByField", options: { byField: "detector_id", mode: "inner" } },
-          { id: "sortBy", options: { fields: {}, sort: [{ field: "detections", desc: true }] } },
-          { id: "limit", options: { limitField: 10 } },
-          { id: "organize", options: { excludeByName: { detector_id: true }, indexByName: { detector_name: 0, detections: 1 }, renameByName: {} } },
-        ],
-      }
-    ),
+    bars("Top detectors", { x: 0, y: 15, w: 12, h: 9 }, [csv("A", "fact_detection_daily.csv", [["detector_name", "string"], ["date_key", "number"], ["detections", "number"]], { filter: RANGE("date_key"), summarize: "sum(detections)", by: "detector_name", alias: "detections" })], {
+      xField: "detector_name",
+      color: "blue",
+      transformations: [{ id: "sortBy", options: { fields: {}, sort: [{ field: "detections", desc: true }] } }, { id: "limit", options: { limitField: 10 } }],
+    }),
     bars("Detections by ATT&CK tactic", { x: 12, y: 15, w: 12, h: 9 }, [csv("A", "fact_technique_daily.csv", [["tactic", "string"], ["date_key", "number"], ["detections", "number"]], { filter: `${RANGE("date_key")} && tactic != ''`, summarize: "sum(detections)", by: "tactic", alias: "detections" })], { xField: "tactic", color: "purple", transformations: [{ id: "sortBy", options: { fields: {}, sort: [{ field: "detections", desc: true }] } }] }),
     table(
       "Top ATT&CK techniques",
       { x: 0, y: 24, w: 12, h: 10 },
-      csv("A", "fact_technique_daily.csv", [["technique_id", "string"], ["date_key", "number"], ["detections", "number"]], { filter: RANGE("date_key"), summarize: "sum(detections)", by: "technique_id", alias: "detections" }),
-      { sort: [{ field: "detections", desc: true }], limit: 15, rename: { technique_id: "Technique", detections: "Detections" } }
+      csv("A", "fact_technique_daily.csv", [["technique_id", "string"], ["technique_name", "string"], ["date_key", "number"], ["detections", "number"]], { filter: RANGE("date_key"), computed: [["technique_id + ' ' + (technique_name ?? '')", "technique", "string"]], summarize: "sum(detections)", by: "technique", alias: "detections" }),
+      { sort: [{ field: "detections", desc: true }], limit: 15, rename: { technique: "Technique", detections: "Detections" } }
     ),
-    bars(
-      "Detections by source",
-      { x: 12, y: 24, w: 12, h: 10 },
-      [
-        csv("A", "fact_sensor_daily.csv", [["sensor_type", "string"], ["date_key", "number"], ["detections", "number"]], { filter: RANGE("date_key"), summarize: "sum(detections)", by: "sensor_type", alias: "detections" }),
-        csv("B", "dim_sensor_type.csv", [["sensor_type", "string"], ["label", "string"]]),
-      ],
-      {
-        xField: "label",
-        color: "green",
-        transformations: [
-          { id: "joinByField", options: { byField: "sensor_type", mode: "inner" } },
-          { id: "groupBy", options: { fields: { label: { aggregations: [], operation: "groupby" }, detections: { aggregations: ["sum"], operation: "aggregate" } } } },
-          { id: "sortBy", options: { fields: {}, sort: [{ field: "detections (sum)", desc: true }] } },
-          { id: "limit", options: { limitField: 12 } },
-          { id: "organize", options: { excludeByName: {}, indexByName: {}, renameByName: { "detections (sum)": "detections" } } },
-        ],
-        description: "Sensor types that contributed, by readable name. A detection with two sources counts for both.",
-      }
-    ),
+    bars("Detections by source", { x: 12, y: 24, w: 12, h: 10 }, [csv("A", "fact_sensor_daily.csv", [["sensor_label", "string"], ["date_key", "number"], ["detections", "number"]], { filter: RANGE("date_key"), summarize: "sum(detections)", by: "sensor_label", alias: "detections" })], {
+      xField: "sensor_label",
+      color: "green",
+      transformations: [{ id: "sortBy", options: { fields: {}, sort: [{ field: "detections", desc: true }] } }, { id: "limit", options: { limitField: 12 } }],
+      description: "Sensor types that contributed, by readable name. A detection with two sources counts for both.",
+    }),
   ],
   { time: "now-30d" }
 );
