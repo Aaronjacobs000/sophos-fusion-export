@@ -1,8 +1,8 @@
 # Changelog
 
-## 0.1.0 (unreleased)
+## 0.1.0 (22/11/2026)
 
-First version, private while the live checks run.
+First release.
 
 - Exporter for one tenant credential: licenses, cases (Sophos Fusion Cases v2, cases v1 for a tenant not yet on Sophos Fusion), detections with MITRE ATT&CK, endpoint health, Account Health Check scores and product alerts, from documented APIs only.
 - Star schema CSV with `tenant_id` on every row, `_schema.json`, watermarks in `_state/`, and reruns that write the same files for the same data.

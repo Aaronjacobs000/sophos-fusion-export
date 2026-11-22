@@ -11,7 +11,7 @@ Sophos APIs --> Container Apps job (4 runs a day) --> Azure Files share (history
      (Sophos credential)
 ```
 
-Tested on 22/11/2026 in a pay-as-you-go subscription in Australia East, deployed from the template and image this page links to. The backfill and the next run both succeeded: each read the Sophos credential from Key Vault and uploaded with the managed identity, and the second run kept the backfill's history on the share. A scheduled run takes about 75 seconds.
+Tested on 22/11/2026 in a pay-as-you-go subscription in Australia East, deployed from the template and image this page links to. The backfill and the next run both succeeded: each read the Sophos credential from Key Vault and uploaded with the managed identity, and the second run kept the backfill's history on the share. A run after the backfill takes one to two minutes.
 
 ## What it creates
 
