@@ -47,7 +47,7 @@ Sophos APIs --> exporter (scheduled, read only) --> CSV folder --> SharePoint or
 
 `powerbi/direct` is a Power BI project whose Power Query signs in to Sophos and reads cases, detections, endpoints, alerts and licenses on every refresh. It needs no exporter and no SharePoint, which makes it quick to try. It is not the recommended path, for these reasons:
 
-- The client secret sits in the file. It is a Power Query parameter, so anyone who can open the file, or edit the semantic model once it is published, can read it. A copy of the file is a copy of the credential.
+- The client secret sits in the file. It is a Power Query parameter, so anyone who can open the file, or edit the semantic model once it is published, can read it. A copy of the file is a copy of the credential. The `.pbit` template in this repository starts blank, and the `.pbix` you save from it holds the secret you typed.
 - The data source must be Anonymous. Power Query only sends a POST anonymously, and both the Sophos token request and Sophos Fusion GraphQL are POSTs. Power BI can't protect the credential with its own credential store.
 - Scheduled refresh in the service needs static addresses. Every request uses a fixed base URL with `RelativePath` and `Query`, and the tenant's regional host is a parameter you set (`SophosRegionHost`), not something the file looks up. Change those patterns and the service refuses to refresh.
 - Privacy levels are switched off for the file. The token from `id.sophos.com` has to travel to the other Sophos hosts, which Power Query's privacy firewall otherwise blocks, so the file is saved with "Ignore the privacy levels" on.
@@ -223,7 +223,9 @@ Then, in the Power BI service, open the semantic model's settings once:
 1. Under Data source credentials, choose Edit credentials: authentication method OAuth2, privacy level Organizational, then sign in with an account that can read the site.
 2. Under Refresh, turn on scheduled refresh and pick times an hour or so after the exporter's runs. Set the time zone to match `reportTimezone`.
 
-Licensing: a Microsoft Fabric (Free) license is enough to publish to and refresh in your own My workspace. Sharing the report, or a shared workspace, needs Power BI Pro (or a Fabric capacity). The repository has no `.pbit`; building one needs Power BI Desktop on Windows (open the PBIP, then File > Save as > Power BI template).
+Licensing: a Microsoft Fabric (Free) license is enough to publish to and refresh in your own My workspace. Sharing the report, or a shared workspace, needs Power BI Pro (or a Fabric capacity).
+
+`powerbi/csv/FusionExport.pbit` is the same report packed as one Power BI template file. Open it in Power BI Desktop and type the two parameters it asks for: `SharePointSiteUrl`, the site or OneDrive for Business URL the exporter uploads to (for example `https://contoso.sharepoint.com/sites/reporting`), and `ExportFolder`, the folder inside the site's Documents library, exactly as the exporter's `sharepoint.folder` setting has it (for example `FusionExport/contoso`). Choose Load, sign in to SharePoint with your organizational account when asked, then publish and set up the service as above. To rebuild a template after a change, open the PBIP in Power BI Desktop and choose File > Export > Power BI template. Desktop adds a `SecurityBindings` entry tied to your Windows sign-in; remove it, and its line in `[Content_Types].xml`, before you commit the file.
 
 To try the report without a tenant, upload the synthetic `demo/` folder to SharePoint and point `ExportFolder` at it.
 
@@ -231,8 +233,8 @@ To try the report without a tenant, upload the synthetic `demo/` folder to Share
 
 Read the warnings in [Two paths into Power BI](#alternative-a-power-bi-file-that-calls-the-sophos-apis-itself) first.
 
-1. Open `powerbi/direct/FusionDirect.pbip` in Power BI Desktop.
-2. Set the parameters: `SophosClientId`, `SophosClientSecret`, `SophosRegionHost` (the tenant's data region host from `doctor` or `GET /whoami/v1`, for example `https://api-au01.central.sophos.com`) and `DetectionDays` (1 to 30).
+1. Open the template, `powerbi/direct/FusionDirect.pbit`, in Power BI Desktop; it asks for the parameters when it opens. Or open `powerbi/direct/FusionDirect.pbip` and set them under Transform data > Edit parameters.
+2. Set the parameters: `SophosClientId`, `SophosClientSecret`, `SophosRegionHost` (the tenant's data region host from `doctor` or `GET /whoami/v1`, for example `https://api-au01.central.sophos.com`) and `DetectionDays` (1 to 30; the project's default is 7), then choose Load. The template holds no credential, but the secret you type is saved in plain text in the `.pbix` you save from it and in the model you publish, so treat that file as the credential.
 3. When Power BI asks how to connect to `https://id.sophos.com`, `https://api.central.sophos.com`, the region host and `https://api.taegis.sophos.com`, choose **Anonymous** for each. The Authorization header carries the token.
 4. Publish, then in the semantic model's settings set the same four data sources to Anonymous and tick **Skip test connection** for each: the service tests a source by reading its root address, which the Sophos API hosts answer with 404. Then turn on scheduled refresh.
 
@@ -298,7 +300,6 @@ Turn it on with `"personalData": true` or `--personal-data` only where the files
 - Product alerts leave the Common API once acknowledged. The table keeps every alert the exporter has seen.
 - Sophos serves AI Defense activity 100 to a call, so a backfill reads 30 days by default. The application inventory leaves out training policy, compliance and category fields: the live API refused them on 07/11/2026 although the published schema lists them.
 - The Sophos Fusion GraphQL host may move to a Fusion-branded name; the exporter will need an update when it does.
-- No `.pbit` template yet: see [Power BI, recommended path](#power-bi-recommended-path).
 
 ## Development
 

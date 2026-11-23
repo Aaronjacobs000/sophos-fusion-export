@@ -1,2 +1,4 @@
 # Check out text files with LF on every platform: the golden CSV and docs tests compare bytes.
 * text=auto eol=lf
+# Power BI templates are zip files: never convert their line endings.
+*.pbit binary

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Power BI templates for both paths, `powerbi/csv/FusionExport.pbit` and `powerbi/direct/FusionDirect.pbit`, built from the PBIP projects with every parameter blank. The README says how to fill them in and how to rebuild them.
+
 ## 0.1.0 (22/11/2026)
 
 First release.
