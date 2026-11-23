@@ -11,13 +11,19 @@
  *   node scripts/check-pbit.mjs <folder>    the templates under <folder>/powerbi
  *
  * Prints "in step" or the differences for each template. Exits 0 when every
- * template is in step, 1 when one has drifted, 2 when a file can't be read.
+ * template is in step, 1 when one has drifted, 2 when a file can't be read,
+ * 3 when a parameter holds a value. When several apply, the highest wins.
  *
  * What Desktop changes on export is ignored: line endings and other
  * whitespace, the order of tables, columns, measures and queries, lineage
  * tags and other ids, annotations, culture and linguistic metadata,
- * parameter values (the templates ship blank), and the row number columns and
- * auto date tables Desktop adds.
+ * parameter values, and the row number columns and auto date tables Desktop
+ * adds.
+ *
+ * Every parameter must ship blank (null or ""), in the model and in the
+ * Power Query edits not yet applied to it: a typed value can be a client
+ * secret, a client id or a customer's site, and a template pushed here is
+ * public. A parameter that holds a value is named, never printed.
  *
  * A template is read as data: the zip is unpacked in memory and only its JSON
  * parts are parsed. Nothing in it is run.
@@ -31,6 +37,7 @@ import { crc32, inflateRawSync } from "node:zlib";
 const MAX_ENTRY_BYTES = 64 * 1024 * 1024;
 const DESKTOP_TABLE = /^(LocalDateTable|DateTableTemplate)_[0-9a-f-]{36}$/i;
 const PARAMETER = /\bmeta\s*\[[^\]]*\bIsParameterQuery\s*=\s*true/i;
+const BLANK = /^(null|"")$/;
 
 // ---------- reading a .pbit ----------
 
@@ -121,13 +128,15 @@ function pagesFrom(read, pbirPrefix, legacyFiles) {
   throw new Error("no report pages found");
 }
 
-/** The model and page names of a .pbit file's bytes. */
+/** The model, page names and unapplied Power Query edits (name and M text) of a .pbit file's bytes. */
 export function readTemplate(bytes) {
   const zip = readZip(bytes);
   const read = (name) => zip.get(name)?.();
   const schema = read("DataModelSchema");
   if (!schema) throw new Error("the template has no DataModelSchema");
-  return { model: parseJson(schema, "DataModelSchema").model, pages: pagesFrom(read, "Report/definition/", ["Report/Layout"]) };
+  const pending = read("UnappliedChanges");
+  const unapplied = pending ? (parseJson(pending, "UnappliedChanges").queries ?? []).map((q) => ({ name: q.name, expression: q.text })) : [];
+  return { model: parseJson(schema, "DataModelSchema").model, pages: pagesFrom(read, "Report/definition/", ["Report/Layout"]), unapplied };
 }
 
 /** The model and page names of the PBIP project <name> in a folder. */
@@ -180,6 +189,26 @@ function parameterSettings(text) {
     .join(", ")}]`;
 }
 
+/**
+ * The names of the parameters that hold a value, in the model or the
+ * unapplied edits: anything but null or "" before the meta record, a
+ * DefaultValue or List in it, or anything after it.
+ */
+export function filledParameters({ model, unapplied = [] }) {
+  const filled = new Set();
+  for (const e of [...(model.expressions ?? []), ...unapplied]) {
+    const text = normText(e.expression);
+    if (!PARAMETER.test(text)) continue;
+    const at = text.search(/\bmeta\s*\[/i);
+    const close = text.lastIndexOf("]");
+    const listed = splitFields(text.slice(text.indexOf("[", at) + 1, close)).some(
+      (f) => /^\s*(DefaultValue|List)\s*=/i.test(f) && !/=\s*(null|""|\{\s*\})\s*$/i.test(f),
+    );
+    if (!BLANK.test(text.slice(0, at).trim()) || text.slice(close + 1).trim() || listed) filled.add(e.name);
+  }
+  return [...filled].sort();
+}
+
 /** What the check compares, keyed by name so that order and ids don't matter. */
 export function summarize({ model, pages }) {
   const tables = new Map();
@@ -216,7 +245,7 @@ function compareMaps(label, template, project, describe, out) {
   for (const name of template.keys()) if (!project.has(name)) out.push(`${label(name)}: only in the template`);
   for (const [name, value] of project) {
     if (!template.has(name)) out.push(`${label(name)}: only in the project`);
-    else if (template.get(name) !== value) out.push(`${label(name)}: ${describe(template.get(name), value)}`);
+    else if (template.get(name) !== value) out.push(`${label(name)}: ${describe(template.get(name), value, name)}`);
   }
 }
 
@@ -236,7 +265,9 @@ export function compareTemplate(template, project) {
     compareMaps((m) => `measure ${name}[${m}]`, tt.measures, pt.measures, (a, b) => `expression differs: ${excerpt(a, b)}`, out);
   }
   compareMaps((q) => `query ${q}`, t.queries, p.queries, (a, b) => `Power Query differs: ${excerpt(a, b)}`, out);
-  compareMaps((q) => `parameter ${q}`, t.parameters, p.parameters, (a, b) => `settings differ: template ${a}, project ${b}`, out);
+  const filled = new Set(filledParameters(template));
+  const settings = (a, b, name) => (filled.has(name) ? "settings differ (not shown: it holds a value)" : `settings differ: template ${a}, project ${b}`);
+  compareMaps((q) => `parameter ${q}`, t.parameters, p.parameters, settings, out);
   const tPages = new Set(t.pages);
   const pPages = new Set(p.pages);
   for (const page of t.pages) if (!pPages.has(page)) out.push(`page "${page}": only in the template`);
@@ -269,22 +300,34 @@ export function checkAll(root) {
   if (!templates.length) return { code: 2, lines: [`no .pbit templates under ${join(root, "powerbi")}`] };
   const lines = [];
   let code = 0;
+  let drifted = false;
+  let anyFilled = false;
   for (const t of templates) {
     const shown = relative(root, t.path).replace(/\\/g, "/");
     try {
-      const diffs = compareTemplate(readTemplate(readFileSync(t.path)), readProject(t.dir, t.name));
-      if (!diffs.length) lines.push(`${shown}: in step`);
-      else {
-        lines.push(`${shown}: ${diffs.length} difference${diffs.length === 1 ? "" : "s"}`, ...diffs.map((d) => `  ${d}`));
-        code = Math.max(code, 1);
+      const template = readTemplate(readFileSync(t.path));
+      const filled = filledParameters(template);
+      if (filled.length) {
+        lines.push(`${shown}: ${filled.length} parameter${filled.length === 1 ? "" : "s"} with a value`, ...filled.map((name) => `  parameter ${name}: holds a value; templates ship every parameter blank`));
+        anyFilled = true;
+        code = Math.max(code, 3);
       }
+      const diffs = compareTemplate(template, readProject(t.dir, t.name));
+      if (diffs.length) {
+        lines.push(`${shown}: ${diffs.length} difference${diffs.length === 1 ? "" : "s"}`, ...diffs.map((d) => `  ${d}`));
+        drifted = true;
+        code = Math.max(code, 1);
+      } else if (!filled.length) lines.push(`${shown}: in step`);
     } catch (error) {
       lines.push(`${shown}: can't check: ${error.message}`);
-      code = 2;
+      code = Math.max(code, 2);
     }
   }
-  if (code === 1) {
+  if (drifted) {
     lines.push("To fix: open the .pbip in Power BI Desktop on Windows, choose File > Export > Power BI template, then remove SecurityBindings as the README says.");
+  }
+  if (anyFilled) {
+    lines.push("To fix a parameter with a value: export the template again from the .pbip with nothing typed into its parameters. If a pushed template held a client secret or client id, treat that credential as exposed and replace it.");
   }
   return { code, lines };
 }

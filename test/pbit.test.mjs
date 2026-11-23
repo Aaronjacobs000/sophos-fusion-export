@@ -9,7 +9,8 @@ import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:f
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { compareTemplate, readProject, readTemplate } from "../scripts/check-pbit.mjs";
+import { crc32 } from "node:zlib";
+import { compareTemplate, filledParameters, readProject, readTemplate, readZip } from "../scripts/check-pbit.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const script = join(root, "scripts", "check-pbit.mjs");
@@ -35,6 +36,7 @@ test("the committed templates are in step with their PBIP projects", () => {
   const result = run();
   assert.equal(result.status, 0, result.stdout + result.stderr);
   for (const { variant, name } of PROJECTS) assert.match(result.stdout, new RegExp(`powerbi/${variant}/${name}\\.pbit: in step`));
+  assert.doesNotMatch(result.stdout, /with a value/);
 });
 
 test("a template is read from its zip: the model, and the page names in report order", () => {
@@ -142,6 +144,133 @@ test("no templates at all is an error", () => {
   const dir = mkdtempSync(join(tmpdir(), "fusion-export-pbit-"));
   try {
     assert.equal(run(dir).status, 2);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+/** A stored (uncompressed) zip of the given entries, enough for readZip. */
+function writeZip(entries) {
+  const locals = [];
+  const central = [];
+  let offset = 0;
+  for (const [name, data] of entries) {
+    const nameBytes = Buffer.from(name, "utf8");
+    const crc = crc32(data);
+    const local = Buffer.alloc(30);
+    local.writeUInt32LE(0x04034b50, 0);
+    local.writeUInt16LE(20, 4);
+    local.writeUInt16LE(0x800, 6);
+    local.writeUInt16LE(33, 12);
+    local.writeUInt32LE(crc, 14);
+    local.writeUInt32LE(data.length, 18);
+    local.writeUInt32LE(data.length, 22);
+    local.writeUInt16LE(nameBytes.length, 26);
+    const dir = Buffer.alloc(46);
+    dir.writeUInt32LE(0x02014b50, 0);
+    dir.writeUInt16LE(20, 4);
+    dir.writeUInt16LE(20, 6);
+    dir.writeUInt16LE(0x800, 8);
+    dir.writeUInt16LE(33, 14);
+    dir.writeUInt32LE(crc, 16);
+    dir.writeUInt32LE(data.length, 20);
+    dir.writeUInt32LE(data.length, 24);
+    dir.writeUInt16LE(nameBytes.length, 28);
+    dir.writeUInt32LE(offset, 42);
+    locals.push(local, nameBytes, data);
+    central.push(dir, nameBytes);
+    offset += 30 + nameBytes.length + data.length;
+  }
+  const dirBytes = Buffer.concat(central);
+  const end = Buffer.alloc(22);
+  end.writeUInt32LE(0x06054b50, 0);
+  end.writeUInt16LE(entries.size, 8);
+  end.writeUInt16LE(entries.size, 10);
+  end.writeUInt32LE(dirBytes.length, 12);
+  end.writeUInt32LE(offset, 16);
+  return Buffer.concat([...locals, dirBytes, end]);
+}
+
+/** Rewrites JSON parts of a .pbit in place, keeping Desktop's UTF-16 LE encoding. */
+function editTemplate(pbit, edits) {
+  const entries = new Map([...readZip(readFileSync(pbit))].map(([name, read]) => [name, read()]));
+  for (const [part, edit] of Object.entries(edits)) {
+    const json = JSON.parse(entries.get(part).toString("utf16le"));
+    edit(json);
+    entries.set(part, Buffer.from(JSON.stringify(json), "utf16le"));
+  }
+  writeFileSync(pbit, writeZip(entries));
+}
+
+/** Gives a parameter a new M text, keeping it an array when Desktop wrote one. */
+function setText(holder, key, text) {
+  holder[key] = Array.isArray(holder[key]) ? [text] : text;
+}
+
+test("the committed templates ship every parameter blank, in the model and the unapplied edits", () => {
+  for (const { variant, name } of PROJECTS) {
+    const template = readTemplate(readFileSync(join(root, "powerbi", variant, `${name}.pbit`)));
+    assert.deepEqual(filledParameters(template), []);
+    assert.ok(template.unapplied.length > 0);
+  }
+  const direct = readTemplate(readFileSync(join(root, "powerbi", "direct", "FusionDirect.pbit")));
+  for (const parameter of ["SophosClientId", "SophosClientSecret", "SophosRegionHost", "DetectionDays"]) {
+    assert.ok(direct.model.expressions.some((e) => e.name === parameter), parameter);
+    assert.ok(direct.unapplied.some((q) => q.name === parameter), parameter);
+  }
+});
+
+test("a parameter holds a value unless it is null or empty, with nothing in its meta record or after it", () => {
+  const meta = 'meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]';
+  const expressions = [
+    ["NullValue", `null ${meta}`],
+    ["EmptyValue", `"" ${meta}`],
+    ["EmptyList", 'null meta [IsParameterQuery=true, List={}, DefaultValue=null, Type="Text", IsParameterQueryRequired=true]'],
+    ["TextValue", `"value" ${meta}`],
+    ["NumberValue", "7 meta [IsParameterQuery=true, Type=\"Number\", IsParameterQueryRequired=true]"],
+    ["ListValue", 'null meta [IsParameterQuery=true, List={"value"}, Type="Text", IsParameterQueryRequired=true]'],
+    ["DefaultValue", 'null meta [IsParameterQuery=true, DefaultValue="value", Type="Text", IsParameterQueryRequired=true]'],
+    ["Appended", `null ${meta} & "value"`],
+    ["NotAParameter", 'let Source = "value" in Source'],
+  ].map(([name, expression]) => ({ name, expression }));
+  const unapplied = [{ name: "PendingValue", expression: [`"value" ${meta}`] }];
+  assert.deepEqual(filledParameters({ model: { expressions }, unapplied }), ["Appended", "DefaultValue", "ListValue", "NumberValue", "PendingValue", "TextValue"]);
+});
+
+test("a template with a filled parameter fails with exit 3 and names the parameter, never its value", () => {
+  const dir = copyProject("direct", "FusionDirect");
+  const secret = "fake-secret-c8f1e2d4b7a9";
+  const clientId = "fake-client-id-5d3e9a71";
+  const host = "fake-host-a1b2c3.example";
+  try {
+    const pbit = join(dir, "powerbi", "direct", "FusionDirect.pbit");
+    editTemplate(pbit, {
+      DataModelSchema: (schema) => {
+        const expressions = schema.model.expressions;
+        const secretParameter = expressions.find((e) => e.name === "SophosClientSecret");
+        setText(secretParameter, "expression", normalizeToLines(secretParameter.expression).join("\n").replace(/^null/, `"${secret}"`));
+        const hostParameter = expressions.find((e) => e.name === "SophosRegionHost");
+        setText(hostParameter, "expression", normalizeToLines(hostParameter.expression).join("\n").replace("IsParameterQuery=true,", `IsParameterQuery=true, DefaultValue="${host}",`));
+      },
+      UnappliedChanges: (pending) => {
+        const idParameter = pending.queries.find((q) => q.name === "SophosClientId");
+        setText(idParameter, "text", normalizeToLines(idParameter.text).join("\n").replace(/^null/, `"${clientId}"`));
+      },
+    });
+
+    const result = run(dir);
+    assert.equal(result.status, 3, result.stdout + result.stderr);
+    const out = result.stdout;
+    assert.match(out, /powerbi\/direct\/FusionDirect\.pbit: 3 parameters with a value/);
+    for (const name of ["SophosClientId", "SophosClientSecret", "SophosRegionHost"]) {
+      assert.ok(out.includes(`  parameter ${name}: holds a value; templates ship every parameter blank`), out);
+    }
+    assert.ok(!out.includes("parameter DetectionDays: holds a value"), out);
+    assert.ok(out.includes("parameter SophosRegionHost: settings differ (not shown: it holds a value)"), out);
+    assert.doesNotMatch(out, /FusionDirect\.pbit: in step/);
+    assert.match(out, /File > Export > Power BI template/);
+    assert.match(out, /treat that credential as exposed and replace it/);
+    for (const value of [secret, clientId, host]) assert.ok(!(result.stdout + result.stderr).includes(value), "a parameter value was printed");
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
