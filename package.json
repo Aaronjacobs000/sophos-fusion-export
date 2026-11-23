@@ -21,7 +21,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "npm run build && node --test test/*.test.mjs",
     "demo": "npm run build && node scripts/make-demo.mjs",
-    "docs": "npm run build && node scripts/gen-docs.mjs"
+    "docs": "npm run build && node scripts/gen-docs.mjs",
+    "check:pbit": "node scripts/check-pbit.mjs"
   },
   "devDependencies": {
     "@microsoft/powerquery-parser": "4.0.1",

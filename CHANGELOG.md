@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Power BI templates for both paths, `powerbi/csv/FusionExport.pbit` and `powerbi/direct/FusionDirect.pbit`, built from the PBIP projects with every parameter blank. The README says how to fill them in and how to rebuild them.
+- `npm run check:pbit` compares each `.pbit` template with its PBIP project (tables, columns, measures, Power Query, parameters and page names) and lists the differences, so a model change that still needs a template export shows up.
 
 ## 0.1.0 (22/11/2026)
 
