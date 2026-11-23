@@ -207,6 +207,12 @@ For a OneDrive for Business folder, use the OneDrive URL (`https://contoso-my.sh
 
 `powerbi/csv` is a Power BI project (PBIP): the semantic model `FusionExport.SemanticModel` and the report `FusionExport.Report`, with six pages (overview, cases, detections and ATT&CK, endpoints and licenses, alerts, AI Defense). It reads the CSV folder through the SharePoint folder connector.
 
+![Power BI report, Overview page](docs/images/powerbi-overview.png)
+![Power BI report, Detections and ATT&CK page](docs/images/powerbi-detections.png)
+![Power BI report, Cases page](docs/images/powerbi-cases.png)
+
+*The Overview, Detections and ATT&CK, and Cases pages in the Power BI service, on data from a Sophos test tenant (23/11/2026).*
+
 Publish it one of two ways:
 
 - With Power BI Desktop (Windows), open `powerbi/csv/FusionExport.pbip`, set the parameters `SharePointSiteUrl` and `ExportFolder` (Transform data > Edit parameters), sign in to SharePoint with your organizational account when asked, then publish.
@@ -245,6 +251,12 @@ The tables here are a subset of the exporter's: `fact_case`, `fact_detection`, `
 ## Grafana
 
 `grafana/` holds five dashboards (overview, cases, detections and ATT&CK, endpoints with licenses and alerts, AI Defense), provisioning for the data source and dashboards, a small read-only file server for the CSV folder, and a Docker Compose file. The dashboards use the [Infinity data source](https://grafana.com/grafana/plugins/yesoreyeram-infinity-datasource/) and run every query on the Grafana server.
+
+![Grafana dashboard, Overview](docs/images/grafana-overview.png)
+![Grafana dashboard, Detections and ATT&CK](docs/images/grafana-detections.png)
+![Grafana dashboard, Cases](docs/images/grafana-cases.png)
+
+*The Overview, Detections and ATT&CK, and Cases dashboards, on data from a Sophos test tenant (23/11/2026).*
 
 With Docker:
 
