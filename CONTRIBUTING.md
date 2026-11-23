@@ -9,6 +9,7 @@ Issues and pull requests are welcome on this repository. This is a personal, uno
 - Schema changes add columns at the end of a table, bump the table's minor version, and come with `npm run docs`, the regenerated templates (`node scripts/build-grafana.mjs`, `node scripts/build-powerbi.mjs`) and the golden files (`UPDATE_GOLDEN=1 node --test test/run.test.mjs`).
 - A model change also needs both `.pbit` templates exported again on Windows (open the `.pbip` in Power BI Desktop, File > Export > Power BI template, then remove `SecurityBindings` as the README says). `npm run check:pbit` lists any template that has drifted from its PBIP project.
 - Templates ship every parameter blank. `npm run check:pbit` exits 3 and names the parameter, never its value, when a `.pbit` holds a value for one, such as a client secret typed in before the export.
+- Templates ship without `SecurityBindings`. `npm run check:pbit` exits 3 when a `.pbit` still carries the part or a `[Content_Types].xml` line naming it, and never prints the part.
 - Never commit real tenant data. Test fixtures and `demo/` are synthetic; build new fixtures by hand or from `scripts/make-demo.mjs`.
 - No secrets in code, config, fixtures, logs or output.
 

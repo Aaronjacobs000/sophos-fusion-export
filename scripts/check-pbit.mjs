@@ -12,7 +12,8 @@
  *
  * Prints "in step" or the differences for each template. Exits 0 when every
  * template is in step, 1 when one has drifted, 2 when a file can't be read,
- * 3 when a parameter holds a value. When several apply, the highest wins.
+ * 3 when a parameter holds a value or a template still carries
+ * SecurityBindings. When several apply, the highest wins.
  *
  * What Desktop changes on export is ignored: line endings and other
  * whitespace, the order of tables, columns, measures and queries, lineage
@@ -24,6 +25,11 @@
  * Power Query edits not yet applied to it: a typed value can be a client
  * secret, a client id or a customer's site, and a template pushed here is
  * public. A parameter that holds a value is named, never printed.
+ *
+ * Desktop adds a SecurityBindings part on export, tied to the Windows
+ * sign-in that exported it, and a line for it in [Content_Types].xml. Both
+ * must be removed before a template is committed. Either one left in is
+ * named; the part's bytes are never read.
  *
  * A template is read as data: the zip is unpacked in memory and only its JSON
  * parts are parsed. Nothing in it is run.
@@ -38,6 +44,7 @@ const MAX_ENTRY_BYTES = 64 * 1024 * 1024;
 const DESKTOP_TABLE = /^(LocalDateTable|DateTableTemplate)_[0-9a-f-]{36}$/i;
 const PARAMETER = /\bmeta\s*\[[^\]]*\bIsParameterQuery\s*=\s*true/i;
 const BLANK = /^(null|"")$/;
+const SECURITY_BINDINGS = /SecurityBindings/i;
 
 // ---------- reading a .pbit ----------
 
@@ -126,6 +133,27 @@ function pagesFrom(read, pbirPrefix, legacyFiles) {
     }
   }
   throw new Error("no report pages found");
+}
+
+/**
+ * What a template still carries of the SecurityBindings part Desktop adds on
+ * export, as short lines: the part itself (zip names compared without regard
+ * to case, as package part names are), and each Override or Default in
+ * [Content_Types].xml that names it. Empty when there is neither.
+ */
+export function securityBindings(zip) {
+  const found = [];
+  let types;
+  for (const [name, read] of zip) {
+    if (/^securitybindings$/i.test(name.split("/").pop())) found.push(`part ${name}: tied to the Windows sign-in that exported the template`);
+    else if (name.toLowerCase() === "[content_types].xml") types = read;
+  }
+  if (types) {
+    for (const [element, kind] of decodeText(types()).matchAll(/<(?:[\w.-]+:)?(Override|Default)\b[^>]*>/gi)) {
+      if (SECURITY_BINDINGS.test(element)) found.push(`[Content_Types].xml: ${/^o/i.test(kind) ? "an Override" : "a Default"} that names SecurityBindings`);
+    }
+  }
+  return found;
 }
 
 /** The model, page names and unapplied Power Query edits (name and M text) of a .pbit file's bytes. */
@@ -302,10 +330,18 @@ export function checkAll(root) {
   let code = 0;
   let drifted = false;
   let anyFilled = false;
+  let anyBindings = false;
   for (const t of templates) {
     const shown = relative(root, t.path).replace(/\\/g, "/");
     try {
-      const template = readTemplate(readFileSync(t.path));
+      const bytes = readFileSync(t.path);
+      const bindings = securityBindings(readZip(bytes));
+      if (bindings.length) {
+        lines.push(`${shown}: still carries SecurityBindings`, ...bindings.map((b) => `  ${b}`));
+        anyBindings = true;
+        code = Math.max(code, 3);
+      }
+      const template = readTemplate(bytes);
       const filled = filledParameters(template);
       if (filled.length) {
         lines.push(`${shown}: ${filled.length} parameter${filled.length === 1 ? "" : "s"} with a value`, ...filled.map((name) => `  parameter ${name}: holds a value; templates ship every parameter blank`));
@@ -317,7 +353,7 @@ export function checkAll(root) {
         lines.push(`${shown}: ${diffs.length} difference${diffs.length === 1 ? "" : "s"}`, ...diffs.map((d) => `  ${d}`));
         drifted = true;
         code = Math.max(code, 1);
-      } else if (!filled.length) lines.push(`${shown}: in step`);
+      } else if (!filled.length && !bindings.length) lines.push(`${shown}: in step`);
     } catch (error) {
       lines.push(`${shown}: can't check: ${error.message}`);
       code = Math.max(code, 2);
@@ -325,6 +361,9 @@ export function checkAll(root) {
   }
   if (drifted) {
     lines.push("To fix: open the .pbip in Power BI Desktop on Windows, choose File > Export > Power BI template, then remove SecurityBindings as the README says.");
+  }
+  if (anyBindings) {
+    lines.push("To fix SecurityBindings: delete the SecurityBindings part from the .pbit and its line in [Content_Types].xml, as the README says, then run the check again.");
   }
   if (anyFilled) {
     lines.push("To fix a parameter with a value: export the template again from the .pbip with nothing typed into its parameters. If a pushed template held a client secret or client id, treat that credential as exposed and replace it.");

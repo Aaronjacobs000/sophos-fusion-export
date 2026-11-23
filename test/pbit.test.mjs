@@ -10,7 +10,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { crc32 } from "node:zlib";
-import { compareTemplate, filledParameters, readProject, readTemplate, readZip } from "../scripts/check-pbit.mjs";
+import { compareTemplate, filledParameters, readProject, readTemplate, readZip, securityBindings } from "../scripts/check-pbit.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const script = join(root, "scripts", "check-pbit.mjs");
@@ -37,6 +37,7 @@ test("the committed templates are in step with their PBIP projects", () => {
   assert.equal(result.status, 0, result.stdout + result.stderr);
   for (const { variant, name } of PROJECTS) assert.match(result.stdout, new RegExp(`powerbi/${variant}/${name}\\.pbit: in step`));
   assert.doesNotMatch(result.stdout, /with a value/);
+  assert.doesNotMatch(result.stdout, /SecurityBindings/);
 });
 
 test("a template is read from its zip: the model, and the page names in report order", () => {
@@ -191,15 +192,22 @@ function writeZip(entries) {
   return Buffer.concat([...locals, dirBytes, end]);
 }
 
+/** Rewrites a .pbit in place: change gets its parts as a map of name to bytes. */
+function rewriteTemplate(pbit, change) {
+  const entries = new Map([...readZip(readFileSync(pbit))].map(([name, read]) => [name, read()]));
+  change(entries);
+  writeFileSync(pbit, writeZip(entries));
+}
+
 /** Rewrites JSON parts of a .pbit in place, keeping Desktop's UTF-16 LE encoding. */
 function editTemplate(pbit, edits) {
-  const entries = new Map([...readZip(readFileSync(pbit))].map(([name, read]) => [name, read()]));
-  for (const [part, edit] of Object.entries(edits)) {
-    const json = JSON.parse(entries.get(part).toString("utf16le"));
-    edit(json);
-    entries.set(part, Buffer.from(JSON.stringify(json), "utf16le"));
-  }
-  writeFileSync(pbit, writeZip(entries));
+  rewriteTemplate(pbit, (entries) => {
+    for (const [part, edit] of Object.entries(edits)) {
+      const json = JSON.parse(entries.get(part).toString("utf16le"));
+      edit(json);
+      entries.set(part, Buffer.from(JSON.stringify(json), "utf16le"));
+    }
+  });
 }
 
 /** Gives a parameter a new M text, keeping it an array when Desktop wrote one. */
@@ -271,6 +279,74 @@ test("a template with a filled parameter fails with exit 3 and names the paramet
     assert.match(out, /File > Export > Power BI template/);
     assert.match(out, /treat that credential as exposed and replace it/);
     for (const value of [secret, clientId, host]) assert.ok(!(result.stdout + result.stderr).includes(value), "a parameter value was printed");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("the committed templates carry no SecurityBindings part and no [Content_Types].xml line for one", () => {
+  for (const { variant, name } of PROJECTS) {
+    const zip = readZip(readFileSync(join(root, "powerbi", variant, `${name}.pbit`)));
+    assert.ok(zip.has("[Content_Types].xml"), name);
+    assert.deepEqual(securityBindings(zip), [], name);
+  }
+});
+
+test("SecurityBindings is found as a part in any case, and as an Override or Default in [Content_Types].xml", () => {
+  const zipOf = (parts) => new Map(Object.entries(parts).map(([name, text]) => [name, () => Buffer.from(text, "utf8")]));
+  const clean = '<?xml version="1.0" encoding="utf-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="json" ContentType="" /><Override PartName="/DataModelSchema" ContentType="" /></Types>';
+  assert.deepEqual(securityBindings(zipOf({ "[Content_Types].xml": clean, DataModelSchema: "{}" })), []);
+  const named = clean.replace(
+    "</Types>",
+    '<Override PartName="/SecurityBindings" ContentType="" /><ct:Default Extension="securitybindings" ContentType="" /></Types>',
+  );
+  assert.deepEqual(securityBindings(zipOf({ "[Content_Types].xml": named, securitybindings: "x" })), [
+    "part securitybindings: tied to the Windows sign-in that exported the template",
+    "[Content_Types].xml: an Override that names SecurityBindings",
+    "[Content_Types].xml: a Default that names SecurityBindings",
+  ]);
+  const utf16 = new Map([["[content_types].xml", () => Buffer.concat([Buffer.from([0xff, 0xfe]), Buffer.from(named, "utf16le")])]]);
+  assert.equal(securityBindings(utf16).length, 2);
+});
+
+test("a template that still carries the SecurityBindings part fails with exit 3 and names it, never its bytes", () => {
+  const dir = copyProject("direct", "FusionDirect");
+  const marker = "fake-binding-3e7c91d0a5b2";
+  try {
+    const pbit = join(dir, "powerbi", "direct", "FusionDirect.pbit");
+    rewriteTemplate(pbit, (entries) => entries.set("SecurityBindings", Buffer.concat([Buffer.from([0x01, 0x00, 0x00, 0x00, 0xd0, 0x8c]), Buffer.from(marker)])));
+
+    const result = run(dir);
+    assert.equal(result.status, 3, result.stdout + result.stderr);
+    const out = result.stdout;
+    assert.match(out, /powerbi\/direct\/FusionDirect\.pbit: still carries SecurityBindings/);
+    assert.ok(out.includes("  part SecurityBindings: tied to the Windows sign-in that exported the template"), out);
+    assert.ok(!out.includes("[Content_Types].xml:"), out);
+    assert.doesNotMatch(out, /FusionDirect\.pbit: in step/);
+    assert.match(out, /To fix SecurityBindings: delete the SecurityBindings part/);
+    assert.ok(!(result.stdout + result.stderr).includes(marker), "the part's bytes were printed");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("a template whose [Content_Types].xml still names SecurityBindings fails with exit 3, with no part left", () => {
+  const dir = copyProject("csv", "FusionExport");
+  try {
+    const pbit = join(dir, "powerbi", "csv", "FusionExport.pbit");
+    rewriteTemplate(pbit, (entries) => {
+      const types = entries.get("[Content_Types].xml").toString("utf8");
+      entries.set("[Content_Types].xml", Buffer.from(types.replace("</Types>", '<Override PartName="/SecurityBindings" ContentType="" /></Types>'), "utf8"));
+    });
+
+    const result = run(dir);
+    assert.equal(result.status, 3, result.stdout + result.stderr);
+    const out = result.stdout;
+    assert.match(out, /powerbi\/csv\/FusionExport\.pbit: still carries SecurityBindings/);
+    assert.ok(out.includes("  [Content_Types].xml: an Override that names SecurityBindings"), out);
+    assert.ok(!out.includes("part SecurityBindings"), out);
+    assert.doesNotMatch(out, /FusionExport\.pbit: in step/);
+    assert.match(out, /To fix SecurityBindings/);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
